@@ -1,23 +1,59 @@
-/* global $, window, XMLHttpRequest, ActiveXObject, document, alert, localStorage */
+/* global $, window, XMLHttpRequest, ActiveXObject, document, alert, localStorage, gapi, API_LOADED, console, separator */
 
-var videos = [];
+var unwatchedVideos = [];
 var watchedVideos = [];
 var unwatched = true;
 
 function readData() {
-	var uncheckedWatched = localStorage.getItem("watched-list");
-	if (uncheckedWatched === null) {
-		uncheckedWatched = [];
+	var watchedVideosTemp = JSON.parse(localStorage.getItem("watched-videos"));
+	if (watchedVideosTemp === null) {
+		watchedVideosTemp = [];
 	}
-	videos = [];
-	var needsUpdate = 10;
-	var xhr;
+	watchedVideos = [];
+  unwatchedVideos = JSON.parse(localStorage.getItem("unwatched-videos"));
+	if (unwatchedVideos === null) {
+		unwatchedVideos = [];
+	}
 
+	if (API_LOADED) {
+		var getSubs = function (pageToken) {
+			gapi.client.youtube.subscriptions.list({
+				mine: true,
+				part: 'snippet, contentDetails',
+				maxResults: 50,
+				pageToken: pageToken								
+			}).execute(function (response) {
+				loadVideosFromChannel($.map(response.items, function (val) {
+					if (val.contentDetails.newItemCount > 0) {
+						return val.snippet.resourceId.channelId;
+					} else {
+						return "";
+					}
+				}));
+				if (response.nextPageToken !== undefined) {
+					getSubs(response.nextPageToken);
+				}
+			});
+		};
+		getSubs(undefined);
+	}
+	
+	function loadVideosFromChannel(channelIds) {
+		gapi.client.youtube.channels.list({
+			part: 'contentDetails',
+			id: channelIds.join(',')
+		}).execute(function (response) {
+			response.items.forEach(function (val) {
+				loadVideosFromPlaylist(val.contentDetails.relatedPlaylists.uploads);
+			});
+		});
+	}
+	
 	function loadVideosFromPlaylist(playlistId) {
 		gapi.client.youtube.playlistItems.list({
 			part: 'snippet',
 			playlistId: playlistId,
-			maxResults: 10
+			maxResults: 10,		 
 		}).execute(function (response) {
 			response.items.forEach(function (item) {
 				loadVideo(item.snippet);
@@ -25,15 +61,6 @@ function readData() {
 		});
 	}
 	
-	function loadVideosFromChannel(channelId) {
-		gapi.client.youtube.channels.list({
-			part: 'contentDetails',
-			id: channelId,
-		}).execute(function (response) {
-			loadVideosFromPlaylist(response.items[0].contentDetails.relatedPlaylists.uploads);
-		});
-	}
-
 	function loadVideo(videoSnippet) {
 		var video = {
 			title: videoSnippet.title,
@@ -42,42 +69,46 @@ function readData() {
 			publishedDate: videoSnippet.publishedAt,
 			description: videoSnippet.description,
 		};
-		if (uncheckedWatched.indexOf(video.link) !== -1) {
-			watchedVideos.push(video.link);
-		}
-		videos.push(video);
-		needsUpdate = 10;
-	}
-	
-	if (API_LOADED) {
-		var getSubs = function (pageToken) {
-			gapi.client.youtube.subscriptions.list({
-				mine: true,
-				part: 'snippet',
-				maxResults: 50,
-				pageToken: pageToken								
-			}).execute(function (response) {
-				response.items.forEach(function (snippet) {
-					loadVideosFromChannel(snippet.snippet.resourceId.channelId);
-				});
-				if (response.nextPageToken !== undefined) {
-					getSubs(response.nextPageToken);
-				}
-			});
-		}
-		getSubs(undefined);
-	}
-	
-	var updateInterval = window.setInterval(function () {
-		if (needsUpdate > 0) {
-			if (needsUpdate === 10) {
-				addVideo();
-			}
-			needsUpdate--;
+		
+		if (listContainsVideo(watchedVideosTemp, video.link) !== -1) {
+			addToList(watchedVideos, video);
 		} else {
+			addToList(unwatchedVideos, video);
+		}
+	}
+	
+	var checkCount = 10;
+	var updateInterval = window.setInterval(function () {
+		addVideo();
+		checkCount--;
+		if (checkCount < 0) {
 			window.clearInterval(updateInterval);
 		}
 	}, 1000);
+}
+
+function listContainsVideo(videos, id) {
+	for(var i = 0; i < videos.length; i++) {
+		if (videos[i].link == id) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+function addToList(videos, video) {
+	for (var i = 0; i < videos.length; i++) {
+		if (videos[i].link == video.link) {
+			// Already added
+			return;
+		} else if (videos[i].publishedDate > video.publishedDate) {
+			// In the right position
+			videos.splice(i, 0, video);
+			return;
+		}
+	}
+	// If we get this far, we haven't added it yet.
+	videos.splice(videos.length, 0, video);
 }
 
 function getCode(video) {
@@ -86,6 +117,7 @@ function getCode(video) {
 		'<iframe class="video" width="560" height="315" src="https://www.youtube.com/embed/'+video.link+'" frameborder="0" allowfullscreen></iframe>'+
 		'<div class="video-info">'+
 			'<div class="author">by '+video.author+'</div>'+
+			'<div class="upload-date">uploaded '+video.publishedDate+'</div>'+
 			'<div class="description">'+video.description+'</div>'+
 		'</div>'+
 		'<div class="buttons">'+
@@ -96,25 +128,33 @@ function getCode(video) {
 }
 
 function saveWatched() {
-	localStorage.setItem("watched-list", watchedVideos);
+	localStorage.setItem("watched-videos", JSON.stringify(watchedVideos));
+	localStorage.setItem("unwatched-videos", JSON.stringify(unwatchedVideos));
 }
 
 function addVideo() {
 	displayNoVideos();
-	videos.sort(function (a, b) {
-		if (unwatched) {
-			return Date.parse(a.publishedDate) - Date.parse(b.publishedDate);
-		} else {
-			return Date.parse(b.publishedDate) - Date.parse(a.publishedDate);
-		}
-	});
 	if($(this).scrollTop() + $(this).innerHeight() * 2 >= $(document).height()) {
-		for (var i = 0; i < videos.length; i++) {
-			var video = videos[i];
-			if (((watchedVideos.indexOf(video.link) === -1) == unwatched) && ($("#"+video.link).length === 0)) {
-				$(".videos").append(getCode(video));
-				addVideo();
-				break;
+		// If we're at the bottom of the page
+		
+		var i;
+		if (unwatched) {
+			for (i = 0; i < unwatchedVideos.length; i++) {
+				if ($("#"+unwatchedVideos[i].link).length === 0) {
+					// Isn't already on screen
+					$(".videos").append(getCode(unwatchedVideos[i]));
+					addVideo();
+					return;
+				}
+			}
+		} else {
+			for (i = watchedVideos.length-1; i >= 0; i--) {
+				if ($("#"+watchedVideos[i].link).length === 0) {
+					// Isn't already on screen
+					$(".videos").append(getCode(watchedVideos[i]));
+					addVideo();
+					return;
+				}
 			}
 		}
 	}
@@ -128,16 +168,15 @@ function displayNoVideos() {
 	}
 }
 
-$(window).bind('scroll', addVideo);
-window.setInterval(readData, 1000 * 60 * 5);
-
 $(document).ready(function () {	
 	$(".videos").on("click", ".done", function () {
 		var id = $(this).parent().parent().attr('id');
 		if(unwatched) {
-			watchedVideos.push(id);
+			addToList(watchedVideos, unwatchedVideos[listContainsVideo(unwatchedVideos, id)]);
+			unwatchedVideos.splice(listContainsVideo(unwatchedVideos, id), 1);
 		} else {
-			watchedVideos.splice(watchedVideos.indexOf(id), 1);
+			addToList(unwatchedVideos, watchedVideos[listContainsVideo(watchedVideos, id)]);
+			watchedVideos.splice(listContainsVideo(watchedVideos, id), 1);
 		}
 		$("#"+id).remove();
 		saveWatched();
@@ -145,10 +184,14 @@ $(document).ready(function () {
 	});
 	$("#all-done").click(function () {
 		if (unwatched) {
-			videos.forEach(function (video) {
-				watchedVideos.push(video.link);
+			unwatchedVideos.forEach(function (video) {
+				addToList(watchedVideos, video);
 			});
+			unwatchedVideos = [];
 		} else {
+			watchedVideos.forEach(function (video) {
+				addToList(unwatchedVideos, video);
+			});
 			watchedVideos = [];
 		}
 		$(".video-container").remove();
@@ -173,6 +216,10 @@ $(document).ready(function () {
 		$(".video-container").remove();
 		addVideo();
 	});
+	
+	$(window).bind('scroll', addVideo);
+	window.setInterval(readData, 1000 * 60 * 5);
+	
 	$("#unwatched").addClass("selected");
 	unwatched = ($(".selected").attr("id") === "unwatched");
 	$(".videos").height = $(document).height;
