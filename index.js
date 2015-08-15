@@ -1,4 +1,4 @@
-/* global $, window, XMLHttpRequest, ActiveXObject, document, alert, localStorage, gapi, API_LOADED, console, separator */
+/* global $, window, XMLHttpRequest, ActiveXObject, document, localStorage, gapi, API_LOADED, console */
 
 var unwatchedVideos = [];
 var watchedVideos = [];
@@ -111,18 +111,28 @@ function addToList(videos, video) {
 	videos.splice(videos.length, 0, video);
 }
 
+function formatDate(date) {
+	return (new Date(date)).toLocaleString();
+}
+
 function getCode(video) {
 	return ''+
 	'<div class="video-container" id="'+video.link+'">'+
 		'<iframe class="video" width="560" height="315" src="https://www.youtube.com/embed/'+video.link+'" frameborder="0" allowfullscreen></iframe>'+
 		'<div class="video-info">'+
 			'<div class="author">by '+video.author+'</div>'+
-			'<div class="upload-date">uploaded '+video.publishedDate+'</div>'+
-			'<div class="description">'+video.description+'</div>'+
+			'<div class="upload-date">uploaded '+formatDate(video.publishedDate)+'</div>'+
+			'<div class="description"><p>'+video.description
+																		 .replace(new RegExp('\n\n', 'g'), '</p><p>')
+																		 .replace(new RegExp('\n', 'g'), '<br>')+'</p></div>'+
+			'<button class="read-more">Read more</button>'+
+			'<button class="read-less">Read less</button>'+
 		'</div>'+
 		'<div class="buttons">'+
-			'<button class="done"><i class="fa fa-'+ (unwatched ? 'check' : 'remove') +' fa-3x"></i></button>'+
-			'<button class="youtube-watch"><i class="fa fa-youtube fa-3x"></i></button>'+
+			(unwatched ?
+			'<button class="done" title="Mark as watched"><i class="fa fa-check fa-3x"></i></button>' :
+			'<button class="undone" title="Mark as unwatched"><i class="fa fa-remove fa-3x"></i></button>')+
+			'<button class="youtube-watch" title="Watch on YouTube"><i class="fa fa-youtube fa-3x"></i></button>'+
 		'</div>'+
 	'</div>';
 }
@@ -171,29 +181,34 @@ function displayNoVideos() {
 $(document).ready(function () {	
 	$(".videos").on("click", ".done", function () {
 		var id = $(this).parent().parent().attr('id');
-		if(unwatched) {
-			addToList(watchedVideos, unwatchedVideos[listContainsVideo(unwatchedVideos, id)]);
-			unwatchedVideos.splice(listContainsVideo(unwatchedVideos, id), 1);
-		} else {
-			addToList(unwatchedVideos, watchedVideos[listContainsVideo(watchedVideos, id)]);
-			watchedVideos.splice(listContainsVideo(watchedVideos, id), 1);
-		}
+		addToList(watchedVideos, unwatchedVideos[listContainsVideo(unwatchedVideos, id)]);
+		unwatchedVideos.splice(listContainsVideo(unwatchedVideos, id), 1);
+		$("#"+id).remove();
+		saveWatched();
+		addVideo();
+	});
+	$(".videos").on("click", ".undone", function () {
+		var id = $(this).parent().parent().attr('id');
+		addToList(unwatchedVideos, watchedVideos[listContainsVideo(watchedVideos, id)]);
+		watchedVideos.splice(listContainsVideo(watchedVideos, id), 1);
 		$("#"+id).remove();
 		saveWatched();
 		addVideo();
 	});
 	$("#all-done").click(function () {
-		if (unwatched) {
-			unwatchedVideos.forEach(function (video) {
-				addToList(watchedVideos, video);
-			});
-			unwatchedVideos = [];
-		} else {
-			watchedVideos.forEach(function (video) {
-				addToList(unwatchedVideos, video);
-			});
-			watchedVideos = [];
-		}
+		unwatchedVideos.forEach(function (video) {
+			addToList(watchedVideos, video);
+		});
+		unwatchedVideos = [];
+		$(".video-container").remove();
+		saveWatched();
+		addVideo();
+	});
+	$("#all-undone").click( function () {
+		watchedVideos.forEach(function (video) {
+			addToList(unwatchedVideos, video);
+		});
+		watchedVideos = [];
 		$(".video-container").remove();
 		saveWatched();
 		addVideo();
@@ -224,6 +239,30 @@ $(document).ready(function () {
 	unwatched = ($(".selected").attr("id") === "unwatched");
 	$(".videos").height = $(document).height;
 	$("#all-undone").hide();
+	$('.videos').on('DOMNodeInserted', 'div', function () {
+		var video = $(this);
+		var desc = video.find(".description");
+		if (desc.height() > 275) {
+			desc.addClass("truncated")
+			video.find(".read-more").show();
+		} else {
+			video.find(".read-more").hide();
+		}
+		video.find(".read-less").hide();
+	});
+	$(".videos").on("click", ".read-more", function () {
+		var more = $(this);
+		more.parent().find(".description").removeClass("truncated");
+		more.hide();
+		more.parent().find(".read-less").show();
+	});
+	$(".videos").on("click", ".read-less", function () {
+		var less = $(this);
+		less.parent().find(".description").addClass("truncated")
+		less.hide();
+		less.parent().find(".read-more").show();
+		less.parent().find(".description").before().show()
+	});
 	
 	displayNoVideos();
 });
