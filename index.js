@@ -75,6 +75,7 @@ function readData() {
 		} else {
 			addToList(unwatchedVideos, video);
 		}
+		updateCounts();
 	}
 	
 	var checkCount = 10;
@@ -111,30 +112,26 @@ function addToList(videos, video) {
 	videos.splice(videos.length, 0, video);
 }
 
-function formatDate(date) {
-	return (new Date(date)).toLocaleString();
-}
-
 function getCode(video) {
-	return ''+
-	'<div class="video-container" id="'+video.link+'">'+
-		'<iframe class="video" width="560" height="315" src="https://www.youtube.com/embed/'+video.link+'" frameborder="0" allowfullscreen></iframe>'+
-		'<div class="video-info">'+
-			'<div class="author">by '+video.author+'</div>'+
-			'<div class="upload-date">uploaded '+formatDate(video.publishedDate)+'</div>'+
-			'<div class="description"><p>'+video.description
-																		 .replace(new RegExp('\n\n', 'g'), '</p><p>')
-																		 .replace(new RegExp('\n', 'g'), '<br>')+'</p></div>'+
-			'<button class="read-more">Read more</button>'+
-			'<button class="read-less">Read less</button>'+
-		'</div>'+
-		'<div class="buttons">'+
-			(unwatched ?
-			'<button class="done" title="Mark as watched"><i class="fa fa-check fa-3x"></i></button>' :
-			'<button class="undone" title="Mark as unwatched"><i class="fa fa-remove fa-3x"></i></button>')+
-			'<button class="youtube-watch" title="Watch on YouTube"><i class="fa fa-youtube fa-3x"></i></button>'+
-		'</div>'+
-	'</div>';
+	var formattedDesc = video.description
+													.replace(/\n(?:\n)+/g, '</p><p>')
+													.replace(/\n/g, '<br>');
+	
+	return (`
+	<div class="video-container" id="${video.link}">
+		<iframe class="video" width="560" height="315" src="https://www.youtube.com/embed/${video.link}" frameborder="0" allowfullscreen></iframe>
+		<div class="video-info">
+			<div class="author">by ${video.author}</div>
+			<div class="upload-date">uploaded ${(new Date(video.publishedDate)).toLocaleString()}</div>
+			<div class="description"><p>${formattedDesc}</p></div>
+			<button class="read-more">Read more</button>
+			<button class="read-less">Read less</button>
+		</div>
+		<div class="buttons">
+			<button class="done" title="Mark as ${unwatched ? "watched" : "unwatched"}"><i class="fa fa-${unwatched ? "check" : "remove"} fa-3x"></i></button>
+			<button class="youtube-watch" title="Watch on YouTube"><i class="fa fa-youtube fa-3x"></i></button>
+		</div>
+	</div>`);
 }
 
 function saveWatched() {
@@ -142,7 +139,13 @@ function saveWatched() {
 	localStorage.setItem("unwatched-videos", JSON.stringify(unwatchedVideos));
 }
 
+function updateCounts() {
+	$("#unwatched").text(`Unwatched (${unwatchedVideos.length})`);
+	$("#watched").text(`Watched (${watchedVideos.length})`);
+}
+
 function addVideo() {
+	updateCounts();
 	displayNoVideos();
 	if($(this).scrollTop() + $(this).innerHeight() * 2 >= $(document).height()) {
 		// If we're at the bottom of the page
@@ -243,7 +246,7 @@ $(document).ready(function () {
 		var video = $(this);
 		var desc = video.find(".description");
 		if (desc.height() > 275) {
-			desc.addClass("truncated")
+			desc.addClass("truncated");
 			video.find(".read-more").show();
 		} else {
 			video.find(".read-more").hide();
@@ -258,10 +261,9 @@ $(document).ready(function () {
 	});
 	$(".videos").on("click", ".read-less", function () {
 		var less = $(this);
-		less.parent().find(".description").addClass("truncated")
+		less.parent().find(".description").addClass("truncated");
 		less.hide();
 		less.parent().find(".read-more").show();
-		less.parent().find(".description").before().show()
 	});
 	
 	displayNoVideos();
