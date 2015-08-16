@@ -122,15 +122,15 @@ function getCode(video) {
 	
 	return (`
 	<div class="video-container row" id="${video.link}">
-		<iframe class="video col-sm-6" src="https://www.youtube.com/embed/${video.link}" frameborder="0" allowfullscreen></iframe>
-		<div class="video-info col-sm-5">
+		<iframe class="video col-md-6" src="https://www.youtube.com/embed/${video.link}" frameborder="0" allowfullscreen></iframe>
+		<div class="video-info col-md-5">
 			<div class="author">by ${video.author}</div>
 			<div class="upload-date">uploaded ${(new Date(video.publishedDate)).toLocaleString()}</div>
 			<div class="description"><p>${formattedDesc}</p></div>
 			<button class="read-more">Read more</button>
 			<button class="read-less">Read less</button>
 		</div>
-		<div class="buttons col-sm-1">
+		<div class="buttons col-md-1">
 			<button class="${unwatched ? "done" : "undone"} btn btn-default" title="Mark as ${unwatched ? "watched" : "unwatched"}"><i class="fa fa-${unwatched ? "check" : "remove"} fa-3x"></i></button>
 			<button class="youtube-watch btn btn-default" title="Watch on YouTube"><i class="fa fa-youtube fa-3x"></i></button>
 		</div>
