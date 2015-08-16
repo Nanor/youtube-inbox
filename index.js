@@ -4,6 +4,8 @@ var unwatchedVideos = [];
 var watchedVideos = [];
 var unwatched = true;
 
+var daysIntoHistory = 28;
+
 function readData() {
 	var watchedVideosTemp = JSON.parse(localStorage.getItem("watched-videos"));
 	if (watchedVideosTemp === null) {
@@ -69,13 +71,14 @@ function readData() {
 			publishedDate: videoSnippet.publishedAt,
 			description: videoSnippet.description,
 		};
-		
-		if (listContainsVideo(watchedVideosTemp, video.link) !== -1) {
-			addToList(watchedVideos, video);
-		} else {
-			addToList(unwatchedVideos, video);
+		if (Date.parse(video.publishedDate) > (Date.parse(new Date()) - 1000 * 60 * 60 * 24 * daysIntoHistory)) {		
+			if (listContainsVideo(watchedVideosTemp, video.link) !== -1) {
+				addToList(watchedVideos, video);
+			} else {
+				addToList(unwatchedVideos, video);
+			}
+			updateCounts();
 		}
-		updateCounts();
 	}
 	
 	var checkCount = 10;
@@ -118,18 +121,18 @@ function getCode(video) {
 													.replace(/\n/g, '<br>');
 	
 	return (`
-	<div class="video-container" id="${video.link}">
-		<iframe class="video" width="560" height="315" src="https://www.youtube.com/embed/${video.link}" frameborder="0" allowfullscreen></iframe>
-		<div class="video-info">
+	<div class="video-container row" id="${video.link}">
+		<iframe class="video col-sm-6" src="https://www.youtube.com/embed/${video.link}" frameborder="0" allowfullscreen></iframe>
+		<div class="video-info col-sm-5">
 			<div class="author">by ${video.author}</div>
 			<div class="upload-date">uploaded ${(new Date(video.publishedDate)).toLocaleString()}</div>
 			<div class="description"><p>${formattedDesc}</p></div>
 			<button class="read-more">Read more</button>
 			<button class="read-less">Read less</button>
 		</div>
-		<div class="buttons">
-			<button class="done" title="Mark as ${unwatched ? "watched" : "unwatched"}"><i class="fa fa-${unwatched ? "check" : "remove"} fa-3x"></i></button>
-			<button class="youtube-watch" title="Watch on YouTube"><i class="fa fa-youtube fa-3x"></i></button>
+		<div class="buttons col-sm-1">
+			<button class="${unwatched ? "done" : "undone"} btn btn-default" title="Mark as ${unwatched ? "watched" : "unwatched"}"><i class="fa fa-${unwatched ? "check" : "remove"} fa-3x"></i></button>
+			<button class="youtube-watch btn btn-default" title="Watch on YouTube"><i class="fa fa-youtube fa-3x"></i></button>
 		</div>
 	</div>`);
 }
@@ -140,8 +143,8 @@ function saveWatched() {
 }
 
 function updateCounts() {
-	$("#unwatched").text(`Unwatched (${unwatchedVideos.length})`);
-	$("#watched").text(`Watched (${watchedVideos.length})`);
+	$("#unwatched").find(".text").text(`Unwatched (${unwatchedVideos.length})`);
+	$("#watched").find(".text").text(`Watched (${watchedVideos.length})`);
 }
 
 function addVideo() {
@@ -220,7 +223,7 @@ $(document).ready(function () {
 		var id = $(this).parent().parent().attr('id');
 		window.open("https://www.youtube.com/watch?v="+id);
 	});
-	$(".tab-bar").on("click", ".tab", function () {
+	$(".top-bar").on("click", ".tab", function () {
 		$(".tab").removeClass("selected");
 		$(this).addClass("selected");
 		unwatched = ($(".selected").attr("id") === "unwatched");
