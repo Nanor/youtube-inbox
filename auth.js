@@ -1,5 +1,4 @@
 
-/* global $, gapi, window, handleAPILoaded */
 // The client ID is obtained from the Google Developers Console
 // at https://console.developers.google.com/.
 // If you run this code from a server other than http://localhost,
@@ -61,9 +60,4 @@ function afterLoaded() {
 // http://code.google.com/p/google-api-javascript-client/wiki/GettingStarted#Loading_the_Client
 function loadAPIClientInterfaces() {
   gapi.client.load('youtube', 'v3', afterLoaded);
-}
-
-function googleApiClientReady() {
-	gapi.client.setApiKey(OAUTH2_CLIENT_ID);
-	gapi.client.load('youtube', 'v3', loadAPIClientInterfaces);
 }

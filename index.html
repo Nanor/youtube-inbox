@@ -1,43 +1,43 @@
 <!doctype html>
 <html>
-  <head>
-    <title>YouTube Inbox</title>
-		<link rel="stylesheet" href="font-awesome-4.4.0/css/font-awesome.min.css">
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-    <link rel="stylesheet" type="text/css" href="index.css">
-		
-		<link rel="icon" href="favicon-vflz7uhzw.ico" sizes="32x32">
-  </head>
-  <body>
-		
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-		<script src="auth.js"></script>
-		<script type="text/javascript" src="index.js"></script>
-		<script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    
-		<div class="top-bar container">
-			<div class="row">
-				<div class="col-xs-1">
-					<button class="btn btn-default pre-auth" id="login-link">Log in</button>
-				</div>
-				<div class="col-xs-2"></div>
-				<button id="unwatched" class="tab col-xs-3 selected">
-					<div class="text">Unwatched (0)</div>
-				</button>
-				<button id="watched" class="tab col-xs-3">
-					<div class="text">Watched (0)</div>
-				</button>
-				<div class="col-xs-2"></div>
-				<button id="all-done" class="btn btn-default col-xs-1" title="Mark all as watched"><i class="fa fa-check fa-3x"></i></button>
-				<button id="all-undone" class="btn btn-default col-xs-1" title="Mark all as unwatched"><i class="fa fa-remove fa-3x"></i></button>
-			</div>
-		</div>			
-		<div class="videos container-fluid">
-			<div class="no-videos row">
-				No videos to display. You're all caught up!
-			</div>
+<head>
+	<title>YouTube Inbox</title>
+	<link rel="stylesheet" href="font-awesome-4.4.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" type="text/css" href="index.css">
+
+	<link rel="icon" href="favicon-vflz7uhzw.ico" sizes="32x32">
+</head>
+<body>
+
+<script src="http://code.jquery.com/jquery-2.0.0.js"></script>
+<script src="auth.js"></script>
+<script type="text/javascript" src="index.js"></script>
+<script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+<div class="top-bar container">
+	<div class="row">
+		<div class="col-xs-1">
+			<button class="btn btn-default pre-auth" id="login-link">Log in</button>
 		</div>
-  </body>
+		<div class="col-xs-2"></div>
+		<button id="unwatched" class="tab col-xs-3 selected">
+			<div class="text">Unwatched (0)</div>
+		</button>
+		<button id="watched" class="tab col-xs-3">
+			<div class="text">Watched (0)</div>
+		</button>
+		<div class="col-xs-2"></div>
+		<button id="all-done" class="btn btn-default col-xs-1" title="Mark all as watched"><i class="fa fa-check fa-3x"></i></button>
+		<button id="all-undone" class="btn btn-default col-xs-1" title="Mark all as unwatched"><i class="fa fa-remove fa-3x"></i></button>
+	</div>
+</div>
+<div class="videos container-fluid">
+	<div class="no-videos row">
+		No videos to display. You're all caught up!
+	</div>
+</div>
+</body>
 </html>

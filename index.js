@@ -1,5 +1,3 @@
-/* global $, window, XMLHttpRequest, ActiveXObject, document, localStorage, gapi, API_LOADED, console */
-
 var unwatchedVideos = [];
 var watchedVideos = [];
 var unwatched = true;
@@ -7,15 +5,16 @@ var unwatched = true;
 var daysIntoHistory = 28;
 
 function readData() {
-	var watchedVideosTemp = JSON.parse(localStorage.getItem("watched-videos"));
-	if (watchedVideosTemp === null) {
-		watchedVideosTemp = [];
+	watchedVideos = JSON.parse(localStorage.getItem("watched-videos"));
+	if (watchedVideos === null) {
+		watchedVideos = [];
 	}
-	watchedVideos = [];
-  unwatchedVideos = JSON.parse(localStorage.getItem("unwatched-videos"));
+	unwatchedVideos = JSON.parse(localStorage.getItem("unwatched-videos"));
 	if (unwatchedVideos === null) {
 		unwatchedVideos = [];
 	}
+
+	removeOldVideos(watchedVideos, new Date() - 1000 * 60 * 60 * 24 * daysIntoHistory);
 
 	if (API_LOADED) {
 		var getSubs = function (pageToken) {
@@ -23,7 +22,7 @@ function readData() {
 				mine: true,
 				part: 'snippet, contentDetails',
 				maxResults: 50,
-				pageToken: pageToken								
+				pageToken: pageToken
 			}).execute(function (response) {
 				loadVideosFromChannel($.map(response.items, function (val) {
 					if (val.contentDetails.newItemCount > 0) {
@@ -39,7 +38,7 @@ function readData() {
 		};
 		getSubs(undefined);
 	}
-	
+
 	function loadVideosFromChannel(channelIds) {
 		gapi.client.youtube.channels.list({
 			part: 'contentDetails',
@@ -50,37 +49,35 @@ function readData() {
 			});
 		});
 	}
-	
+
 	function loadVideosFromPlaylist(playlistId) {
 		gapi.client.youtube.playlistItems.list({
 			part: 'snippet',
 			playlistId: playlistId,
-			maxResults: 10,		 
+			maxResults: 10,
 		}).execute(function (response) {
 			response.items.forEach(function (item) {
 				loadVideo(item.snippet);
 			});
 		});
 	}
-	
+
 	function loadVideo(videoSnippet) {
 		var video = {
 			title: videoSnippet.title,
-			link: videoSnippet.resourceId.videoId,	
+			link: videoSnippet.resourceId.videoId,
 			author: videoSnippet.channelTitle,
 			publishedDate: videoSnippet.publishedAt,
 			description: videoSnippet.description,
 		};
-		if (Date.parse(video.publishedDate) > (Date.parse(new Date()) - 1000 * 60 * 60 * 24 * daysIntoHistory)) {		
-			if (listContainsVideo(watchedVideosTemp, video.link) !== -1) {
-				addToList(watchedVideos, video);
-			} else {
+		if (Date.parse(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * daysIntoHistory)) {
+			if (listContainsVideo(watchedVideos, video.link) === -1) {
 				addToList(unwatchedVideos, video);
 			}
-			updateCounts();
 		}
+		updateCounts();
 	}
-	
+
 	var checkCount = 10;
 	var updateInterval = window.setInterval(function () {
 		addVideo();
@@ -115,26 +112,34 @@ function addToList(videos, video) {
 	videos.splice(videos.length, 0, video);
 }
 
-function getCode(video) {
-	var formattedDesc = video.description
-													.replace(/\n(?:\n)+/g, '</p><p>')
-													.replace(/\n/g, '<br>');
-	
-	return (`
-	<div class="video-container row" id="${video.link}">
-		<iframe class="video col-md-6" src="https://www.youtube.com/embed/${video.link}" frameborder="0" allowfullscreen></iframe>
-		<div class="video-info col-md-5">
-			<div class="author">by ${video.author}</div>
-			<div class="upload-date">uploaded ${(new Date(video.publishedDate)).toLocaleString()}</div>
-			<div class="description"><p>${formattedDesc}</p></div>
-			<button class="read-more">Read more</button>
-			<button class="read-less">Read less</button>
-		</div>
-		<div class="buttons col-md-1">
-			<button class="${unwatched ? "done" : "undone"} btn btn-default" title="Mark as ${unwatched ? "watched" : "unwatched"}"><i class="fa fa-${unwatched ? "check" : "remove"} fa-3x"></i></button>
-			<button class="youtube-watch btn btn-default" title="Watch on YouTube"><i class="fa fa-youtube fa-3x"></i></button>
-		</div>
-	</div>`);
+function removeOldVideos(videos, date) {
+	while (videos.length > 0 && Date.parse(videos[0].publishedDate) < date) {
+		videos.splice(0, 1);
+	}
+}
+
+function addVideoToDom(element, video) {
+
+	var description = $('<div/>', {class: "description"});
+	video.description.split(/\n(?:\n)+/).forEach(function (paragraph) {
+		description.append($('<p>'+paragraph.replace(/\n/g, '<br>')+'</div>'));
+	});
+
+	element.append(
+			$('<div/>', {class: 'video-container row', id: video.link})
+					.append($(`<iframe src="https://www.youtube.com/embed/${video.link}" frameborder="0" allowfullscreen></iframe>`).addClass("video col-md-6"))
+					.append($('<div/>', {class: 'video-info col-md-5'})
+							.append($('<div/>', {class: 'author', text: 'by '+video.author}))
+							.append($('<div/>', {class: 'upload-date', text: 'uploaded '+(new Date(video.publishedDate)).toLocaleString()}))
+							.append(description)
+							.append($('<button/>', {class: 'read-more', text: 'Read more'}))
+							.append($('<button/>', {class: 'read-less', text: 'Read less'})))
+					.append($('<div/>', {class: 'buttons col-md-1'})
+							.append($('<button/>', {class: (unwatched ? 'done' : 'undone')+' btn btn-default', title: "Mark as "+(unwatched ? 'watched' : 'unwatched'), })
+									.append($('<i/>', {class: 'fa fa-'+(unwatched ? "check" : "remove")+' fa-3x'})))
+							.append($('<button/>', {class: 'youtube-watch btn btn-default', title: "Watch on YouTube"})
+									.append($('<i/>', {class: 'fa fa-youtube fa-3x'}))))
+	);
 }
 
 function saveWatched() {
@@ -152,13 +157,13 @@ function addVideo() {
 	displayNoVideos();
 	if($(this).scrollTop() + $(this).innerHeight() * 2 >= $(document).height()) {
 		// If we're at the bottom of the page
-		
+
 		var i;
 		if (unwatched) {
 			for (i = 0; i < unwatchedVideos.length; i++) {
 				if ($("#"+unwatchedVideos[i].link).length === 0) {
 					// Isn't already on screen
-					$(".videos").append(getCode(unwatchedVideos[i]));
+					addVideoToDom($('.videos'), unwatchedVideos[i]);
 					addVideo();
 					return;
 				}
@@ -167,7 +172,7 @@ function addVideo() {
 			for (i = watchedVideos.length-1; i >= 0; i--) {
 				if ($("#"+watchedVideos[i].link).length === 0) {
 					// Isn't already on screen
-					$(".videos").append(getCode(watchedVideos[i]));
+					addVideoToDom($('.videos'), watchedVideos[i]);
 					addVideo();
 					return;
 				}
@@ -184,8 +189,9 @@ function displayNoVideos() {
 	}
 }
 
-$(document).ready(function () {	
-	$(".videos").on("click", ".done", function () {
+$(document).ready(function () {
+	var videos = $(".videos");
+	videos.on("click", ".done", function () {
 		var id = $(this).parent().parent().attr('id');
 		addToList(watchedVideos, unwatchedVideos[listContainsVideo(unwatchedVideos, id)]);
 		unwatchedVideos.splice(listContainsVideo(unwatchedVideos, id), 1);
@@ -193,7 +199,7 @@ $(document).ready(function () {
 		saveWatched();
 		addVideo();
 	});
-	$(".videos").on("click", ".undone", function () {
+	videos.on("click", ".undone", function () {
 		var id = $(this).parent().parent().attr('id');
 		addToList(unwatchedVideos, watchedVideos[listContainsVideo(watchedVideos, id)]);
 		watchedVideos.splice(listContainsVideo(watchedVideos, id), 1);
@@ -219,7 +225,7 @@ $(document).ready(function () {
 		saveWatched();
 		addVideo();
 	});
-	$(".videos").on("click", ".youtube-watch", function () {
+	videos.on("click", ".youtube-watch", function () {
 		var id = $(this).parent().parent().attr('id');
 		window.open("https://www.youtube.com/watch?v="+id);
 	});
@@ -237,15 +243,14 @@ $(document).ready(function () {
 		$(".video-container").remove();
 		addVideo();
 	});
-	
+
 	$(window).bind('scroll', addVideo);
 	window.setInterval(readData, 1000 * 60 * 5);
-	
+
 	$("#unwatched").addClass("selected");
 	unwatched = ($(".selected").attr("id") === "unwatched");
-	$(".videos").height = $(document).height;
-	$("#all-undone").hide();
-	$('.videos').on('DOMNodeInserted', 'div', function () {
+	videos.height = $(document).height;
+	videos.on('DOMNodeInserted', 'div', function () {
 		var video = $(this);
 		var desc = video.find(".description");
 		if (desc.height() > 275) {
@@ -256,18 +261,18 @@ $(document).ready(function () {
 		}
 		video.find(".read-less").hide();
 	});
-	$(".videos").on("click", ".read-more", function () {
+	videos.on("click", ".read-more", function () {
 		var more = $(this);
 		more.parent().find(".description").removeClass("truncated");
 		more.hide();
 		more.parent().find(".read-less").show();
 	});
-	$(".videos").on("click", ".read-less", function () {
+	videos.on("click", ".read-less", function () {
 		var less = $(this);
 		less.parent().find(".description").addClass("truncated");
 		less.hide();
 		less.parent().find(".read-more").show();
 	});
-	
+
 	displayNoVideos();
 });
