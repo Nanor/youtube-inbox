@@ -67,6 +67,7 @@ function readData() {
 			title: videoSnippet.title,
 			link: videoSnippet.resourceId.videoId,
 			author: videoSnippet.channelTitle,
+			authorId: videoSnippet.channelId,
 			publishedDate: videoSnippet.publishedAt,
 			description: videoSnippet.description,
 		};
@@ -100,7 +101,8 @@ function listContainsVideo(videos, id) {
 function addToList(videos, video) {
 	for (var i = 0; i < videos.length; i++) {
 		if (videos[i].link == video.link) {
-			// Already added
+			// Already added, replace in case it's been updated.
+			videos[i] = video;
 			return;
 		} else if (videos[i].publishedDate > video.publishedDate) {
 			// In the right position
@@ -129,7 +131,8 @@ function addVideoToDom(element, video) {
 			$('<div/>', {class: 'video-container row', id: video.link})
 					.append($(`<iframe src="https://www.youtube.com/embed/${video.link}" frameborder="0" allowfullscreen></iframe>`).addClass("video col-md-6"))
 					.append($('<div/>', {class: 'video-info col-md-5'})
-							.append($('<div/>', {class: 'author', text: 'by '+video.author}))
+							.append($('<div/>', {class: 'author'})
+									.append($('<a/>', {href: 'http://www.youtube.com/channel/'+video.authorId, text: 'by '+video.author})))
 							.append($('<div/>', {class: 'upload-date', text: 'uploaded '+(new Date(video.publishedDate)).toLocaleString()}))
 							.append(description)
 							.append($('<button/>', {class: 'read-more', text: 'Read more'}))
