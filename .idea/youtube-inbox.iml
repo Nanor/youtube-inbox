@@ -8,5 +8,7 @@
     <orderEntry type="library" name="gapi.youtube-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="bootstrap-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="gapi-DefinitelyTyped" level="application" />
+    <orderEntry type="library" name="linkify" level="application" />
+    <orderEntry type="library" name="linkify-jquery" level="application" />
   </component>
 </module>

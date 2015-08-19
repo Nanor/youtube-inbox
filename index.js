@@ -124,15 +124,16 @@ function addVideoToDom(element, video) {
 
 	var description = $('<div/>', {class: "description"});
 	video.description.split(/\n(?:\n)+/).forEach(function (paragraph) {
-		description.append($('<p>'+paragraph.replace(/\n/g, '<br>')+'</div>'));
+		description.append($('<p>'+paragraph.replace(/\n/g, '<br>')+'</p>'));
 	});
+	description.find('p').linkify({ target: "_blank" });
 
 	element.append(
 			$('<div/>', {class: 'video-container row', id: video.link})
 					.append($(`<iframe src="https://www.youtube.com/embed/${video.link}" frameborder="0" allowfullscreen></iframe>`).addClass("video col-md-6"))
 					.append($('<div/>', {class: 'video-info col-md-5'})
 							.append($('<div/>', {class: 'author'})
-									.append($('<a/>', {href: 'http://www.youtube.com/channel/'+video.authorId, text: 'by '+video.author})))
+									.append($('<a/>', {href: 'http://www.youtube.com/channel/'+video.authorId, target: "_blank", text: 'by '+video.author})))
 							.append($('<div/>', {class: 'upload-date', text: 'uploaded '+(new Date(video.publishedDate)).toLocaleString()}))
 							.append(description)
 							.append($('<button/>', {class: 'read-more', text: 'Read more'}))
@@ -143,6 +144,7 @@ function addVideoToDom(element, video) {
 							.append($('<button/>', {class: 'youtube-watch btn btn-default', title: "Watch on YouTube"})
 									.append($('<i/>', {class: 'fa fa-youtube fa-3x'}))))
 	);
+
 }
 
 function saveWatched() {
