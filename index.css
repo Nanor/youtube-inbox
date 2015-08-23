@@ -97,6 +97,43 @@ iframe {
   color: gray;
   width: 100%;
 }
-#login-link {
-  margin-top: 13px;
+.post-auth {
+  display: none;
+}
+
+#settings-button {
+  margin: 17px 0;
+}
+
+.settings {
+  display: none;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px;
+  z-index: 100;
+  background-color: white;
+  border: 2px solid black;
+  border-radius: 7px;
+}
+
+.settings label {
+  display: block;
+  font-weight: normal;
+  margin: 5px 0;
+}
+
+.settings label input {
+  display: inline;
+  margin: 0 7px;
+  width: 60px;
+}
+
+.settings label .note {
+  padding-left: 5px;
+}
+
+.settings .note {
+  display: inline;
+  font-style: italic;
 }

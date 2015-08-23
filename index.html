@@ -21,10 +21,11 @@
 
 <div class="top-bar container">
 	<div class="row">
-		<div class="col-xs-1">
-			<button class="btn btn-default pre-auth" id="login-link">Log in</button>
+		<div class="col-xs-2">
+			<button class="btn btn-default settings-toggle" id="settings-button"><i class="fa fa-gear"></i></button>
+			<button class="btn btn-default" id="refresh"><i class="fa fa-refresh"></i></button>
 		</div>
-		<div class="col-xs-2"></div>
+		<div class="col-xs-1"></div>
 		<button id="unwatched" class="tab col-xs-3 selected">
 			<div class="text">Unwatched (0)</div>
 		</button>
@@ -40,6 +41,14 @@
 	<div class="no-videos row">
 		No videos to display. You're all caught up!
 	</div>
+</div>
+<div class="settings">
+	<button class="btn btn-default settings-toggle" id="settings-button-window"><i class="fa fa-gear"></i></button>
+	<button class="btn btn-default pre-auth" id="login-link">Log in</button>
+	<button class="btn btn-default post-auth" id="logout-link">Log out</button>
+	<label>Update interval:<input id="update-interval" type="number" value="5"/>minutes.<div class="note">(0 for never)</div></label>
+	<label>Discard watched videos older than<input id="history-length" type="number" value="28"/>days old.</label>
+	<p class="note">(Unwatched videos will be kept forever)</p>
 </div>
 </body>
 </html>

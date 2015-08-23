@@ -25,7 +25,8 @@ function checkAuth() {
   gapi.auth.authorize({
     client_id: OAUTH2_CLIENT_ID,
     scope: OAUTH2_SCOPES,
-    immediate: true
+    immediate: true,
+	  cookie_policy: 'single_host_origin',
   }, handleAuthResult);
 }
 
@@ -36,15 +37,26 @@ function handleAuthResult(authResult) {
     // content that should be visible after authorization succeeds.
     $('.pre-auth').hide();
     $('.post-auth').show();
+
+	  $('#logout-link').click(function () {
+		  API_LOADED = false;
+		  gapi.auth.signOut();
+		  handleAuthResult(null);
+	  });
+
     loadAPIClientInterfaces();
   } else {
+	  $('.pre-auth').show();
+	  $('.post-auth').hide();
+
     // Make the #login-link clickable. Attempt a non-immediate OAuth 2.0
     // client flow. The current function is called when that flow completes.
     $('#login-link').click(function() {
       gapi.auth.authorize({
         client_id: OAUTH2_CLIENT_ID,
         scope: OAUTH2_SCOPES,
-        immediate: false
+        immediate: false,
+	      cookie_policy: 'single_host_origin',
         }, handleAuthResult);
     });
   }

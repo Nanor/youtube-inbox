@@ -81,6 +81,7 @@ function readData() {
 
 	var checkCount = 10;
 	var updateInterval = window.setInterval(function () {
+		saveWatched();
 		addVideo();
 		checkCount--;
 		if (checkCount < 0) {
@@ -250,7 +251,6 @@ $(document).ready(function () {
 	});
 
 	$(window).bind('scroll', addVideo);
-	window.setInterval(readData, 1000 * 60 * 5);
 
 	$("#unwatched").addClass("selected");
 	unwatched = ($(".selected").attr("id") === "unwatched");
@@ -278,6 +278,30 @@ $(document).ready(function () {
 		less.hide();
 		less.parent().find(".read-more").show();
 	});
+	$(".settings-toggle").click(function () {
+		$('.settings').toggle();
+	});
+	var updateInput = $('#update-interval');
+	var interval = localStorage.getItem("update-interval");
+	interval = interval !== null ? interval : 5;
+	updateInput.val(interval);
+	var readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.val());
+	updateInput.change(function () {
+		window.clearInterval(readDataInterval);
+		if (updateInput.val() > 0) {
+			readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.val());
+		}
+		localStorage.setItem("update-interval", updateInput.val());
+	});
+	daysIntoHistory = localStorage.getItem("days-into-history");
+	daysIntoHistory = daysIntoHistory !== null ? daysIntoHistory : 28;
+	var historyInput = $('#history-length');
+	historyInput.val(daysIntoHistory);
+	historyInput.change(function () {
+		daysIntoHistory = Math.max(0, historyInput.val());
+		localStorage.setItem("days-into-history", daysIntoHistory);
+	});
+	$('#refresh').click(readData);
 
 	displayNoVideos();
 });
