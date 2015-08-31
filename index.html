@@ -13,11 +13,12 @@
 
 <script type="text/javascript" src="http://code.jquery.com/jquery-2.0.0.js"></script>
 <script type="text/javascript" src="auth.js"></script>
-<script type="text/javascript" src="index.js"></script>
 <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
 <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="linkify.min.js"></script>
 <script type="text/javascript" src="linkify-jquery.min.js"></script>
+<script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
+<script type="text/javascript" src="index.js"></script>
 
 <div class="top-bar container">
 	<div class="row">
@@ -49,6 +50,7 @@
 	<label>Update interval:<input id="update-interval" type="number" value="5"/>minutes.<div class="note">(0 for never)</div></label>
 	<label>Discard watched videos older than<input id="history-length" type="number" value="28"/>days old.</label>
 	<p class="note">(Unwatched videos will be kept forever)</p>
+	<label for="autoplay">Auto-play videos?<input type="checkbox" id="autoplay"></label>
 </div>
 </body>
 </html>

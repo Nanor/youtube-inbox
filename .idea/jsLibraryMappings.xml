@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="JavaScriptLibraryMappings">
-    <file url="PROJECT" libraries="{bootstrap-DefinitelyTyped, gapi-DefinitelyTyped, gapi.youtube-DefinitelyTyped, jQuery-2.0.0, linkify, linkify-jquery}" />
+    <file url="PROJECT" libraries="{bootstrap-DefinitelyTyped, gapi-DefinitelyTyped, gapi.youtube-DefinitelyTyped, iframe_api, jQuery-2.0.0, linkify, linkify-jquery, www-widgetapi}" />
     <includedPredefinedLibrary name="ECMAScript 6" />
   </component>
 </project>
