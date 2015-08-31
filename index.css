@@ -39,8 +39,9 @@ p {
   margin: 5px 0 0;
 }
 .video {
-  height: 314px;
+  height: 315px;
   overflow: hidden;
+  vertical-align: middle;
 }
 .video p {
   position: absolute;
@@ -49,11 +50,15 @@ p {
   margin-left: 10px;
   margin-top: 10px;
   font-size: medium;
+  z-index: 3;
 }
 .video img {
   width: 105%;
-  margin: -53px -5px 0;
-  padding: 0;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  margin-left: -5px;
 }
 .video:before {
   content: '';
@@ -63,6 +68,7 @@ p {
   left: 10px;
   top: 0;
   background: linear-gradient(black 10px, transparent);
+  z-index: 2;
 }
 .video i {
   position: absolute;

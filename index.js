@@ -1,10 +1,6 @@
 var unwatchedVideos = [];
 var watchedVideos = [];
 var unwatched = true;
-
-
-var snippet = null;
-
 var daysIntoHistory = 28;
 function readData() {
 	watchedVideos = JSON.parse(localStorage.getItem("watched-videos"));
@@ -65,9 +61,12 @@ function readData() {
 	}
 
 	function loadVideo(videoSnippet) {
-		if (snippet === null) {
-			snippet = videoSnippet;
-		}
+		var thumbnail = null;
+		$.each(videoSnippet.thumbnails, function (key, value) {
+			if ((thumbnail === null || thumbnail.width < value.width) && value.url !== null) {
+				thumbnail = value;
+			}
+		});
 		var video = {
 			title: videoSnippet.title,
 			link: videoSnippet.resourceId.videoId,
@@ -75,7 +74,7 @@ function readData() {
 			authorId: videoSnippet.channelId,
 			publishedDate: videoSnippet.publishedAt,
 			description: videoSnippet.description,
-			thumbnail: videoSnippet.thumbnails.high.url,
+			thumbnail: thumbnail.url,
 		};
 		if (Date.parse(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * daysIntoHistory)) {
 			if (listContainsVideo(watchedVideos, video.link) === -1) {
@@ -322,13 +321,19 @@ $(document).ready(function () {
 	function onPlayerReady(event) {
 		event.target.playVideo();
 	}
+	autoplay =  $('#autoplay');
 	function onPlayerStateChange(event) {
 		var video = $(event.target.f).parent();
-		if (event.data == YT.PlayerState.ENDED && $('#autoplay').is(':checked')) {
+		if (event.data == YT.PlayerState.ENDED && autoplay.is(':checked')) {
 			video.next().find('.video').click();
 			video.find('.done').click();
 		}
 	}
+
+	autoplay.prop('checked', localStorage.getItem('autoplay') == 'true');
+	autoplay.change(function () {
+		localStorage.setItem('autoplay', autoplay.is(':checked') ? 'true' : 'false');
+	});
 
 	displayNoVideos();
 });
