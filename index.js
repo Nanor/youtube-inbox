@@ -321,18 +321,35 @@ $(document).ready(function () {
 	function onPlayerReady(event) {
 		event.target.playVideo();
 	}
-	autoplay =  $('#autoplay');
+	var autoplay =  $('#autoplay');
+	var enlarge = $('#enlarge');
+
 	function onPlayerStateChange(event) {
 		var video = $(event.target.f).parent();
 		if (event.data == YT.PlayerState.ENDED && autoplay.is(':checked')) {
 			video.next().find('.video').click();
 			video.find('.done').click();
 		}
+
+		if (event.data == YT.PlayerState.PLAYING && enlarge.is(':checked')) {
+			video.addClass('enlarged');
+			video.find('.video').height(video.find('.video').width() * 9 / 16);
+		}
+
+		if (event.data != YT.PlayerState.PLAYING) {
+			video.removeClass('enlarged');
+			video.find('.video').height(video.find('.video').width() * 9 / 16);
+		}
 	}
 
 	autoplay.prop('checked', localStorage.getItem('autoplay') == 'true');
 	autoplay.change(function () {
 		localStorage.setItem('autoplay', autoplay.is(':checked') ? 'true' : 'false');
+	});
+
+	enlarge.prop('checked', localStorage.getItem('enlarge') == 'true');
+	enlarge.change(function () {
+		localStorage.setItem('enlarge', autoplay.is(':checked') ? 'true' : 'false');
 	});
 
 	displayNoVideos();
