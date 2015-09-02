@@ -35,6 +35,8 @@ function readData() {
 			});
 		};
 		getSubs(undefined);
+	} else {
+		addVideo();
 	}
 
 	function loadVideosFromChannel(channelIds) {
@@ -135,22 +137,26 @@ function addVideoToDom(element, video) {
 	description.find('p').linkify({ target: "_blank" });
 
 	var videoContainer = $('<div/>', {class: 'video-container row', id: video.link})
-					.append($('<div/>', {class: "video col-md-6"})
-							.append($('<p/>', {text: video.title}))
-							.append($('<img/>', {src: video.thumbnail}))
-							.append($('<i/>', {class: 'fa fa-play fa-3x'})))
-					.append($('<div/>', {class: 'video-info col-md-5'})
-							.append($('<div/>', {class: 'author'})
-									.append($('<a/>', {href: 'http://www.youtube.com/channel/'+video.authorId, target: "_blank", text: 'by '+video.author})))
-							.append($('<div/>', {class: 'upload-date', text: 'uploaded '+(new Date(video.publishedDate)).toLocaleString()}))
-							.append(description)
-							.append($('<button/>', {class: 'read-more', text: 'Read more'}))
-							.append($('<button/>', {class: 'read-less', text: 'Read less'})))
-					.append($('<div/>', {class: 'buttons col-md-1'})
-							.append($('<button/>', {class: (unwatched ? 'done' : 'undone')+' btn btn-default', title: "Mark as "+(unwatched ? 'watched' : 'unwatched'), })
-									.append($('<i/>', {class: 'fa fa-'+(unwatched ? "check" : "remove")+' fa-3x'})))
-							.append($('<button/>', {class: 'youtube-watch btn btn-default', title: "Watch on YouTube"})
-									.append($('<i/>', {class: 'fa fa-youtube fa-3x'}))));
+			.append($('<div/>', {class: "video col-md-6"})
+					.append($('<p/>', {text: video.title}))
+					.append($('<img/>', {src: video.thumbnail}))
+					.append($('<i/>', {class: 'fa fa-play fa-3x'})))
+			.append($('<div/>', {class: 'video-info col-md-5'})
+					.append($('<div/>', {class: 'author'})
+							.append($('<a/>', {href: 'http://www.youtube.com/channel/'+video.authorId, target: "_blank", text: 'by '+video.author})))
+					.append($('<div/>', {class: 'upload-date', text: 'uploaded '+(new Date(video.publishedDate)).toLocaleString()}))
+					.append(description)
+					.append($('<button/>', {class: 'read-more', text: 'Read more'}))
+					.append($('<button/>', {class: 'read-less', text: 'Read less'})))
+			.append($('<div/>', {class: 'buttons col-md-1'})
+					.append($('<button/>', {class: (unwatched ? 'done' : 'undone')+' btn btn-default', title: "Mark as "+(unwatched ? 'watched' : 'unwatched'), })
+							.append($('<i/>', {class: 'fa fa-'+(unwatched ? "check" : "remove")+' fa-3x'})))
+					.append($('<button/>', {class: 'youtube-watch btn btn-default', title: "Watch on YouTube"})
+							.append($('<i/>', {class: 'fa fa-youtube fa-3x'})))
+					.append($('<button/>', {class: 'expand-player btn btn-default', title: "Expand Video"})
+							.append($('<i/>', {class: 'fa fa-expand fa-3x'})))
+					.append($('<button/>', {class: 'compress-player btn btn-default', title: "Compress Video"})
+							.append($('<i/>', {class: 'fa fa-compress fa-3x'}))));
 	element.append(videoContainer);
 
 	var desc = videoContainer.find(".description");
@@ -322,7 +328,7 @@ $(document).ready(function () {
 		event.target.playVideo();
 	}
 	var autoplay =  $('#autoplay');
-	var enlarge = $('#enlarge');
+	var expand = $('#expand');
 
 	function onPlayerStateChange(event) {
 		var video = $(event.target.f).parent();
@@ -331,25 +337,53 @@ $(document).ready(function () {
 			video.find('.done').click();
 		}
 
-		if (event.data == YT.PlayerState.PLAYING && enlarge.is(':checked')) {
-			video.addClass('enlarged');
-			video.find('.video').height(video.find('.video').width() * 9 / 16);
+		if (event.data == YT.PlayerState.PLAYING && expand.is(':checked')) {
+			video.find('.expand-player').click();
 		}
 
-		if (event.data != YT.PlayerState.PLAYING) {
-			video.removeClass('enlarged');
-			video.find('.video').height(video.find('.video').width() * 9 / 16);
+		if (event.data == YT.PlayerState.ENDED) {
+			video.find('.compress-player').click();
 		}
 	}
+
+	videos.on('click', '.expand-player', function () {
+		var video = $(this).parent().parent();
+		var videoPlayer = video.find('.video');
+		var description = video.find('.video-info');
+
+		videoPlayer.addClass('col-md-12');
+		videoPlayer.removeClass('col-md-6');
+		videoPlayer.height(video.find('.video').width() * 9 / 16);
+		description.addClass('col-md-11');
+		description.removeClass('col-md-5');
+
+		$(this).hide();
+		$(this).parent().find('.compress-player').show();
+	});
+
+	videos.on('click', '.compress-player', function () {
+		var video = $(this).parent().parent();
+		var videoPlayer = video.find('.video');
+		var description = video.find('.video-info');
+
+		videoPlayer.addClass('col-md-6');
+		videoPlayer.removeClass('col-md-12');
+		videoPlayer.height(video.find('.video').width() * 9 / 16);
+		description.addClass('col-md-5');
+		description.removeClass('col-md-11');
+
+		$(this).hide();
+		$(this).parent().find('.expand-player').show();
+	});
 
 	autoplay.prop('checked', localStorage.getItem('autoplay') == 'true');
 	autoplay.change(function () {
 		localStorage.setItem('autoplay', autoplay.is(':checked') ? 'true' : 'false');
 	});
 
-	enlarge.prop('checked', localStorage.getItem('enlarge') == 'true');
-	enlarge.change(function () {
-		localStorage.setItem('enlarge', autoplay.is(':checked') ? 'true' : 'false');
+	expand.prop('checked', localStorage.getItem('expand') == 'true');
+	expand.change(function () {
+		localStorage.setItem('expand', autoplay.is(':checked') ? 'true' : 'false');
 	});
 
 	displayNoVideos();
