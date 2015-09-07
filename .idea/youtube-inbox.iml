@@ -4,13 +4,5 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="jQuery-2.0.0" level="application" />
-    <orderEntry type="library" name="gapi.youtube-DefinitelyTyped" level="application" />
-    <orderEntry type="library" name="bootstrap-DefinitelyTyped" level="application" />
-    <orderEntry type="library" name="gapi-DefinitelyTyped" level="application" />
-    <orderEntry type="library" name="linkify" level="application" />
-    <orderEntry type="library" name="linkify-jquery" level="application" />
-    <orderEntry type="library" name="iframe_api" level="application" />
-    <orderEntry type="library" name="www-widgetapi" level="application" />
   </component>
 </module>
