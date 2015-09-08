@@ -4,81 +4,6 @@
   text-align: center;
   padding: 20px;
 }
-.videos {
-  background-color: lightgray;
-  padding-top: 75px;
-}
-.video-container {
-  background-color: white;
-  margin: 5px -5px 0;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  display: inline-block;
-}
-.truncated {
-  height: 250px;
-  overflow: hidden;
-}
-.truncated:before {
-  content: '';
-  width: 100%;
-  height: 100px;
-  margin-top: 200px;
-  position: absolute;
-  left: 0;
-  top: 0;
-  background: linear-gradient(transparent 10px, white);
-}
-.author {
-  color: gray;
-  margin-bottom: 5px;
-}
-.upload-date {
-  color: gray;
-}
-p {
-  margin: 5px 0 0;
-}
-.video {
-  height: 315px;
-  overflow: hidden;
-  display: inline-block;
-  padding-right: 0;
-}
-.video p {
-  position: absolute;
-  color: white;
-  font-family: sans-serif;
-  margin-left: 10px;
-  margin-top: 10px;
-  font-size: medium;
-  z-index: 3;
-}
-.video img {
-  width: 100%;
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1;
-  margin-left: -5px;
-}
-.video:before {
-  content: '';
-  width: 97.5%;
-  height: 100px;
-  position: absolute;
-  left: 10px;
-  top: 0;
-  background: linear-gradient(black 10px, transparent);
-  z-index: 2;
-}
-.video i {
-  position: absolute;
-  top : 45%;
-  left: 48%;
-  color: white;
-  z-index: 3;
-}
 .top-bar {
   position: fixed;
   width: 100%;
@@ -117,39 +42,12 @@ p {
   border-color: black;
   font-weight: 600;
 }
-.buttons {
-  display: inline-block;
-  padding-top: 5px;
-}
-.buttons button {
-  margin-right: 2px;
-  margin-bottom: 2px;
-  width: 60px;
-}
-.buttons .done {
-  padding-left: 8px;
-}
-.buttons .youtube-watch {
-  padding-left: 11px;
-}
-.video-info {
-  display: inline-block;
-  padding-top: 5px;
-}
-.video-info button {
-  background: none;
-  border: none;
-  color: gray;
-  width: 100%;
-}
 .post-auth {
   display: none;
 }
-
 #settings-button {
   margin: 17px 0;
 }
-
 .settings {
   display: none;
   position: absolute;
@@ -161,23 +59,19 @@ p {
   border: 2px solid black;
   border-radius: 7px;
 }
-
 .settings label {
   display: block;
   font-weight: normal;
   margin: 5px 0;
 }
-
 .settings label input {
   display: inline;
   margin: 0 7px;
   width: 60px;
 }
-
 .settings label .note {
   padding-left: 5px;
 }
-
 .settings .note {
   display: inline;
   font-style: italic;
@@ -186,7 +80,6 @@ p {
   margin: 0;
   width: 40px;
 }
-
 input[type=checkbox] {
   /* Double-sized Checkboxes */
   -ms-transform: scale(1.5); /* IE */
@@ -195,7 +88,130 @@ input[type=checkbox] {
   -o-transform: scale(1.5); /* Opera */
   padding-top: 10px;
 }
-
-.compress-player {
-  display: none;
+.videos {
+    background-color: lightgray;
+    height: 100%;
+    width: 100%;
+    padding-top: 80px;
+}
+.video-container {
+    background-color: white;
+    margin: 0 10px 10px 10px;
+}
+.video, .video-info, .side-buttons {
+    display: inline-block;
+    padding: 10px;
+    vertical-align: top;
+}
+.video {
+    width: 50%;
+    height: 340px;
+    position: relative;
+}
+.video .thumbnail {
+    overflow: hidden;
+    height: 100%;
+}
+.video img {
+    width: 100%;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 0;
+}
+.video::after {
+    content: '';
+    background: linear-gradient(black 10px, transparent);
+    height: 50%;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 1;
+}
+.video p {
+    position: absolute;
+    width: 100%;
+    padding: 5px 10px;
+    color: white;
+    font-family: sans-serif;
+    font-size: large;
+    z-index: 2;
+}
+.video i {
+    position: absolute;
+    top: 45%;
+    left: 45%;
+    width: 10%;
+    height: 10%;
+    color: white;
+    z-index: 3;
+}
+.video-info {
+    width: 43%;
+    position: relative;
+}
+.video-info .description {
+    overflow: hidden;
+    max-height: 100%;
+}
+label {
+    width: 100%;
+}
+span {
+    color: gray;
+    padding-left: 40%;
+}
+.truncated,
+.truncated:checked ~ label > span + span,
+.truncated ~ label > span:first-child,
+.video-info:not(.long) span
+{
+    display: none;
+}
+.truncated:checked ~ label > span {
+    display: inline;
+}
+.truncated:checked ~ .description {
+    max-height: 250px;
+}
+.long .truncated:checked ~ .description:before {
+    content: '';
+    background: linear-gradient(transparent, white);
+    width: 100%;
+    height: 25%;
+    position: absolute;
+    top: 65%;
+    left: 0;
+    bottom: 10px;
+    z-index: 1;
+}
+.video-info .upload-date {
+    color: gray;
+}
+.side-buttons {
+    width: 7%;
+}
+.side-buttons button,
+.side-buttons div {
+    width: 60px;
+    margin-bottom: 5px;
+}
+.side-buttons .done {
+    padding-left: 8px;
+}
+.expanded,
+.side-buttons label > div + div,
+.expanded:checked ~ .side-buttons label > div
+{
+    display: none;
+}
+.expanded:checked ~ .side-buttons label > div + div {
+    display: inline-block;
+}
+.expanded:checked ~ .video {
+    width: 100%;
+}
+.expanded:checked ~ .video-info {
+    width: 93%;
 }

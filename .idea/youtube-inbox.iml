@@ -4,5 +4,9 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="jquery-2.0.0" level="application" />
+    <orderEntry type="library" name="bootstrap" level="application" />
+    <orderEntry type="library" name="gapi-DefinitelyTyped" level="application" />
+    <orderEntry type="library" name="gapi.youtube-DefinitelyTyped" level="application" />
   </component>
 </module>
