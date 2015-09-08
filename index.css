@@ -165,7 +165,7 @@ span {
 .truncated,
 .truncated:checked ~ label > span + span,
 .truncated ~ label > span:first-child,
-.video-info:not(.long) span
+.video-info:not(.long) label
 {
     display: none;
 }
