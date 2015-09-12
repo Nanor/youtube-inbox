@@ -50,7 +50,7 @@
 }
 .settings {
   display: none;
-  position: absolute;
+  position: fixed;
   top: 10px;
   left: 10px;
   padding: 4px;

@@ -14,6 +14,7 @@ function readData() {
     }
 
     removeOldVideos(watchedVideos, new Date() - 1000 * 60 * 60 * 24 * daysIntoHistory);
+    saveWatched();
 
     if (API_LOADED) {
         var getSubs = function (pageToken) {
@@ -331,11 +332,13 @@ $(document).ready(function () {
         }
 
         if (event.data == YT.PlayerState.PLAYING && expand.is(':checked')) {
-            video.find('.expand-player').click();
+            video.find('.expanded').prop('checked', true);
+            video.find('.expanded').change();
         }
 
         if (event.data == YT.PlayerState.ENDED) {
-            video.find('.compress-player').click();
+            video.find('.expanded').prop('checked', false);
+            video.find('.expanded').change();
         }
     }
 
