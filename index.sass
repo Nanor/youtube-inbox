@@ -111,130 +111,132 @@ input[type=checkbox]
   /* Opera */
   -o-transform: $scale
 
-.no-videos
-  padding-bottom: 10px
-  background-color: lightgray
-  color: grey
-  text-align: center
-  font-family: sans-serif
-
 .videos
   padding-top: $top-bar-height + 10px
   width: 100%
   height: 100%
   background-color: lightgray
 
-  .video-container
-    margin: 0 10px 10px 10px
-    background-color: white
+  .watched-videos, .unwatched-videos
+    .video-container
+      margin: 0 10px 10px 10px
+      background-color: white
 
-    .video, .video-info, .side-buttons
-      display: inline-block
-      padding: 10px
-      vertical-align: top
+      .video, .video-info, .side-buttons
+        display: inline-block
+        padding: 10px
+        vertical-align: top
 
-    .video
-      position: relative
-      width: 50%
-      height: $video-height
-
-      .thumbnail
-        overflow: hidden
-        height: 100%
-
-      img
+      .video
         position: relative
-        top: 50%
-        z-index: 0
-        width: 100%
-        transform: translateY(-50%)
+        width: 50%
+        height: $video-height
 
-      &:after
-        position: absolute
-        top: 10px
-        right: 10px
-        left: 10px
-        z-index: 1
-        height: 50%
-        background: linear-gradient(black 10px, transparent)
-        content: ''
+        .thumbnail
+          overflow: hidden
+          height: 100%
 
-      p
-        position: absolute
-        z-index: 2
-        padding: 5px 10px
-        width: 100%
-        color: white
-        font-size: large
-        font-family: sans-serif
+        img
+          position: relative
+          top: 50%
+          z-index: 0
+          width: 100%
+          transform: translateY(-50%)
 
-      i
-        position: absolute
-        top: 45%
-        left: 45%
-        z-index: 3
-        width: 10%
-        height: 10%
-        color: white
+        &:after
+          position: absolute
+          top: 10px
+          right: 10px
+          left: 10px
+          z-index: 1
+          height: 50%
+          background: linear-gradient(black 10px, transparent)
+          content: ''
 
-    .video-info
-      position: relative
-      width: calc(50% - 80px)
+        p
+          position: absolute
+          z-index: 2
+          padding: 5px 20px 5px 5px
+          width: 100%
+          color: white
+          font-size: large
+          font-family: sans-serif
 
-      .upload-date
-        color: gray
+        i
+          position: absolute
+          top: 45%
+          left: 45%
+          z-index: 3
+          width: 10%
+          height: 10%
+          color: white
 
-      .description
-        overflow: hidden
-        max-height: 100%
+      .video-info
+        position: relative
+        width: calc(50% - 80px)
 
-      label
-        width: 100%
-
-        span
-          padding-left: 40%
+        .upload-date
           color: gray
 
-      // Read more/less controls
-      .truncated,
-      .truncated:checked ~ label > span + span,
-      .truncated:not(:checked) ~ label > span:first-child,
-      &:not(.long) label
+        .description
+          overflow: hidden
+          max-height: 100%
+
+        label
+          width: 100%
+
+          span
+            padding-left: 40%
+            color: gray
+
+        // Read more/less controls
+        .truncated,
+        .truncated:checked ~ label > span + span,
+        .truncated:not(:checked) ~ label > span:first-child,
+        &:not(.long) label
+          display: none
+
+        // Don't allow the description to be so long if truncated.
+        .truncated:checked ~ .description
+          max-height: 250px
+
+        &.long .truncated:checked ~ .description:before
+          position: absolute
+          top: 65%
+          bottom: 10px
+          left: 0
+          z-index: 1
+          width: 100%
+          height: 25%
+          background: linear-gradient(transparent, white)
+          content: ''
+
+      .side-buttons
+        width: 80px
+
+        .btn
+          margin-bottom: 5px
+          width: 80px - 20px
+
+        .done
+          padding-left: 8px
+
+      // Expanded controls
+      .expanded,
+      .expanded:checked ~ .side-buttons label > div:first-child,
+      .expanded:not(:checked) ~ .side-buttons label > div + div
         display: none
 
-      // Don't allow the description to be so long if truncated.
-      .truncated:checked ~ .description
-        max-height: 250px
-
-      &.long .truncated:checked ~ .description:before
-        position: absolute
-        top: 65%
-        bottom: 10px
-        left: 0
-        z-index: 1
+      .expanded:checked ~ .video
         width: 100%
-        height: 25%
-        background: linear-gradient(transparent, white)
-        content: ''
 
-    .side-buttons
-      width: 80px
+      .expanded:checked ~ .video-info
+        width: calc(100% - 80px)
 
-      .btn
-        margin-bottom: 5px
-        width: 80px - 20px
+  .no-videos
+    padding-bottom: 10px
+    background-color: lightgray
+    color: grey
+    text-align: center
+    font-family: sans-serif
 
-      .done
-        padding-left: 8px
-
-    // Expanded controls
-    .expanded,
-    .expanded:checked ~ .side-buttons label > div:first-child,
-    .expanded:not(:checked) ~ .side-buttons label > div + div
-      display: none
-
-    .expanded:checked ~ .video
-      width: 100%
-
-    .expanded:checked ~ .video-info
-      width: calc(100% - 80px)

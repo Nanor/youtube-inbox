@@ -90,39 +90,32 @@ input[type=checkbox] {
   /* Opera */
   -o-transform: scale(1.5); }
 
-.no-videos {
-  padding-bottom: 10px;
-  background-color: lightgray;
-  color: grey;
-  text-align: center;
-  font-family: sans-serif; }
-
 .videos {
   padding-top: 55px;
   width: 100%;
   height: 100%;
   background-color: lightgray; }
-  .videos .video-container {
+  .videos .watched-videos .video-container, .videos .unwatched-videos .video-container {
     margin: 0 10px 10px 10px;
     background-color: white; }
-    .videos .video-container .video, .videos .video-container .video-info, .videos .video-container .side-buttons {
+    .videos .watched-videos .video-container .video, .videos .watched-videos .video-container .video-info, .videos .watched-videos .video-container .side-buttons, .videos .unwatched-videos .video-container .video, .videos .unwatched-videos .video-container .video-info, .videos .unwatched-videos .video-container .side-buttons {
       display: inline-block;
       padding: 10px;
       vertical-align: top; }
-    .videos .video-container .video {
+    .videos .watched-videos .video-container .video, .videos .unwatched-videos .video-container .video {
       position: relative;
       width: 50%;
       height: 340px; }
-      .videos .video-container .video .thumbnail {
+      .videos .watched-videos .video-container .video .thumbnail, .videos .unwatched-videos .video-container .video .thumbnail {
         overflow: hidden;
         height: 100%; }
-      .videos .video-container .video img {
+      .videos .watched-videos .video-container .video img, .videos .unwatched-videos .video-container .video img {
         position: relative;
         top: 50%;
         z-index: 0;
         width: 100%;
         transform: translateY(-50%); }
-      .videos .video-container .video:after {
+      .videos .watched-videos .video-container .video:after, .videos .unwatched-videos .video-container .video:after {
         position: absolute;
         top: 10px;
         right: 10px;
@@ -131,15 +124,15 @@ input[type=checkbox] {
         height: 50%;
         background: linear-gradient(black 10px, transparent);
         content: ""; }
-      .videos .video-container .video p {
+      .videos .watched-videos .video-container .video p, .videos .unwatched-videos .video-container .video p {
         position: absolute;
         z-index: 2;
-        padding: 5px 10px;
+        padding: 5px 20px 5px 5px;
         width: 100%;
         color: white;
         font-size: large;
         font-family: sans-serif; }
-      .videos .video-container .video i {
+      .videos .watched-videos .video-container .video i, .videos .unwatched-videos .video-container .video i {
         position: absolute;
         top: 45%;
         left: 45%;
@@ -147,26 +140,28 @@ input[type=checkbox] {
         width: 10%;
         height: 10%;
         color: white; }
-    .videos .video-container .video-info {
+    .videos .watched-videos .video-container .video-info, .videos .unwatched-videos .video-container .video-info {
       position: relative;
       width: calc(50% - 80px); }
-      .videos .video-container .video-info .upload-date {
+      .videos .watched-videos .video-container .video-info .upload-date, .videos .unwatched-videos .video-container .video-info .upload-date {
         color: gray; }
-      .videos .video-container .video-info .description {
+      .videos .watched-videos .video-container .video-info .description, .videos .unwatched-videos .video-container .video-info .description {
         overflow: hidden;
         max-height: 100%; }
-      .videos .video-container .video-info label {
+      .videos .watched-videos .video-container .video-info label, .videos .unwatched-videos .video-container .video-info label {
         width: 100%; }
-        .videos .video-container .video-info label span {
+        .videos .watched-videos .video-container .video-info label span, .videos .unwatched-videos .video-container .video-info label span {
           padding-left: 40%;
           color: gray; }
-      .videos .video-container .video-info .truncated,
-      .videos .video-container .video-info .truncated:checked ~ label > span + span,
-      .videos .video-container .video-info .truncated:not(:checked) ~ label > span:first-child, .videos .video-container .video-info:not(.long) label {
+      .videos .watched-videos .video-container .video-info .truncated,
+      .videos .watched-videos .video-container .video-info .truncated:checked ~ label > span + span,
+      .videos .watched-videos .video-container .video-info .truncated:not(:checked) ~ label > span:first-child, .videos .watched-videos .video-container .video-info:not(.long) label, .videos .unwatched-videos .video-container .video-info .truncated,
+      .videos .unwatched-videos .video-container .video-info .truncated:checked ~ label > span + span,
+      .videos .unwatched-videos .video-container .video-info .truncated:not(:checked) ~ label > span:first-child, .videos .unwatched-videos .video-container .video-info:not(.long) label {
         display: none; }
-      .videos .video-container .video-info .truncated:checked ~ .description {
+      .videos .watched-videos .video-container .video-info .truncated:checked ~ .description, .videos .unwatched-videos .video-container .video-info .truncated:checked ~ .description {
         max-height: 250px; }
-      .videos .video-container .video-info.long .truncated:checked ~ .description:before {
+      .videos .watched-videos .video-container .video-info.long .truncated:checked ~ .description:before, .videos .unwatched-videos .video-container .video-info.long .truncated:checked ~ .description:before {
         position: absolute;
         top: 65%;
         bottom: 10px;
@@ -176,20 +171,28 @@ input[type=checkbox] {
         height: 25%;
         background: linear-gradient(transparent, white);
         content: ""; }
-    .videos .video-container .side-buttons {
+    .videos .watched-videos .video-container .side-buttons, .videos .unwatched-videos .video-container .side-buttons {
       width: 80px; }
-      .videos .video-container .side-buttons .btn {
+      .videos .watched-videos .video-container .side-buttons .btn, .videos .unwatched-videos .video-container .side-buttons .btn {
         margin-bottom: 5px;
         width: 60px; }
-      .videos .video-container .side-buttons .done {
+      .videos .watched-videos .video-container .side-buttons .done, .videos .unwatched-videos .video-container .side-buttons .done {
         padding-left: 8px; }
-    .videos .video-container .expanded,
-    .videos .video-container .expanded:checked ~ .side-buttons label > div:first-child,
-    .videos .video-container .expanded:not(:checked) ~ .side-buttons label > div + div {
+    .videos .watched-videos .video-container .expanded,
+    .videos .watched-videos .video-container .expanded:checked ~ .side-buttons label > div:first-child,
+    .videos .watched-videos .video-container .expanded:not(:checked) ~ .side-buttons label > div + div, .videos .unwatched-videos .video-container .expanded,
+    .videos .unwatched-videos .video-container .expanded:checked ~ .side-buttons label > div:first-child,
+    .videos .unwatched-videos .video-container .expanded:not(:checked) ~ .side-buttons label > div + div {
       display: none; }
-    .videos .video-container .expanded:checked ~ .video {
+    .videos .watched-videos .video-container .expanded:checked ~ .video, .videos .unwatched-videos .video-container .expanded:checked ~ .video {
       width: 100%; }
-    .videos .video-container .expanded:checked ~ .video-info {
+    .videos .watched-videos .video-container .expanded:checked ~ .video-info, .videos .unwatched-videos .video-container .expanded:checked ~ .video-info {
       width: calc(100% - 80px); }
+  .videos .no-videos {
+    padding-bottom: 10px;
+    background-color: lightgray;
+    color: grey;
+    text-align: center;
+    font-family: sans-serif; }
 
 /*# sourceMappingURL=index.css.map */
