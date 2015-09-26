@@ -1,236 +1,194 @@
 html {
-    overflow: -moz-scrollbars-vertical;
-    overflow-y: scroll;
-}
+  overflow: -moz-scrollbars-vertical;
+  overflow-y: scroll; }
+
 .top-bar {
-    height: 45px;
-    position: fixed;
-    background: white;
-    width: 100%;
-    padding-left: 5px;
-    padding-right: 10px;
-    z-index: 100;
-}
-.top-bar .btn {
-    margin: 5px 0 5px 5px;
-}
-.tab {
+  position: fixed;
+  z-index: 100;
+  padding-right: 10px;
+  padding-left: 5px;
+  width: 100%;
+  height: 45px;
+  background: white; }
+  .top-bar .btn {
+    margin: 5px 0 5px 5px; }
+  .top-bar .tab {
     position: absolute;
     width: 25%;
-    height: 45px;
-}
-#unwatched {
-    left: 25%;
-}
-#watched {
-    left: 50%;
-}
-.tab .text {
-    font-weight: 300;
-    font-size: large;
-    border-bottom: solid;
-    border-color: transparent;
-    height: 100%;
-    padding-top: 15px;
-    text-align: center;
-}
-#all-done, #all-undone {
+    height: 45px; }
+    .top-bar .tab .text {
+      padding-top: 15px;
+      height: 100%;
+      border-color: transparent;
+      border-bottom: solid;
+      text-align: center;
+      font-weight: 300;
+      font-size: large; }
+  .top-bar #unwatched {
+    left: 25%; }
+  .top-bar #watched {
+    left: 50%; }
+  .top-bar #all-done, .top-bar #all-undone {
     float: right;
-    max-width: 45px;
-}
-#all-done {
-    padding-left: 10px;
-}
-input[type='radio']:checked + .tab .text {
+    max-width: 45px; }
+  .top-bar #all-done {
+    padding-left: 10px; }
+  .top-bar input[type='radio']:checked + .tab .text {
     border-color: black;
-    font-weight: 600;
-}
-#tab-unwatched:checked ~ button + button,
-#tab-watched:checked ~ button,
-input[type='radio'] {
-    display: none;
-}
-#tab-watched:checked ~ button + button {
-    display: inline;
-}
+    font-weight: 600; }
+  .top-bar input[type='radio'],
+  .top-bar #tab-unwatched:checked ~ #all-undone,
+  .top-bar #tab-watched:checked ~ #all-done {
+    display: none; }
+
 .post-auth {
-    display: none;
-}
+  display: none; }
+
 #settings-toggle, .settings {
-    display: none;
-}
+  display: none; }
+
 #settings-toggle:checked + .settings {
-    display: block;
-}
+  display: block; }
+
 .settings {
-    position: fixed;
-    top: 5px;
-    left: 5px;
-    padding: 4px;
-    z-index: 100;
-    background-color: white;
-    border: 2px solid black;
-    border-radius: 7px;
-}
-.settings label ~ label {
+  position: fixed;
+  top: 5px;
+  left: 5px;
+  z-index: 100;
+  padding: 4px;
+  border: 2px solid black;
+  border-radius: 7px;
+  background-color: white; }
+  .settings label ~ label {
     display: block;
-    font-weight: normal;
     margin: 5px 0;
-}
-.settings label input {
+    font-weight: normal; }
+  .settings label input {
     display: inline;
     margin: 0 7px;
-    width: 60px;
-}
-.settings label .note {
-    padding-left: 5px;
-}
-.settings .note {
+    width: 60px; }
+  .settings label .note {
+    padding-left: 5px; }
+  .settings .note {
     display: inline;
-    font-style: italic;
-}
+    font-style: italic; }
+
 #autoplay, #expand {
-    margin: 0;
-    width: 40px;
-}
+  margin: 0;
+  width: 40px; }
+
 input[type=checkbox] {
-    /* Double-sized Checkboxes */
-    -ms-transform: scale(1.5); /* IE */
-    -moz-transform: scale(1.5); /* FF */
-    -webkit-transform: scale(1.5); /* Safari and Chrome */
-    -o-transform: scale(1.5); /* Opera */
-    padding-top: 10px;
-}
-.videos {
-    background-color: lightgray;
-    height: 100%;
-    width: 100%;
-    padding-top: 55px;
-}
+  /* Double-sized Checkboxes */
+  padding-top: 10px;
+  /* IE */
+  -webkit-transform: scale(1.5);
+  /* FF */
+  -moz-transform: scale(1.5);
+  /* Safari and Chrome */
+  -ms-transform: scale(1.5);
+  /* Opera */
+  -o-transform: scale(1.5); }
+
 .no-videos {
-    background-color: lightgray;
-    color: grey;
-    font-family: sans-serif;
-    text-align: center;
-    padding-bottom: 10px;
-}
-.video-container {
-    background-color: white;
+  padding-bottom: 10px;
+  background-color: lightgray;
+  color: grey;
+  text-align: center;
+  font-family: sans-serif; }
+
+.videos {
+  padding-top: 55px;
+  width: 100%;
+  height: 100%;
+  background-color: lightgray; }
+  .videos .video-container {
     margin: 0 10px 10px 10px;
-}
-.video, .video-info, .side-buttons {
-    display: inline-block;
-    padding: 10px;
-    vertical-align: top;
-}
-.video {
-    width: 50%;
-    height: 340px;
-    position: relative;
-}
-.video .thumbnail {
-    overflow: hidden;
-    height: 100%;
-}
-.video img {
-    width: 100%;
-    position: relative;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 0;
-}
-.video::after {
-    content: '';
-    background: linear-gradient(black 10px, transparent);
-    height: 50%;
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    z-index: 1;
-}
-.video p {
-    position: absolute;
-    width: 100%;
-    padding: 5px 10px;
-    color: white;
-    font-family: sans-serif;
-    font-size: large;
-    z-index: 2;
-}
-.video i {
-    position: absolute;
-    top: 45%;
-    left: 45%;
-    width: 10%;
-    height: 10%;
-    color: white;
-    z-index: 3;
-}
-.video-info {
-    width: 43%;
-    position: relative;
-}
-.video-info .description {
-    overflow: hidden;
-    max-height: 100%;
-}
-.video-info label {
-    width: 100%;
-}
-.video-info span {
-    color: gray;
-    padding-left: 40%;
-}
-.truncated,
-.truncated:checked ~ label > span + span,
-.truncated ~ label > span:first-child,
-.video-info:not(.long) label
-{
-    display: none;
-}
-.truncated:checked ~ label > span {
-    display: inline;
-}
-.truncated:checked ~ .description {
-    max-height: 250px;
-}
-.long .truncated:checked ~ .description:before {
-    content: '';
-    background: linear-gradient(transparent, white);
-    width: 100%;
-    height: 25%;
-    position: absolute;
-    top: 65%;
-    left: 0;
-    bottom: 10px;
-    z-index: 1;
-}
-.video-info .upload-date {
-    color: gray;
-}
-.side-buttons {
-    width: 7%;
-}
-.side-buttons .btn {
-    width: 60px;
-    margin-bottom: 5px;
-}
-.side-buttons .done {
-    padding-left: 8px;
-}
-.expanded,
-.side-buttons label > div + div,
-.expanded:checked ~ .side-buttons label > div
-{
-    display: none;
-}
-.expanded:checked ~ .side-buttons label > div + div {
-    display: inline-block;
-}
-.expanded:checked ~ .video {
-    width: 100%;
-}
-.expanded:checked ~ .video-info {
-    width: 93%;
-}
+    background-color: white; }
+    .videos .video-container .video, .videos .video-container .video-info, .videos .video-container .side-buttons {
+      display: inline-block;
+      padding: 10px;
+      vertical-align: top; }
+    .videos .video-container .video {
+      position: relative;
+      width: 50%;
+      height: 340px; }
+      .videos .video-container .video .thumbnail {
+        overflow: hidden;
+        height: 100%; }
+      .videos .video-container .video img {
+        position: relative;
+        top: 50%;
+        z-index: 0;
+        width: 100%;
+        transform: translateY(-50%); }
+      .videos .video-container .video:after {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        z-index: 1;
+        height: 50%;
+        background: linear-gradient(black 10px, transparent);
+        content: ""; }
+      .videos .video-container .video p {
+        position: absolute;
+        z-index: 2;
+        padding: 5px 10px;
+        width: 100%;
+        color: white;
+        font-size: large;
+        font-family: sans-serif; }
+      .videos .video-container .video i {
+        position: absolute;
+        top: 45%;
+        left: 45%;
+        z-index: 3;
+        width: 10%;
+        height: 10%;
+        color: white; }
+    .videos .video-container .video-info {
+      position: relative;
+      width: calc(50% - 80px); }
+      .videos .video-container .video-info .upload-date {
+        color: gray; }
+      .videos .video-container .video-info .description {
+        overflow: hidden;
+        max-height: 100%; }
+      .videos .video-container .video-info label {
+        width: 100%; }
+        .videos .video-container .video-info label span {
+          padding-left: 40%;
+          color: gray; }
+      .videos .video-container .video-info .truncated,
+      .videos .video-container .video-info .truncated:checked ~ label > span + span,
+      .videos .video-container .video-info .truncated:not(:checked) ~ label > span:first-child, .videos .video-container .video-info:not(.long) label {
+        display: none; }
+      .videos .video-container .video-info .truncated:checked ~ .description {
+        max-height: 250px; }
+      .videos .video-container .video-info.long .truncated:checked ~ .description:before {
+        position: absolute;
+        top: 65%;
+        bottom: 10px;
+        left: 0;
+        z-index: 1;
+        width: 100%;
+        height: 25%;
+        background: linear-gradient(transparent, white);
+        content: ""; }
+    .videos .video-container .side-buttons {
+      width: 80px; }
+      .videos .video-container .side-buttons .btn {
+        margin-bottom: 5px;
+        width: 60px; }
+      .videos .video-container .side-buttons .done {
+        padding-left: 8px; }
+    .videos .video-container .expanded,
+    .videos .video-container .expanded:checked ~ .side-buttons label > div:first-child,
+    .videos .video-container .expanded:not(:checked) ~ .side-buttons label > div + div {
+      display: none; }
+    .videos .video-container .expanded:checked ~ .video {
+      width: 100%; }
+    .videos .video-container .expanded:checked ~ .video-info {
+      width: calc(100% - 80px); }
+
+/*# sourceMappingURL=index.css.map */

@@ -1,0 +1,238 @@
+$top-bar-height: 45px
+$video-height: 340px
+
+html
+  // Always display the scroll bar.
+  overflow: -moz-scrollbars-vertical
+  overflow-y: scroll
+
+.top-bar
+  position: fixed
+  z-index: 100
+  padding-right: 10px
+  padding-left: 5px
+  width: 100%
+  height: $top-bar-height
+  background: white
+
+  .btn
+    margin: 5px 0 5px 5px
+
+  .tab
+    position: absolute
+    width: 25%
+    height: $top-bar-height
+
+    .text
+      padding-top: 15px
+      height: 100%
+      border-color: transparent
+      border-bottom: solid
+      text-align: center
+      font-weight: 300
+      font-size: large
+
+  #unwatched
+    left: 25%
+
+  #watched
+    left: 50%
+
+  #all-done, #all-undone
+    float: right
+    max-width: 45px
+
+  #all-done
+    padding-left: 10px
+
+  // Tab selecting controls.
+  input[type='radio']:checked + .tab
+    .text
+      border-color: black
+      font-weight: 600
+
+  input[type='radio'],
+  #tab-unwatched:checked ~ #all-undone,
+  #tab-watched:checked ~ #all-done
+    display: none
+
+.post-auth
+  display: none
+
+#settings-toggle, .settings
+  display: none
+
+#settings-toggle:checked + .settings
+  display: block
+
+.settings
+  position: fixed
+  top: 5px
+  left: 5px
+  z-index: 100
+  padding: 4px
+  border: 2px solid black
+  border-radius: 7px
+  background-color: white
+
+  label ~ label
+    display: block
+    margin: 5px 0
+    font-weight: normal
+
+  label input
+    display: inline
+    margin: 0 7px
+    width: 60px
+
+  label .note
+    padding-left: 5px
+
+  .note
+    display: inline
+    font-style: italic
+
+#autoplay, #expand
+  margin: 0
+  width: 40px
+
+input[type=checkbox]
+  /* Double-sized Checkboxes */
+  $scale: scale(1.5)
+  padding-top: 10px
+  /* IE */
+  -webkit-transform: $scale
+  /* FF */
+  -moz-transform: $scale
+  /* Safari and Chrome */
+  -ms-transform: $scale
+  /* Opera */
+  -o-transform: $scale
+
+.no-videos
+  padding-bottom: 10px
+  background-color: lightgray
+  color: grey
+  text-align: center
+  font-family: sans-serif
+
+.videos
+  padding-top: $top-bar-height + 10px
+  width: 100%
+  height: 100%
+  background-color: lightgray
+
+  .video-container
+    margin: 0 10px 10px 10px
+    background-color: white
+
+    .video, .video-info, .side-buttons
+      display: inline-block
+      padding: 10px
+      vertical-align: top
+
+    .video
+      position: relative
+      width: 50%
+      height: $video-height
+
+      .thumbnail
+        overflow: hidden
+        height: 100%
+
+      img
+        position: relative
+        top: 50%
+        z-index: 0
+        width: 100%
+        transform: translateY(-50%)
+
+      &:after
+        position: absolute
+        top: 10px
+        right: 10px
+        left: 10px
+        z-index: 1
+        height: 50%
+        background: linear-gradient(black 10px, transparent)
+        content: ''
+
+      p
+        position: absolute
+        z-index: 2
+        padding: 5px 10px
+        width: 100%
+        color: white
+        font-size: large
+        font-family: sans-serif
+
+      i
+        position: absolute
+        top: 45%
+        left: 45%
+        z-index: 3
+        width: 10%
+        height: 10%
+        color: white
+
+    .video-info
+      position: relative
+      width: calc(50% - 80px)
+
+      .upload-date
+        color: gray
+
+      .description
+        overflow: hidden
+        max-height: 100%
+
+      label
+        width: 100%
+
+        span
+          padding-left: 40%
+          color: gray
+
+      // Read more/less controls
+      .truncated,
+      .truncated:checked ~ label > span + span,
+      .truncated:not(:checked) ~ label > span:first-child,
+      &:not(.long) label
+        display: none
+
+      // Don't allow the description to be so long if truncated.
+      .truncated:checked ~ .description
+        max-height: 250px
+
+      &.long .truncated:checked ~ .description:before
+        position: absolute
+        top: 65%
+        bottom: 10px
+        left: 0
+        z-index: 1
+        width: 100%
+        height: 25%
+        background: linear-gradient(transparent, white)
+        content: ''
+
+    .side-buttons
+      width: 80px
+
+      .btn
+        margin-bottom: 5px
+        width: 80px - 20px
+
+      .done
+        padding-left: 8px
+
+    // Expanded controls
+    .expanded,
+    .expanded:checked ~ .side-buttons label > div:first-child,
+    .expanded:not(:checked) ~ .side-buttons label > div + div
+      display: none
+
+    .expanded:checked ~ .video
+      width: 100%
+
+    .expanded:checked ~ .video-info
+      width: calc(100% - 80px)
