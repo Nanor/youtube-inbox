@@ -26,10 +26,8 @@ html
     .text
       padding-top: 15px
       height: 100%
-      border-color: transparent
       border-bottom: solid
       text-align: center
-      font-weight: 300
       font-size: large
 
   #unwatched
@@ -50,6 +48,10 @@ html
     .text
       border-color: black
       font-weight: 600
+  input[type='radio']:not(:checked) + .tab
+    .text
+      border-color: transparent
+      font-weight: 300
 
   input[type='radio'],
   #tab-unwatched:checked ~ #all-undone,

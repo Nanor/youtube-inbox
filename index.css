@@ -19,10 +19,8 @@ html {
     .top-bar .tab .text {
       padding-top: 15px;
       height: 100%;
-      border-color: transparent;
       border-bottom: solid;
       text-align: center;
-      font-weight: 300;
       font-size: large; }
   .top-bar #unwatched {
     left: 25%; }
@@ -36,6 +34,9 @@ html {
   .top-bar input[type='radio']:checked + .tab .text {
     border-color: black;
     font-weight: 600; }
+  .top-bar input[type='radio']:not(:checked) + .tab .text {
+    border-color: transparent;
+    font-weight: 300; }
   .top-bar input[type='radio'],
   .top-bar #tab-unwatched:checked ~ #all-undone,
   .top-bar #tab-watched:checked ~ #all-done {
