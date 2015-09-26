@@ -1,7 +1,6 @@
 var unwatchedVideos = [];
 var watchedVideos = [];
 var daysIntoHistory = 28;
-var unwatched = true;
 
 function readData() {
     watchedVideos = JSON.parse(localStorage.getItem("watched-videos"));
@@ -155,9 +154,9 @@ function addVideoToDom(element, video) {
                 .append($('<span/>', {class: 'read-more', text: 'Read more'}))
                 .append($('<span/>', {class: 'read-less', text: 'Read less'}))))
         .append($('<div/>', {class: 'side-buttons'})
-            .append($('<button/>', {class: (unwatched ? 'done' : 'undone')+' btn btn-default', title: "Mark as "+(unwatched ? 'watched' : 'unwatched'), })
-                .append($('<i/>', {class: 'fa fa-'+(unwatched ? "check" : "remove")+' fa-3x'})))
-            .append($('<button/>', {class: 'youtube-watch btn btn-default', title: "Watch on YouTube"})
+            .append($('<button/>', {class: (unwatched() ? 'done' : 'undone')+' btn btn-default', title: "Mark as "+(unwatched() ? 'watched' : 'unwatched'), })
+                .append($('<i/>', {class: 'fa fa-'+(unwatched() ? "check" : "remove")+' fa-3x'})))
+            .append($('<a/>', {class: 'youtube-watch btn btn-default', title: "Watch on YouTube", href: "https://www.youtube.com/watch?v="+video.link, target: "_blank"})
                 .append($('<i/>', {class: 'fa fa-youtube fa-3x'})))
             .append($('<label/>', {for: 'expand'+video.link})
                 .append($('<div/>', {class: 'expand-player btn btn-default', title: "Expand Video"})
@@ -188,12 +187,11 @@ function updateCounts() {
 
 function addVideo() {
     updateCounts();
-    displayNoVideos();
     if($(this).scrollTop() + $(this).innerHeight() * 2 >= $(document).height()) {
         // If we're at the bottom of the page
 
         var i;
-        if (unwatched) {
+        if (unwatched()) {
             for (i = 0; i < unwatchedVideos.length; i++) {
                 if ($("#"+unwatchedVideos[i].link).length === 0) {
                     // Isn't already on screen
@@ -215,12 +213,8 @@ function addVideo() {
     }
 }
 
-function displayNoVideos() {
-    if ($(".video").length === 0) {
-        $(".no-videos").show();
-    } else {
-        $(".no-videos").hide();
-    }
+function unwatched() {
+    return $('#tab-unwatched').prop('checked');
 }
 
 $(document).ready(function () {
@@ -259,32 +253,14 @@ $(document).ready(function () {
         saveWatched();
         addVideo();
     });
-    videos.on("click", ".youtube-watch", function () {
-        var id = $(this).parent().parent().attr('id');
-        window.open("https://www.youtube.com/watch?v="+id);
-    });
-    $(".top-bar").on("click", ".tab", function () {
-        $(".tab").removeClass("selected");
-        $(this).addClass("selected");
-        unwatched = ($(".selected").attr("id") === "unwatched");
-        if (unwatched) {
-            $("#all-done").show();
-            $("#all-undone").hide();
-        } else {
-            $("#all-undone").show();
-            $("#all-done").hide();
-        }
+    $('input[name="tab"]').change(function () {
+        console.log("Changed");
         $(".video-container").remove();
         addVideo();
     });
 
     $(window).bind('scroll', addVideo);
 
-    $("#unwatched").addClass("selected");
-    unwatched = ($(".selected").attr("id") === "unwatched");
-    $(".settings-toggle").click(function () {
-        $('.settings').toggle();
-    });
     var updateInput = $('#update-interval');
     var interval = localStorage.getItem("update-interval");
     interval = interval !== null ? interval : 5;
@@ -351,6 +327,4 @@ $(document).ready(function () {
     expand.change(function () {
         localStorage.setItem('expand', autoplay.is(':checked') ? 'true' : 'false');
     });
-
-    displayNoVideos();
 });

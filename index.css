@@ -1,98 +1,118 @@
-.no-videos {
-  color: grey;
-  font-family: sans-serif;
-  text-align: center;
-  padding: 20px;
+html {
+    overflow: -moz-scrollbars-vertical;
+    overflow-y: scroll;
 }
 .top-bar {
-  position: fixed;
-  width: 100%;
-  background-color: white;
-  z-index: 5;
-  height: 70px;
+    height: 45px;
+    position: fixed;
+    background: white;
+    width: 100%;
+    padding-left: 5px;
+    padding-right: 10px;
+    z-index: 100;
 }
-#all-done {
-  max-width: 60px;
-  padding-left: 8px;
-  margin-top: 8px;
-  margin-left: 8px
-}
-#all-undone {
-  max-width: 60px;
-  margin-top: 8px;
-  margin-left: 8px;
-  display: none;
+.top-bar .btn {
+    margin: 5px 0 5px 5px;
 }
 .tab {
-  background: none;
-  border: none;
-  position: relative;
-  height: 70px;
+    position: absolute;
+    width: 25%;
+    height: 45px;
+}
+#unwatched {
+    left: 25%;
+}
+#watched {
+    left: 50%;
 }
 .tab .text {
-  position: absolute;
-  bottom: 0;
-  font-size: 20px;
-  width: 100%;
-  border-bottom: solid;
-  border-color: white;
-  padding-bottom: 5px;
+    font-weight: 300;
+    font-size: large;
+    border-bottom: solid;
+    border-color: transparent;
+    height: 100%;
+    padding-top: 15px;
+    text-align: center;
 }
-.tab.selected .text {
-  border-color: black;
-  font-weight: 600;
+#all-done, #all-undone {
+    float: right;
+    max-width: 45px;
+}
+#all-done {
+    padding-left: 10px;
+}
+input[type='radio']:checked + .tab .text {
+    border-color: black;
+    font-weight: 600;
+}
+#tab-unwatched:checked ~ button + button,
+#tab-watched:checked ~ button,
+input[type='radio'] {
+    display: none;
+}
+#tab-watched:checked ~ button + button {
+    display: inline;
 }
 .post-auth {
-  display: none;
+    display: none;
 }
-#settings-button {
-  margin: 17px 0;
+#settings-toggle, .settings {
+    display: none;
+}
+#settings-toggle:checked + .settings {
+    display: block;
 }
 .settings {
-  display: none;
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  padding: 4px;
-  z-index: 100;
-  background-color: white;
-  border: 2px solid black;
-  border-radius: 7px;
+    position: fixed;
+    top: 5px;
+    left: 5px;
+    padding: 4px;
+    z-index: 100;
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 7px;
 }
-.settings label {
-  display: block;
-  font-weight: normal;
-  margin: 5px 0;
+.settings label ~ label {
+    display: block;
+    font-weight: normal;
+    margin: 5px 0;
 }
 .settings label input {
-  display: inline;
-  margin: 0 7px;
-  width: 60px;
+    display: inline;
+    margin: 0 7px;
+    width: 60px;
 }
 .settings label .note {
-  padding-left: 5px;
+    padding-left: 5px;
 }
 .settings .note {
-  display: inline;
-  font-style: italic;
+    display: inline;
+    font-style: italic;
 }
 #autoplay, #expand {
-  margin: 0;
-  width: 40px;
+    margin: 0;
+    width: 40px;
 }
 input[type=checkbox] {
-  /* Double-sized Checkboxes */
-  -ms-transform: scale(1.5); /* IE */
-  -moz-transform: scale(1.5); /* FF */
-  -webkit-transform: scale(1.5); /* Safari and Chrome */
-  -o-transform: scale(1.5); /* Opera */
-  padding-top: 10px;
+    /* Double-sized Checkboxes */
+    -ms-transform: scale(1.5); /* IE */
+    -moz-transform: scale(1.5); /* FF */
+    -webkit-transform: scale(1.5); /* Safari and Chrome */
+    -o-transform: scale(1.5); /* Opera */
+    padding-top: 10px;
 }
 .videos {
     background-color: lightgray;
     height: 100%;
     width: 100%;
-    padding-top: 80px;
+    padding-top: 55px;
+}
+.no-videos {
+    background-color: lightgray;
+    color: grey;
+    font-family: sans-serif;
+    text-align: center;
+    padding-bottom: 10px;
 }
 .video-container {
     background-color: white;
@@ -155,10 +175,10 @@ input[type=checkbox] {
     overflow: hidden;
     max-height: 100%;
 }
-label {
+.video-info label {
     width: 100%;
 }
-span {
+.video-info span {
     color: gray;
     padding-left: 40%;
 }
@@ -192,8 +212,7 @@ span {
 .side-buttons {
     width: 7%;
 }
-.side-buttons button,
-.side-buttons div {
+.side-buttons .btn {
     width: 60px;
     margin-bottom: 5px;
 }
