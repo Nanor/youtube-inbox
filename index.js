@@ -5,6 +5,7 @@ var title = "";
 
 function readData() {
     $('#refresh').children('i').addClass('fa-spin');
+
     watchedVideos = JSON.parse(localStorage.getItem("watched-videos"));
     if (watchedVideos === null) {
         watchedVideos = [];
@@ -15,7 +16,6 @@ function readData() {
     }
 
     removeOldVideos(watchedVideos, new Date() - 1000 * 60 * 60 * 24 * daysIntoHistory);
-    saveWatched();
 
     if (API_LOADED) {
         var getSubs = function (pageToken) {
@@ -34,8 +34,6 @@ function readData() {
             });
         };
         getSubs(undefined);
-    } else {
-        addVideo();
     }
 
     function loadVideosFromChannel(channelIds) {
@@ -78,26 +76,15 @@ function readData() {
             thumbnail: thumbnail.url,
         };
         if (Date.parse(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * daysIntoHistory)) {
-            if (listContainsVideo(watchedVideos, video.link) === -1) {
+            if (indexInList(watchedVideos, video.link) === -1) {
                 addToList(unwatchedVideos, video);
             }
         }
-        checkCount = 10;
+        refreshScreen();
     }
-
-    var checkCount = 10;
-    var updateInterval = window.setInterval(function () {
-        saveWatched();
-        addVideo();
-        checkCount--;
-        if (checkCount < 0) {
-            $('#refresh').children('i').removeClass('fa-spin');
-            window.clearInterval(updateInterval);
-        }
-    }, 100);
 }
 
-function listContainsVideo(videos, id) {
+function indexInList(videos, id) {
     for(var i = 0; i < videos.length; i++) {
         if (videos[i].link == id) {
             return i;
@@ -128,8 +115,8 @@ function removeOldVideos(videos, date) {
     }
 }
 
-function addVideoToDom(element, video) {
-    var unwatchedVideo = listContainsVideo(unwatchedVideos, video.link) !== -1;
+function addVideoToDom(element, video, index) {
+    var isUnwatchedVideo = indexInList(unwatchedVideos, video.link) !== -1;
 
     var description = $('<div/>', {class: "description"});
     video.description.split(/\n(?:\n)+/).forEach(function (paragraph) {
@@ -154,8 +141,8 @@ function addVideoToDom(element, video) {
                 .append($('<span/>', {class: 'read-more', text: 'Read more'}))
                 .append($('<span/>', {class: 'read-less', text: 'Read less'}))))
         .append($('<div/>', {class: 'side-buttons'})
-            .append($('<button/>', {class: (unwatchedVideo ? 'done' : 'undone')+' btn btn-default', title: "Mark as "+(unwatchedVideo ? 'watched' : 'unwatched'), })
-                .append($('<i/>', {class: 'fa fa-'+(unwatchedVideo ? "check" : "remove")+' fa-3x'})))
+            .append($('<button/>', {class: (isUnwatchedVideo ? 'done' : 'undone')+' btn btn-default', title: "Mark as "+(isUnwatchedVideo ? 'watched' : 'unwatched'), })
+                .append($('<i/>', {class: 'fa fa-'+(isUnwatchedVideo ? "check" : "remove")+' fa-3x'})))
             .append($('<a/>', {class: 'youtube-watch btn btn-default', title: "Watch on YouTube", href: "https://www.youtube.com/watch?v="+video.link, target: "_blank"})
                 .append($('<i/>', {class: 'fa fa-youtube fa-3x'})))
             .append($('<label/>', {for: 'expand'+video.link})
@@ -168,70 +155,113 @@ function addVideoToDom(element, video) {
         video.height(video.width() * 9 / 16)
     });
 
-    element.append(videoContainer);
+    if (index === 0) {
+        element.prepend(videoContainer);
+    } else if (index > $(element).children().length) {
+        element.append(videoContainer);
+    } else {
+        $(element).children(`:nth-child(${index})`).after(videoContainer);
+    }
 
     if (videoContainer.find('.description').height() >= 250) {
         videoContainer.find('.video-info').addClass('long');
     }
 }
 
-function saveWatched() {
-    localStorage.setItem("watched-videos", JSON.stringify(watchedVideos));
-    localStorage.setItem("unwatched-videos", JSON.stringify(unwatchedVideos));
-}
+var refreshTimer = null;
+function refreshScreen() {
+    if (refreshTimer === null) {
+        updateScreen();
+    } else {
+        clearTimeout(refreshTimer);
+    }
+    refreshTimer = setTimeout(updateScreen, 100);
 
-function updateCounts() {
-    $("#unwatched").find(".text").text(`Unwatched (${unwatchedVideos.length})`);
-    $('title').text((unwatchedVideos.length > 0 ? `(${unwatchedVideos.length}) ` : "") + title);
-    $("#watched").find(".text").text(`Watched (${watchedVideos.length})`);
-}
+    function updateScreen() {
+        // Save the list to localStorage
+        localStorage.setItem("watched-videos", JSON.stringify(watchedVideos));
+        localStorage.setItem("unwatched-videos", JSON.stringify(unwatchedVideos));
 
-function addVideo() {
-    updateCounts();
-    if($(this).scrollTop() + $(this).innerHeight() * 2 >= $(document).height()) {
-        // If we're at the bottom of the page
+        // Update document title
+        $('title').text((unwatchedVideos.length > 0 ? `(${unwatchedVideos.length}) ` : "") + title);
+        // Update tab texts.
+        $("#unwatched").find(".text").text(`Unwatched (${unwatchedVideos.length})`);
+        $("#watched").find(".text").text(`Watched (${watchedVideos.length})`);
 
         var i;
-        if ($('#tab-unwatched').prop('checked')) {
-            for (i = 0; i < unwatchedVideos.length; i++) {
-                if ($("#"+unwatchedVideos[i].link).length === 0) {
-                    // Isn't already on screen
-                    addVideoToDom($('.unwatched-videos'), unwatchedVideos[i]);
-                    addVideo();
-                    return;
+        var video;
+
+        var onUnwatchedTab = $('#tab-unwatched').prop('checked');
+        var $unwatchedList = $('.unwatched-videos');
+        var $watchedList = $('.watched-videos');
+
+        // Add any videos we've skipped out.
+        if (onUnwatchedTab) {
+            for (i = 0; i < $unwatchedList.children().length; i++) {
+                // Isn't already on screen
+                if ($("#" + unwatchedVideos[i].link).length === 0) {
+                    addVideoToDom($unwatchedList, unwatchedVideos[i], i);
                 }
             }
         } else {
-            for (i = watchedVideos.length-1; i >= 0; i--) {
-                if ($("#"+watchedVideos[i].link).length === 0) {
-                    // Isn't already on screen
-                    addVideoToDom($('.watched-videos'), watchedVideos[i]);
-                    addVideo();
-                    return;
+            for (i = 0; i < $watchedList.children().length && i < watchedVideos.length; i++) {
+                video = watchedVideos[watchedVideos.length - 1 - i];
+                // Isn't already on screen
+                if ($("#" + video.link).length === 0) {
+                    addVideoToDom($watchedList, video, i);
                 }
             }
         }
+
+        function addOneVideo() {
+            // Add videos to screen while we've at the bottom of the page.
+            if ($(this).scrollTop() + $(this).innerHeight() * 2 >= $(document).height()) {
+                if (onUnwatchedTab) {
+                    for (i = 0; i < unwatchedVideos.length; i++) {
+                        // Isn't already on screen
+                        if ($("#" + unwatchedVideos[i].link).length === 0) {
+                            addVideoToDom($unwatchedList, unwatchedVideos[i], i);
+                            addOneVideo();
+                            break;
+                        }
+                    }
+                } else {
+                    for (i = 0; i < watchedVideos.length; i++) {
+                        video = watchedVideos[watchedVideos.length - 1 - i];
+                        // Isn't already on screen
+                        if ($("#" + video.link).length === 0) {
+                            addVideoToDom($watchedList, video, i);
+                            addOneVideo();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        addOneVideo();
+
+        $('#refresh').children("i").removeClass("fa-spin");
+        refreshTimer = null;
     }
 }
 
-$(document).ready(function () {
+function readyFunction() {
     title = $('title').text();
     var videos = $(".videos");
     videos.on("click", ".done", function () {
         var id = $(this).parent().parent().attr('id');
-        addToList(watchedVideos, unwatchedVideos[listContainsVideo(unwatchedVideos, id)]);
-        unwatchedVideos.splice(listContainsVideo(unwatchedVideos, id), 1);
-        $("#"+id).remove();
-        saveWatched();
-        addVideo();
+        addToList(watchedVideos, unwatchedVideos[indexInList(unwatchedVideos, id)]);
+        unwatchedVideos.splice(indexInList(unwatchedVideos, id), 1);
+        $("#" + id).remove();
+        refreshScreen();
     });
     videos.on("click", ".undone", function () {
         var id = $(this).parent().parent().attr('id');
-        addToList(unwatchedVideos, watchedVideos[listContainsVideo(watchedVideos, id)]);
-        watchedVideos.splice(listContainsVideo(watchedVideos, id), 1);
-        $("#"+id).remove();
-        saveWatched();
-        addVideo();
+        addToList(unwatchedVideos, watchedVideos[indexInList(watchedVideos, id)]);
+        watchedVideos.splice(indexInList(watchedVideos, id), 1);
+        $("#" + id).remove();
+        refreshScreen();
     });
     $("#all-done").click(function () {
         unwatchedVideos.forEach(function (video) {
@@ -239,17 +269,15 @@ $(document).ready(function () {
         });
         unwatchedVideos = [];
         $(".video-container").remove();
-        saveWatched();
-        addVideo();
+        refreshScreen();
     });
-    $("#all-undone").click( function () {
+    $("#all-undone").click(function () {
         watchedVideos.forEach(function (video) {
             addToList(unwatchedVideos, video);
         });
         watchedVideos = [];
         $(".video-container").remove();
-        saveWatched();
-        addVideo();
+        refreshScreen();
     });
     $('input[name="tab"]').change(function () {
         if ($('#tab-unwatched').prop('checked')) {
@@ -259,11 +287,11 @@ $(document).ready(function () {
             $('.unwatched-videos').hide();
             $('.watched-videos').show();
         }
-        window.scrollTo(0,0);
-        addVideo();
+        window.scrollTo(0, 0);
+        refreshScreen();
     });
 
-    $(window).bind('scroll', addVideo);
+    $(window).bind('scroll', refreshScreen);
 
     var updateInput = $('#update-interval');
     var interval = localStorage.getItem("update-interval");
@@ -301,7 +329,8 @@ $(document).ready(function () {
     function onPlayerReady(event) {
         event.target.playVideo();
     }
-    var autoplay =  $('#autoplay');
+
+    var autoplay = $('#autoplay');
     var expand = $('#expand');
 
     function onPlayerStateChange(event) {
@@ -331,4 +360,5 @@ $(document).ready(function () {
     expand.change(function () {
         localStorage.setItem('expand', autoplay.is(':checked') ? 'true' : 'false');
     });
-});
+}
+$(document).ready(readyFunction);
