@@ -1,12 +1,12 @@
 $(document).ready(() ->
   class Video
-    constructor: (@title, @link, @author, @authorId, publishedDate, @description, @thumbnail) ->
+    constructor: (@title, @id, @author, @authorId, publishedDate, @description, @thumbnail) ->
       @publishedDate = new Date(publishedDate)
 
     @fromJson: (json) ->
       new Video(
         json.title,
-        json.link,
+        json.id or json.link,
         json.author,
         json.authorId,
         json.publishedDate,
@@ -15,7 +15,7 @@ $(document).ready(() ->
       )
 
     addToDom: (parent, index) ->
-      isUnwatchedVideo = unwatchedVideos.find(@link)?
+      isUnwatchedVideo = unwatchedVideos.find(@id)?
 
       description = $('<div/>', {class: "description"})
       @description.split(/\n(?:\n)+/).forEach((paragraph) ->
@@ -25,10 +25,10 @@ $(document).ready(() ->
 
       videoContainer = $('<div/>',
         class: 'video-container'
-        id: 'video-' + @link).append($('<input/>',
+        id: 'video-' + @id).append($('<input/>',
         type: 'checkbox'
         class: 'expanded'
-        id: 'expand' + @link)).append($('<div/>', class: 'video').append($('<div/>',
+        id: 'expand' + @id)).append($('<div/>', class: 'video').append($('<div/>',
         class: 'thumbnail').append($('<p/>', text: @title)).append($('<img/>', src: @thumbnail)).append($('<i/>',
         class: 'fa fa-play fa-3x')))).append($('<div/>', class: 'video-info').append($('<div/>',
         class: 'author').append($('<a/>',
@@ -39,8 +39,8 @@ $(document).ready(() ->
         text: 'uploaded ' + new Date(@publishedDate).toLocaleString())).append($('<input/>',
         type: 'checkbox'
         class: 'truncated'
-        id: 'trunc' + @link
-        'checked': true)).append(description).append($('<label/>', for: 'trunc' + @link).append($('<span/>',
+        id: 'trunc' + @id
+        'checked': true)).append(description).append($('<label/>', for: 'trunc' + @id).append($('<span/>',
         class: 'read-more'
         text: 'Read more')).append($('<span/>',
         class: 'read-less'
@@ -50,9 +50,9 @@ $(document).ready(() ->
         class: 'fa fa-' + (if isUnwatchedVideo then 'check' else 'remove') + ' fa-3x'))).append($('<a/>',
         class: 'youtube-watch btn btn-default'
         title: 'Watch on YouTube'
-        href: 'https://www.youtube.com/watch?v=' + @link
+        href: 'https://www.youtube.com/watch?v=' + @id
         target: '_blank').append($('<i/>', class: 'fa fa-youtube fa-3x'))).append($('<label/>',
-        for: 'expand' + @link).append($('<div/>',
+        for: 'expand' + @id).append($('<div/>',
         class: 'expand-player btn btn-default'
         title: 'Expand Video').append($('<i/>', class: 'fa fa-expand fa-3x'))).append($('<div/>',
         class: 'compress-player btn btn-default'
@@ -83,14 +83,14 @@ $(document).ready(() ->
 
     add: (newVideo) ->
       for video in @videos
-        if video.link == newVideo.link
+        if video.id == newVideo.id
           return
       @videos.push(newVideo)
       @sort()
       @save()
       # Update visuals
-      if $(@selector).children().length >= @indexOf(newVideo.link)
-        newVideo.addToDom(@htmlElement, @indexOf(newVideo.link))
+      if $(@selector).children().length >= @indexOf(newVideo.id)
+        newVideo.addToDom(@htmlElement, @indexOf(newVideo.id))
       window.refresh()
       return @
 
@@ -106,18 +106,18 @@ $(document).ready(() ->
         @videos.splice(index, 1)
         @save()
         # Update visuals
-        $('#video-' + video.link).remove()
+        $('#video-' + video.id).remove()
         window.refresh()
         video
 
     clearOlderThan: (date) ->
       for video in @videos
         if new Date(video.publishedDate) < date
-          @remove(video.link)
+          @remove(video.id)
 
     indexOf: (id) ->
       for i in [0...@videos.length]
-        if @videos[i].link == id
+        if @videos[i].id == id
           return i
       -1
 
@@ -126,7 +126,7 @@ $(document).ready(() ->
 
     find: (id) ->
       for video in @videos
-        if video.link == id
+        if video.id == id
           return video
 
     length: () ->
@@ -139,7 +139,7 @@ $(document).ready(() ->
       if ($(window).scrollTop() + $(window).innerHeight() * 2 >= $(document).height())
         for i in [0...@length()]
           video = @get(i)
-          if ($("#video-" + video.link).length == 0)
+          if ($("#video-" + video.id).length == 0)
             video.addToDom(@htmlElement, i)
             @addVideoToDom()
             break
@@ -214,7 +214,7 @@ $(document).ready(() ->
         thumbnail.url
       )
       if Date.parse(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * historyInput.value())
-        if watchedVideos.indexOf(video.link) == -1
+        if watchedVideos.indexOf(video.id) == -1
           unwatchedVideos.add(video)
 
     getSubs() if window.API_LOADED

@@ -3,9 +3,9 @@
   $(document).ready(function() {
     var $autoplay, $expand, $videos, SavedInput, Video, VideoList, historyInput, onPlayerReady, onPlayerStateChange, readDataInterval, title, unwatchedVideos, updateInput, watchedVideos;
     Video = (function() {
-      function Video(title1, link, author, authorId, publishedDate, description1, thumbnail1) {
+      function Video(title1, id1, author, authorId, publishedDate, description1, thumbnail1) {
         this.title = title1;
-        this.link = link;
+        this.id = id1;
         this.author = author;
         this.authorId = authorId;
         this.description = description1;
@@ -14,12 +14,12 @@
       }
 
       Video.fromJson = function(json) {
-        return new Video(json.title, json.link, json.author, json.authorId, json.publishedDate, json.description, json.thumbnail);
+        return new Video(json.title, json.id || json.link, json.author, json.authorId, json.publishedDate, json.description, json.thumbnail);
       };
 
       Video.prototype.addToDom = function(parent, index) {
         var description, isUnwatchedVideo, videoContainer;
-        isUnwatchedVideo = unwatchedVideos.find(this.link) != null;
+        isUnwatchedVideo = unwatchedVideos.find(this.id) != null;
         description = $('<div/>', {
           "class": "description"
         });
@@ -31,11 +31,11 @@
         });
         videoContainer = $('<div/>', {
           "class": 'video-container',
-          id: 'video-' + this.link
+          id: 'video-' + this.id
         }).append($('<input/>', {
           type: 'checkbox',
           "class": 'expanded',
-          id: 'expand' + this.link
+          id: 'expand' + this.id
         })).append($('<div/>', {
           "class": 'video'
         }).append($('<div/>', {
@@ -60,10 +60,10 @@
         })).append($('<input/>', {
           type: 'checkbox',
           "class": 'truncated',
-          id: 'trunc' + this.link,
+          id: 'trunc' + this.id,
           'checked': true
         })).append(description).append($('<label/>', {
-          "for": 'trunc' + this.link
+          "for": 'trunc' + this.id
         }).append($('<span/>', {
           "class": 'read-more',
           text: 'Read more'
@@ -80,12 +80,12 @@
         }))).append($('<a/>', {
           "class": 'youtube-watch btn btn-default',
           title: 'Watch on YouTube',
-          href: 'https://www.youtube.com/watch?v=' + this.link,
+          href: 'https://www.youtube.com/watch?v=' + this.id,
           target: '_blank'
         }).append($('<i/>', {
           "class": 'fa fa-youtube fa-3x'
         }))).append($('<label/>', {
-          "for": 'expand' + this.link
+          "for": 'expand' + this.id
         }).append($('<div/>', {
           "class": 'expand-player btn btn-default',
           title: 'Expand Video'
@@ -144,15 +144,15 @@
         ref = this.videos;
         for (j = 0, len = ref.length; j < len; j++) {
           video = ref[j];
-          if (video.link === newVideo.link) {
+          if (video.id === newVideo.id) {
             return;
           }
         }
         this.videos.push(newVideo);
         this.sort();
         this.save();
-        if ($(this.selector).children().length >= this.indexOf(newVideo.link)) {
-          newVideo.addToDom(this.htmlElement, this.indexOf(newVideo.link));
+        if ($(this.selector).children().length >= this.indexOf(newVideo.id)) {
+          newVideo.addToDom(this.htmlElement, this.indexOf(newVideo.id));
         }
         window.refresh();
         return this;
@@ -174,7 +174,7 @@
           video = this.videos[index];
           this.videos.splice(index, 1);
           this.save();
-          $('#video-' + video.link).remove();
+          $('#video-' + video.id).remove();
           window.refresh();
           return video;
         }
@@ -187,7 +187,7 @@
         for (j = 0, len = ref.length; j < len; j++) {
           video = ref[j];
           if (new Date(video.publishedDate) < date) {
-            results.push(this.remove(video.link));
+            results.push(this.remove(video.id));
           } else {
             results.push(void 0);
           }
@@ -198,7 +198,7 @@
       VideoList.prototype.indexOf = function(id) {
         var i, j, ref;
         for (i = j = 0, ref = this.videos.length; 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
-          if (this.videos[i].link === id) {
+          if (this.videos[i].id === id) {
             return i;
           }
         }
@@ -214,7 +214,7 @@
         ref = this.videos;
         for (j = 0, len = ref.length; j < len; j++) {
           video = ref[j];
-          if (video.link === id) {
+          if (video.id === id) {
             return video;
           }
         }
@@ -234,7 +234,7 @@
           results = [];
           for (i = j = 0, ref = this.length(); 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
             video = this.get(i);
-            if ($("#video-" + video.link).length === 0) {
+            if ($("#video-" + video.id).length === 0) {
               video.addToDom(this.htmlElement, i);
               this.addVideoToDom();
               break;
@@ -349,7 +349,7 @@
         });
         video = new Video(videoSnippet.title, videoSnippet.resourceId.videoId, videoSnippet.channelTitle, videoSnippet.channelId, videoSnippet.publishedAt, videoSnippet.description, thumbnail.url);
         if (Date.parse(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * historyInput.value())) {
-          if (watchedVideos.indexOf(video.link) === -1) {
+          if (watchedVideos.indexOf(video.id) === -1) {
             return unwatchedVideos.add(video);
           }
         }
