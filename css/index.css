@@ -29,8 +29,6 @@ html {
   .top-bar #all-done, .top-bar #all-undone {
     float: right;
     max-width: 45px; }
-  .top-bar #all-done {
-    padding-left: 10px; }
   .top-bar input[type='radio']:checked + .tab .text {
     border-color: black;
     font-weight: 600; }
@@ -176,8 +174,6 @@ input[type=checkbox] {
       .videos .watched-videos .video-container .side-buttons .btn, .videos .unwatched-videos .video-container .side-buttons .btn {
         margin-bottom: 5px;
         width: 60px; }
-      .videos .watched-videos .video-container .side-buttons .done, .videos .unwatched-videos .video-container .side-buttons .done {
-        padding-left: 8px; }
     .videos .watched-videos .video-container .expanded,
     .videos .watched-videos .video-container .expanded:checked ~ .side-buttons label > div:first-child,
     .videos .watched-videos .video-container .expanded:not(:checked) ~ .side-buttons label > div + div, .videos .unwatched-videos .video-container .expanded,
@@ -194,5 +190,11 @@ input[type=checkbox] {
     color: grey;
     text-align: center;
     font-family: sans-serif; }
+
+.fa-check {
+  padding-left: -2px; }
+
+.fa-check.fa-3x {
+  margin-left: -4px; }
 
 /*# sourceMappingURL=index.css.map */
