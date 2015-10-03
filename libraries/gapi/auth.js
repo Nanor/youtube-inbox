@@ -7,7 +7,7 @@ var OAUTH2_CLIENT_ID = '821457625314-acmfo1dvnlfeea149csscmfasjgq1vsf.apps.googl
 var OAUTH2_SCOPES = [
   'https://www.googleapis.com/auth/youtube'
 ];
-var API_LOADED = false;
+window.API_LOADED = false;
 
 // Upon loading, the Google APIs JS client automatically invokes this callback.
 var googleApiClientReady = function() {
@@ -63,8 +63,8 @@ function handleAuthResult(authResult) {
 }
 
 function afterLoaded() {
-	API_LOADED = true;
-	readData();
+	window.API_LOADED = true;
+	window.readData();
 }
 
 // Load the client interfaces for the YouTube Analytics and Data APIs, which

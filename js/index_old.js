@@ -242,6 +242,7 @@ function refreshScreen() {
         addOneVideo();
 
         $('#refresh').children("i").removeClass("fa-spin");
+
         refreshTimer = null;
     }
 }
