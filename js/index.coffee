@@ -79,24 +79,19 @@ $(document).ready(() ->
       videoList = JSON.parse(localStorage.getItem(@storageString)) or []
       @videos = (Video.fromJson(video) for video in videoList)
       @order = (if reversed then 1 else -1)
-      @sort()
+      @clean()
 
     add: (newVideo) ->
-      if @find(newVideo.id)?
-
-      else
+      index = @indexOf(newVideo.id)
+      if index == -1
         @videos.push(newVideo)
-        @sort()
-        @save()
+        @clean()
         # Update visuals
         if @htmlElement.children().length > @indexOf(newVideo.id)
           newVideo.addToDom(@htmlElement, @indexOf(newVideo.id))
         window.refresh()
-      return @
-
-    sort: () ->
-      order = @order
-      @videos = @videos.sort((a, b) -> (if a.publishedDate > b.publishedDate then 1 else -1) * order)
+      else
+        @videos[index] = newVideo
       return @
 
     remove: (id) ->
@@ -109,11 +104,6 @@ $(document).ready(() ->
         $('#video-' + video.id).remove()
         window.refresh()
         video
-
-    clearOlderThan: (date) ->
-      for video in @videos
-        if new Date(video.publishedDate) < date
-          @remove(video.id)
 
     indexOf: (id) ->
       for i in [0...@videos.length]
@@ -132,8 +122,31 @@ $(document).ready(() ->
     length: () ->
       @videos.length
 
+    clearOlderThan: (date) ->
+      for video in @videos
+        if new Date(video.publishedDate) < date
+          @remove(video.id)
+
+    sort: () ->
+      order = @order
+      @videos = @videos.sort((a, b) -> (if a.publishedDate > b.publishedDate then 1 else -1) * order)
+      return @
+
+    deduplicate: () ->
+      temp = @videos
+      @videos = []
+      for video in temp
+        if !@find(video.id)?
+          @videos.push(video)
+
     save: () ->
       localStorage.setItem(@storageString, JSON.stringify(@videos))
+
+    clean: () ->
+      @clearOlderThan()
+      @sort()
+      @deduplicate()
+      @save()
 
     addVideoToDom: () ->
       if ($(window).scrollTop() + $(window).innerHeight() * 2 >= $(document).height())
@@ -143,6 +156,18 @@ $(document).ready(() ->
             video.addToDom(@htmlElement, i)
             @addVideoToDom()
             break
+
+    addAllFrom: (sourceList) ->
+      @videos = @videos.concat(sourceList.videos)
+      @clean()
+      sourceList.videos = []
+      sourceList.clean()
+      for i in [0...@htmlElement.children().length]
+        video = @get(i)
+        if @htmlElement.children('#video-'+video.id).length == 0
+          video.addToDom(@htmlElement, i)
+      sourceList.htmlElement.children('.video-container').remove()
+      window.refresh()
 
   class SavedInput
     constructor: (@selector, @storageString, defaultValue, listener) ->
@@ -167,8 +192,6 @@ $(document).ready(() ->
   unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', true)
 
   window.readData = () ->
-    watchedVideos.clearOlderThan(new Date() - 1000 * 60 * 60 * 24 * historyInput.value())
-
     getSubs = (pageToken) ->
       gapi.client.youtube.subscriptions.list({
         mine: true
@@ -242,14 +265,10 @@ $(document).ready(() ->
       unwatchedVideos.add(watchedVideos.remove(id))
   )
   $('#all-done').click(() ->
-    watchedVideos.add(video) for video in unwatchedVideos.videos
-    unwatchedVideos.videos = []
-    $('.unwatched-videos').children('.video-container').remove()
+    watchedVideos.addAllFrom(unwatchedVideos)
   )
   $('#all-undone').click(() ->
-    unwatchedVideos.add(video) for video in watchedVideos.videos
-    watchedVideos.videos = []
-    $('.watched-videos').children('.video-container').remove()
+    unwatchedVideos.addAllFrom(watchedVideos)
   )
   $('input[name="tab"]').change(() ->
     if $('#tab-unwatched').prop('checked')
@@ -290,6 +309,9 @@ $(document).ready(() ->
   onPlayerReady = (event) ->
     event.target.playVideo()
 
+  # TODO: Work out why this doesn't work.
+#  autoplayInput = new SavedInput('#autoplay', 'autoplay', false)
+#  expandInput = new SavedInput('#expand', 'expand', false)
   $autoplay = $('#autoplay')
   $autoplay.prop('checked', localStorage.getItem('autoplay') == 'true')
   $autoplay.change(() ->

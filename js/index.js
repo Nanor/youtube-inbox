@@ -136,30 +136,22 @@
           return results;
         })();
         this.order = (reversed ? 1 : -1);
-        this.sort();
+        this.clean();
       }
 
       VideoList.prototype.add = function(newVideo) {
-        if (this.find(newVideo.id) != null) {
-
-        } else {
+        var index;
+        index = this.indexOf(newVideo.id);
+        if (index === -1) {
           this.videos.push(newVideo);
-          this.sort();
-          this.save();
+          this.clean();
           if (this.htmlElement.children().length > this.indexOf(newVideo.id)) {
             newVideo.addToDom(this.htmlElement, this.indexOf(newVideo.id));
           }
           window.refresh();
+        } else {
+          this.videos[index] = newVideo;
         }
-        return this;
-      };
-
-      VideoList.prototype.sort = function() {
-        var order;
-        order = this.order;
-        this.videos = this.videos.sort(function(a, b) {
-          return (a.publishedDate > b.publishedDate ? 1 : -1) * order;
-        });
         return this;
       };
 
@@ -174,21 +166,6 @@
           window.refresh();
           return video;
         }
-      };
-
-      VideoList.prototype.clearOlderThan = function(date) {
-        var j, len, ref, results, video;
-        ref = this.videos;
-        results = [];
-        for (j = 0, len = ref.length; j < len; j++) {
-          video = ref[j];
-          if (new Date(video.publishedDate) < date) {
-            results.push(this.remove(video.id));
-          } else {
-            results.push(void 0);
-          }
-        }
-        return results;
       };
 
       VideoList.prototype.indexOf = function(id) {
@@ -220,8 +197,55 @@
         return this.videos.length;
       };
 
+      VideoList.prototype.clearOlderThan = function(date) {
+        var j, len, ref, results, video;
+        ref = this.videos;
+        results = [];
+        for (j = 0, len = ref.length; j < len; j++) {
+          video = ref[j];
+          if (new Date(video.publishedDate) < date) {
+            results.push(this.remove(video.id));
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      };
+
+      VideoList.prototype.sort = function() {
+        var order;
+        order = this.order;
+        this.videos = this.videos.sort(function(a, b) {
+          return (a.publishedDate > b.publishedDate ? 1 : -1) * order;
+        });
+        return this;
+      };
+
+      VideoList.prototype.deduplicate = function() {
+        var j, len, results, temp, video;
+        temp = this.videos;
+        this.videos = [];
+        results = [];
+        for (j = 0, len = temp.length; j < len; j++) {
+          video = temp[j];
+          if (this.find(video.id) == null) {
+            results.push(this.videos.push(video));
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      };
+
       VideoList.prototype.save = function() {
         return localStorage.setItem(this.storageString, JSON.stringify(this.videos));
+      };
+
+      VideoList.prototype.clean = function() {
+        this.clearOlderThan();
+        this.sort();
+        this.deduplicate();
+        return this.save();
       };
 
       VideoList.prototype.addVideoToDom = function() {
@@ -240,6 +264,22 @@
           }
           return results;
         }
+      };
+
+      VideoList.prototype.addAllFrom = function(sourceList) {
+        var i, j, ref, video;
+        this.videos = this.videos.concat(sourceList.videos);
+        this.clean();
+        sourceList.videos = [];
+        sourceList.clean();
+        for (i = j = 0, ref = this.htmlElement.children().length; 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
+          video = this.get(i);
+          if (this.htmlElement.children('#video-' + video.id).length === 0) {
+            video.addToDom(this.htmlElement, i);
+          }
+        }
+        sourceList.htmlElement.children('.video-container').remove();
+        return window.refresh();
       };
 
       return VideoList;
@@ -280,7 +320,6 @@
     unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', true);
     window.readData = function() {
       var getSubs, loadVideo, loadVideosFromChannel, loadVideosFromPlaylist;
-      watchedVideos.clearOlderThan(new Date() - 1000 * 60 * 60 * 24 * historyInput.value());
       getSubs = function(pageToken) {
         return gapi.client.youtube.subscriptions.list({
           mine: true,
@@ -378,24 +417,10 @@
       }
     });
     $('#all-done').click(function() {
-      var j, len, ref, video;
-      ref = unwatchedVideos.videos;
-      for (j = 0, len = ref.length; j < len; j++) {
-        video = ref[j];
-        watchedVideos.add(video);
-      }
-      unwatchedVideos.videos = [];
-      return $('.unwatched-videos').children('.video-container').remove();
+      return watchedVideos.addAllFrom(unwatchedVideos);
     });
     $('#all-undone').click(function() {
-      var j, len, ref, video;
-      ref = watchedVideos.videos;
-      for (j = 0, len = ref.length; j < len; j++) {
-        video = ref[j];
-        unwatchedVideos.add(video);
-      }
-      watchedVideos.videos = [];
-      return $('.watched-videos').children('.video-container').remove();
+      return unwatchedVideos.addAllFrom(watchedVideos);
     });
     $('input[name="tab"]').change(function() {
       if ($('#tab-unwatched').prop('checked')) {
