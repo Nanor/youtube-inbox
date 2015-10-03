@@ -1,28 +1,125 @@
 $(document).ready(() ->
   class Video
-    constructor: (@title, @link, @author, @authorId, @publishedDate, @description, @thumbnail) ->
+    constructor: (@title, @link, @author, @authorId, publishedDate, @description, @thumbnail) ->
+      @publishedDate = new Date(publishedDate)
+
+    @fromJson: (json) ->
+      new Video(
+        json.title,
+        json.link,
+        json.author,
+        json.authorId,
+        json.publishedDate,
+        json.description,
+        json.thumbnail
+      )
+
+    addToDom: (parent, index) ->
+      isUnwatchedVideo = unwatchedVideos.find(@link)?
+
+      description = $('<div/>', {class: "description"})
+      @description.split(/\n(?:\n)+/).forEach((paragraph) ->
+        description.append($('<p>' + paragraph.replace(/\n/g, '<br>') + '</p>'))
+      )
+      description.find('p').linkify({target: "_blank"})
+
+      videoContainer = $('<div/>',
+        class: 'video-container'
+        id: 'video-' + @link).append($('<input/>',
+        type: 'checkbox'
+        class: 'expanded'
+        id: 'expand' + @link)).append($('<div/>', class: 'video').append($('<div/>',
+        class: 'thumbnail').append($('<p/>', text: @title)).append($('<img/>', src: @thumbnail)).append($('<i/>',
+        class: 'fa fa-play fa-3x')))).append($('<div/>', class: 'video-info').append($('<div/>',
+        class: 'author').append($('<a/>',
+        href: 'http://www.youtube.com/channel/' + @authorId
+        target: '_blank'
+        text: 'by ' + @author))).append($('<div/>',
+        class: 'upload-date'
+        text: 'uploaded ' + new Date(@publishedDate).toLocaleString())).append($('<input/>',
+        type: 'checkbox'
+        class: 'truncated'
+        id: 'trunc' + @link
+        'checked': true)).append(description).append($('<label/>', for: 'trunc' + @link).append($('<span/>',
+        class: 'read-more'
+        text: 'Read more')).append($('<span/>',
+        class: 'read-less'
+        text: 'Read less')))).append($('<div/>', class: 'side-buttons').append($('<button/>',
+        class: 'mark btn btn-default'
+        title: 'Mark as ' + (if isUnwatchedVideo then 'watched' else 'unwatched')).append($('<i/>',
+        class: 'fa fa-' + (if isUnwatchedVideo then 'check' else 'remove') + ' fa-3x'))).append($('<a/>',
+        class: 'youtube-watch btn btn-default'
+        title: 'Watch on YouTube'
+        href: 'https://www.youtube.com/watch?v=' + @link
+        target: '_blank').append($('<i/>', class: 'fa fa-youtube fa-3x'))).append($('<label/>',
+        for: 'expand' + @link).append($('<div/>',
+        class: 'expand-player btn btn-default'
+        title: 'Expand Video').append($('<i/>', class: 'fa fa-expand fa-3x'))).append($('<div/>',
+        class: 'compress-player btn btn-default'
+        title: 'Compress Video').append($('<i/>', class: 'fa fa-compress fa-3x')))))
+
+      $('.expanded').change(() ->
+        videoElement = $(this).next()
+        videoElement.height(videoElement.width() * 9 / 16)
+      )
+
+      if (index == 0)
+        parent.prepend(videoContainer)
+      else if (index > $(parent).children().length)
+        parent.append(videoContainer);
+      else
+        parent.children(":nth-child(#{index})").after(videoContainer)
+
+      if (videoContainer.find('.description').height() >= 250)
+        videoContainer.find('.video-info').addClass('long')
 
   class VideoList
-    constructor: (@storageString, reversed = false) ->
-      @videos = JSON.parse(localStorage.getItem(@storageString)) or []
-      @order = if reversed then 1 else -1
+    constructor: (@storageString, selector, reversed = false) ->
+      @htmlElement = $(selector)
+      videoList = JSON.parse(localStorage.getItem(@storageString)) or []
+      @videos = (Video.fromJson(video) for video in videoList)
+      @order = (if reversed then 1 else -1)
+      @sort()
 
     add: (newVideo) ->
       for video in @videos
         if video.link == newVideo.link
           return
       @videos.push(newVideo)
-      @videos.sort((a, b) -> (if a.publishedDate > b.publishedDate then -1 else 1) * @order)
+      @sort()
+      @save()
+      # Update visuals
+      if $(@selector).children().length >= @indexOf(newVideo.link)
+        newVideo.addToDom(@htmlElement, @indexOf(newVideo.link))
+      window.refresh()
+      return @
+
+    sort: () ->
+      order = @order
+      @videos = @videos.sort((a, b) -> (if a.publishedDate > b.publishedDate then 1 else -1) * order)
+      return @
 
     remove: (id) ->
-      @videos = (video for video in @videos when video.link != id)
+      index = @indexOf(id)
+      if index != -1
+        video = @videos[index]
+        @videos.splice(index, 1)
+        @save()
+        # Update visuals
+        $('#video-' + video.link).remove()
+        window.refresh()
+        video
 
     clearOlderThan: (date) ->
-      @videos = (video for video in @videos when new Date(video.publishedDate) > date)
+      for video in @videos
+        if new Date(video.publishedDate) < date
+          @remove(video.link)
 
     indexOf: (id) ->
-      ids = (video.link for video in @videos)
-      ids.indexOf(id)
+      for i in [0...@videos.length]
+        if @videos[i].link == id
+          return i
+      -1
 
     get: (index) ->
       @videos[index]
@@ -37,6 +134,15 @@ $(document).ready(() ->
 
     save: () ->
       localStorage.setItem(@storageString, JSON.stringify(@videos))
+
+    addVideoToDom: () ->
+      if ($(window).scrollTop() + $(window).innerHeight() * 2 >= $(document).height())
+        for i in [0...@length()]
+          video = @get(i)
+          if ($("#video-" + video.link).length == 0)
+            video.addToDom(@htmlElement, i)
+            @addVideoToDom()
+            break
 
   class SavedInput
     constructor: (@selector, @storageString, defaultValue, listener) ->
@@ -55,11 +161,10 @@ $(document).ready(() ->
         $(@selector).prop(@property, value)
       localStorage.getItem(@storageString)
 
-  historyInput = new SavedInput('#history-length', 'days-into-history', 28)
-
   title = $('title').text()
-  watchedVideos = new VideoList("watched-videos", false)
-  unwatchedVideos = new VideoList("unwatched-videos", true)
+  historyInput = new SavedInput('#history-length', 'days-into-history', 28)
+  watchedVideos = new VideoList("watched-videos", '.watched-videos')
+  unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', true)
 
   window.readData = () ->
     watchedVideos.clearOlderThan(new Date() - 1000 * 60 * 60 * 24 * historyInput.value())
@@ -112,135 +217,37 @@ $(document).ready(() ->
         if watchedVideos.indexOf(video.link) == -1
           unwatchedVideos.add(video)
 
-      refreshScreen()
-
     getSubs() if window.API_LOADED
 
-  addVideoToDom = (element, video, index) ->
-    isUnwatchedVideo = unwatchedVideos.indexOf(video.link) != -1
+  window.refresh = () ->
+    $('title').text((if unwatchedVideos.length() > 0 then "(#{unwatchedVideos.length()}) " else '') + title)
 
-    description = $('<div/>', {class: "description"})
-    video.description.split(/\n(?:\n)+/).forEach((paragraph) ->
-      description.append($('<p>' + paragraph.replace(/\n/g, '<br>') + '</p>'))
-    )
-    description.find('p').linkify({target: "_blank"})
+    $('#unwatched').find('.text').text("Unwatched (#{unwatchedVideos.length()})")
+    $('#watched').find('.text').text("Watched (#{watchedVideos.length()})")
 
-    `var videoContainer = $('<div/>', {class: 'video-container', id: video.link})
-        .append($('<input/>', {type: 'checkbox', class: 'expanded', id: 'expand' + video.link}))
-        .append($('<div/>', {class: "video"})
-            .append($('<div/>', {class: "thumbnail"})
-                .append($('<p/>', {text: video.title}))
-                .append($('<img/>', {src: video.thumbnail}))
-                .append($('<i/>', {class: 'fa fa-play fa-3x'}))))
-        .append($('<div/>', {class: 'video-info'})
-            .append($('<div/>', {class: 'author'})
-                .append($('<a/>', {
-                    href: 'http://www.youtube.com/channel/' + video.authorId,
-                    target: "_blank",
-                    text: 'by ' + video.author
-                })))
-            .append($('<div/>', {
-                class: 'upload-date',
-                text: 'uploaded ' + (new Date(video.publishedDate)).toLocaleString()
-            }))
-            .append($('<input/>', {type: 'checkbox', class: 'truncated', id: 'trunc' + video.link, 'checked': true}))
-            .append(description)
-            .append($('<label/>', {for: 'trunc' + video.link})
-                .append($('<span/>', {class: 'read-more', text: 'Read more'}))
-                .append($('<span/>', {class: 'read-less', text: 'Read less'}))))
-        .append($('<div/>', {class: 'side-buttons'})
-            .append($('<button/>', {
-                class: 'mark btn btn-default',
-                title: "Mark as " + (isUnwatchedVideo ? 'watched' : 'unwatched'),
-            })
-                .append($('<i/>', {class: 'fa fa-' + (isUnwatchedVideo ? "check" : "remove") + ' fa-3x'})))
-            .append($('<a/>', {
-                class: 'youtube-watch btn btn-default',
-                title: "Watch on YouTube",
-                href: "https://www.youtube.com/watch?v=" + video.link,
-                target: "_blank"
-            })
-                .append($('<i/>', {class: 'fa fa-youtube fa-3x'})))
-            .append($('<label/>', {for: 'expand' + video.link})
-                .append($('<div/>', {class: 'expand-player btn btn-default', title: "Expand Video"})
-                    .append($('<i/>', {class: 'fa fa-expand fa-3x'})))
-                .append($('<div/>', {class: 'compress-player btn btn-default', title: "Compress Video"})
-                    .append($('<i/>', {class: 'fa fa-compress fa-3x'})))));`
-    $('.expanded').change(() ->
-      video = $(this).next()
-      video.height(video.width() * 9 / 16)
-    )
-
-    if (index == 0)
-      element.prepend(videoContainer)
-    else if (index > $(element).children().length)
-      element.append(videoContainer);
+    if $('#tab-unwatched').prop('checked')
+      unwatchedVideos.addVideoToDom()
     else
-      $(element).children(':nth-child(' + index + ')').after(videoContainer)
-
-    if (videoContainer.find('.description').height() >= 250)
-      videoContainer.find('.video-info').addClass('long')
-
-  refreshTimer = null
-  refreshScreen = () ->
-    updateScreen = () ->
-      watchedVideos.save()
-      unwatchedVideos.save()
-
-      $('title').text((if unwatchedVideos.length() > 0 then "(#{unwatchedVideos.length()}) " else '') + title)
-
-      $('#unwatched').find('.text').text("Unwatched (#{unwatchedVideos.length()})")
-      $('#watched').find('.text').text("Watched (#{watchedVideos.length()})")
-
-      onUnwatchedTab = $('#tab-unwatched').prop('checked')
-      videoList = (if onUnwatchedTab then unwatchedVideos else watchedVideos)
-      $videoList = (if onUnwatchedTab then $('.unwatched-videos') else $('.watched-videos'))
-      for i in [0...$videoList.children().length]
-        if ($("#" + videoList.get(i).link).length == 0)
-          addVideoToDom($videoList, videoList.get(i), i)
-
-      addOneVideo = () ->
-        if ($(this).scrollTop() + $(this).innerHeight() * 2 >= $(document).height())
-          for i in [0...videoList.length()]
-            if ($("#" + videoList.get(i).link).length == 0)
-              addVideoToDom($videoList, videoList.get(i), i)
-              addOneVideo()
-              break
-
-      addOneVideo()
-
-      refreshTimer = null;
-
-    if refreshTimer?
-      clearTimeout(refreshTimer)
-    else
-      updateScreen()
-
-    refreshTimer = setTimeout(updateScreen, 100)
+      watchedVideos.addVideoToDom()
+  window.refresh()
 
   $videos = $('.videos')
   $videos.on('click', '.mark', () ->
-    id = $(this).parent().parent().attr('id')
+    id = $(this).parent().parent().attr('id')[6..]
     if unwatchedVideos.find(id)?
-      watchedVideos.add(unwatchedVideos.find(id))
-      unwatchedVideos.remove(id)
+      watchedVideos.add(unwatchedVideos.remove(id))
     else
-      unwatchedVideos.add(watchedVideos.find(id))
-      watchedVideos.remove(id)
-    $("#" + id).remove()
-    refreshScreen()
+      unwatchedVideos.add(watchedVideos.remove(id))
   )
   $('#all-done').click(() ->
     watchedVideos.add(video) for video in unwatchedVideos.videos
     unwatchedVideos.videos = []
     $('.unwatched-videos').children('.video-container').remove()
-    refreshScreen();
   )
   $('#all-undone').click(() ->
     unwatchedVideos.add(video) for video in watchedVideos.videos
     watchedVideos.videos = []
     $('.watched-videos').children('.video-container').remove()
-    refreshScreen();
   )
   $('input[name="tab"]').change(() ->
     if $('#tab-unwatched').prop('checked')
@@ -250,10 +257,10 @@ $(document).ready(() ->
       $('.unwatched-videos').hide()
       $('.watched-videos').show()
     window.scrollTo(0, 0);
-    refreshScreen();
+    window.refresh()
   )
 
-  $(window).bind('scroll', refreshScreen)
+  $(window).bind('scroll', window.refresh)
 
   readDataInterval = null
   updateInput = new SavedInput('#update-interval', 'update-interval', 5, () ->
@@ -270,7 +277,7 @@ $(document).ready(() ->
     new YT.Player(this, {
       height: $(this).width * 9 / 16,
       width: $(this).width,
-      videoId: $(this).parent().attr('id'),
+      videoId: $(this).parent().attr('id')[6..],
       events: {
         'onReady': onPlayerReady,
         'onStateChange': onPlayerStateChange,
