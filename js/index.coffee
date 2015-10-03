@@ -164,7 +164,7 @@ $(document).ready(() ->
       sourceList.clean()
       for i in [0...@htmlElement.children().length]
         video = @get(i)
-        if @htmlElement.children('#video-'+video.id).length == 0
+        if @htmlElement.children('#video-' + video.id).length == 0
           video.addToDom(@htmlElement, i)
       sourceList.htmlElement.children('.video-container').remove()
       window.refresh()
@@ -187,9 +187,24 @@ $(document).ready(() ->
       localStorage.getItem(@storageString)
 
   title = $('title').text()
-  historyInput = new SavedInput('#history-length', 'days-into-history', 28)
   watchedVideos = new VideoList("watched-videos", '.watched-videos')
   unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', true)
+
+  # Saved input boxes.
+  historyInput = new SavedInput('#history-length', 'days-into-history', 28)
+  # TODO: Work out why this doesn't work.
+#  autoplayInput = new SavedInput('#autoplay', 'autoplay', false)
+#  expandInput = new SavedInput('#expand', 'expand', false)
+  $autoplay = $('#autoplay')
+  $autoplay.prop('checked', localStorage.getItem('autoplay') == 'true')
+  $autoplay.change(() ->
+    localStorage.setItem('autoplay', (if $autoplay.is(':checked') then 'true' else 'false'))
+  )
+  $expand = $('#expand')
+  $expand.prop('checked', localStorage.getItem('expand') == 'true')
+  $expand.change(() ->
+    localStorage.setItem('expand', (if $expand.is(':checked') then 'true' else 'false'))
+  )
 
   window.readData = () ->
     getSubs = (pageToken) ->
@@ -256,6 +271,9 @@ $(document).ready(() ->
       watchedVideos.addVideoToDom()
   window.refresh()
 
+  $(window).bind('scroll', window.refresh)
+
+  # Click binds
   $videos = $('.videos')
   $videos.on('click', '.mark', () ->
     id = $(this).parent().parent().attr('id')[6..]
@@ -281,8 +299,7 @@ $(document).ready(() ->
     window.refresh()
   )
 
-  $(window).bind('scroll', window.refresh)
-
+  # Update interval
   readDataInterval = null
   updateInput = new SavedInput('#update-interval', 'update-interval', 5, () ->
     window.clearInterval(readDataInterval)
@@ -294,6 +311,7 @@ $(document).ready(() ->
 
   $('#refresh').click(window.readData)
 
+  # YouTube player
   $videos.on('click', '.video', () ->
     new YT.Player(this, {
       height: $(this).width * 9 / 16,
@@ -309,25 +327,11 @@ $(document).ready(() ->
   onPlayerReady = (event) ->
     event.target.playVideo()
 
-  # TODO: Work out why this doesn't work.
-#  autoplayInput = new SavedInput('#autoplay', 'autoplay', false)
-#  expandInput = new SavedInput('#expand', 'expand', false)
-  $autoplay = $('#autoplay')
-  $autoplay.prop('checked', localStorage.getItem('autoplay') == 'true')
-  $autoplay.change(() ->
-    localStorage.setItem('autoplay', (if $autoplay.is(':checked') then 'true' else 'false'))
-  )
-  $expand = $('#expand')
-  $expand.prop('checked', localStorage.getItem('expand') == 'true')
-  $expand.change(() ->
-    localStorage.setItem('expand', (if $expand.is(':checked') then 'true' else 'false'))
-  )
-
   onPlayerStateChange = (event) ->
     $video = $(event.target.f).parent()
-    if event.data == YT.PlayerState.ENDED and $autoplay.is(':checked')
+    if event.data == YT.PlayerState.ENDED and $autoplay.is(':checked') and $('#tab-unwatched').prop('checked')
       $video.next().find('.video').click()
-      $video.find('.done').click()
+      $video.find('.mark').click()
 
     $expanded = $video.find('.expanded')
     if event.data == YT.PlayerState.PLAYING and $expand.is(':checked')

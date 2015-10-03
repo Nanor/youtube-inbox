@@ -315,9 +315,19 @@
 
     })();
     title = $('title').text();
-    historyInput = new SavedInput('#history-length', 'days-into-history', 28);
     watchedVideos = new VideoList("watched-videos", '.watched-videos');
     unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', true);
+    historyInput = new SavedInput('#history-length', 'days-into-history', 28);
+    $autoplay = $('#autoplay');
+    $autoplay.prop('checked', localStorage.getItem('autoplay') === 'true');
+    $autoplay.change(function() {
+      return localStorage.setItem('autoplay', ($autoplay.is(':checked') ? 'true' : 'false'));
+    });
+    $expand = $('#expand');
+    $expand.prop('checked', localStorage.getItem('expand') === 'true');
+    $expand.change(function() {
+      return localStorage.setItem('expand', ($expand.is(':checked') ? 'true' : 'false'));
+    });
     window.readData = function() {
       var getSubs, loadVideo, loadVideosFromChannel, loadVideosFromPlaylist;
       getSubs = function(pageToken) {
@@ -406,6 +416,7 @@
       }
     };
     window.refresh();
+    $(window).bind('scroll', window.refresh);
     $videos = $('.videos');
     $videos.on('click', '.mark', function() {
       var id;
@@ -433,7 +444,6 @@
       window.scrollTo(0, 0);
       return window.refresh();
     });
-    $(window).bind('scroll', window.refresh);
     readDataInterval = null;
     updateInput = new SavedInput('#update-interval', 'update-interval', 5, function() {
       window.clearInterval(readDataInterval);
@@ -457,22 +467,12 @@
     onPlayerReady = function(event) {
       return event.target.playVideo();
     };
-    $autoplay = $('#autoplay');
-    $autoplay.prop('checked', localStorage.getItem('autoplay') === 'true');
-    $autoplay.change(function() {
-      return localStorage.setItem('autoplay', ($autoplay.is(':checked') ? 'true' : 'false'));
-    });
-    $expand = $('#expand');
-    $expand.prop('checked', localStorage.getItem('expand') === 'true');
-    $expand.change(function() {
-      return localStorage.setItem('expand', ($expand.is(':checked') ? 'true' : 'false'));
-    });
     return onPlayerStateChange = function(event) {
       var $expanded, $video;
       $video = $(event.target.f).parent();
-      if (event.data === YT.PlayerState.ENDED && $autoplay.is(':checked')) {
+      if (event.data === YT.PlayerState.ENDED && $autoplay.is(':checked') && $('#tab-unwatched').prop('checked')) {
         $video.next().find('.video').click();
-        $video.find('.done').click();
+        $video.find('.mark').click();
       }
       $expanded = $video.find('.expanded');
       if (event.data === YT.PlayerState.PLAYING && $expand.is(':checked')) {
