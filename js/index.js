@@ -14,7 +14,7 @@
       }
 
       Video.fromJson = function(json) {
-        return new Video(json.title, json.id || json.link, json.author, json.authorId, json.publishedDate, json.description, json.thumbnail);
+        return new Video(json.title, json.id, json.author, json.authorId, json.publishedDate, json.description, json.thumbnail);
       };
 
       Video.prototype.addToDom = function(parent, index) {
@@ -140,21 +140,17 @@
       }
 
       VideoList.prototype.add = function(newVideo) {
-        var j, len, ref, video;
-        ref = this.videos;
-        for (j = 0, len = ref.length; j < len; j++) {
-          video = ref[j];
-          if (video.id === newVideo.id) {
-            return;
+        if (this.find(newVideo.id) != null) {
+
+        } else {
+          this.videos.push(newVideo);
+          this.sort();
+          this.save();
+          if (this.htmlElement.children().length > this.indexOf(newVideo.id)) {
+            newVideo.addToDom(this.htmlElement, this.indexOf(newVideo.id));
           }
+          window.refresh();
         }
-        this.videos.push(newVideo);
-        this.sort();
-        this.save();
-        if ($(this.selector).children().length >= this.indexOf(newVideo.id)) {
-          newVideo.addToDom(this.htmlElement, this.indexOf(newVideo.id));
-        }
-        window.refresh();
         return this;
       };
 
@@ -348,8 +344,10 @@
           }
         });
         video = new Video(videoSnippet.title, videoSnippet.resourceId.videoId, videoSnippet.channelTitle, videoSnippet.channelId, videoSnippet.publishedAt, videoSnippet.description, thumbnail.url);
-        if (Date.parse(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * historyInput.value())) {
-          if (watchedVideos.indexOf(video.id) === -1) {
+        if (video.publishedDate > (new Date() - 1000 * 60 * 60 * 24 * historyInput.value())) {
+          if (watchedVideos.find(video.id) != null) {
+            return watchedVideos.add(video);
+          } else {
             return unwatchedVideos.add(video);
           }
         }
@@ -419,7 +417,7 @@
       }
     });
     readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.value());
-    $('#refresh').click(readData);
+    $('#refresh').click(window.readData);
     $videos.on('click', '.video', function() {
       return new YT.Player(this, {
         height: $(this).width * 9 / 16,
@@ -435,8 +433,16 @@
       return event.target.playVideo();
     };
     $autoplay = $('#autoplay');
+    $autoplay.prop('checked', localStorage.getItem('autoplay') === 'true');
+    $autoplay.change(function() {
+      return localStorage.setItem('autoplay', ($autoplay.is(':checked') ? 'true' : 'false'));
+    });
     $expand = $('#expand');
-    onPlayerStateChange = function(event) {
+    $expand.prop('checked', localStorage.getItem('expand') === 'true');
+    $expand.change(function() {
+      return localStorage.setItem('expand', ($expand.is(':checked') ? 'true' : 'false'));
+    });
+    return onPlayerStateChange = function(event) {
       var $expanded, $video;
       $video = $(event.target.f).parent();
       if (event.data === YT.PlayerState.ENDED && $autoplay.is(':checked')) {
@@ -453,14 +459,6 @@
         return $expanded.change();
       }
     };
-    $autoplay.prop('checked', localStorage.getItem('autoplay') === 'true');
-    $autoplay.change(function() {
-      return localStorage.setItem('autoplay', ($autoplay.is(':checked') ? 'true' : 'false'));
-    });
-    $expand.prop('checked', localStorage.getItem('expand') === 'true');
-    return $expand.change(function() {
-      return localStorage.setItem('expand', ($expand.is(':checked') ? 'true' : 'false'));
-    });
   });
 
 }).call(this);

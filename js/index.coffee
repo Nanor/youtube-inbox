@@ -6,7 +6,7 @@ $(document).ready(() ->
     @fromJson: (json) ->
       new Video(
         json.title,
-        json.id or json.link,
+        json.id,
         json.author,
         json.authorId,
         json.publishedDate,
@@ -82,16 +82,16 @@ $(document).ready(() ->
       @sort()
 
     add: (newVideo) ->
-      for video in @videos
-        if video.id == newVideo.id
-          return
-      @videos.push(newVideo)
-      @sort()
-      @save()
-      # Update visuals
-      if $(@selector).children().length >= @indexOf(newVideo.id)
-        newVideo.addToDom(@htmlElement, @indexOf(newVideo.id))
-      window.refresh()
+      if @find(newVideo.id)?
+
+      else
+        @videos.push(newVideo)
+        @sort()
+        @save()
+        # Update visuals
+        if @htmlElement.children().length > @indexOf(newVideo.id)
+          newVideo.addToDom(@htmlElement, @indexOf(newVideo.id))
+        window.refresh()
       return @
 
     sort: () ->
@@ -213,8 +213,10 @@ $(document).ready(() ->
         videoSnippet.description,
         thumbnail.url
       )
-      if Date.parse(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * historyInput.value())
-        if watchedVideos.indexOf(video.id) == -1
+      if video.publishedDate > (new Date() - 1000 * 60 * 60 * 24 * historyInput.value())
+        if watchedVideos.find(video.id)?
+          watchedVideos.add(video)
+        else
           unwatchedVideos.add(video)
 
     getSubs() if window.API_LOADED
@@ -271,7 +273,7 @@ $(document).ready(() ->
   #noinspection CoffeeScriptUnusedLocalSymbols
   readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.value())
 
-  $('#refresh').click(readData)
+  $('#refresh').click(window.readData)
 
   $videos.on('click', '.video', () ->
     new YT.Player(this, {
@@ -289,7 +291,15 @@ $(document).ready(() ->
     event.target.playVideo()
 
   $autoplay = $('#autoplay')
+  $autoplay.prop('checked', localStorage.getItem('autoplay') == 'true')
+  $autoplay.change(() ->
+    localStorage.setItem('autoplay', (if $autoplay.is(':checked') then 'true' else 'false'))
+  )
   $expand = $('#expand')
+  $expand.prop('checked', localStorage.getItem('expand') == 'true')
+  $expand.change(() ->
+    localStorage.setItem('expand', (if $expand.is(':checked') then 'true' else 'false'))
+  )
 
   onPlayerStateChange = (event) ->
     $video = $(event.target.f).parent()
@@ -305,13 +315,4 @@ $(document).ready(() ->
     if event.data == YT.PlayerState.ENDED
       $expanded.prop('checked', false)
       $expanded.change()
-
-  $autoplay.prop('checked', localStorage.getItem('autoplay') == 'true')
-  $autoplay.change(() ->
-    localStorage.setItem('autoplay', (if $autoplay.is(':checked') then 'true' else 'false'))
-  )
-  $expand.prop('checked', localStorage.getItem('expand') == 'true')
-  $expand.change(() ->
-    localStorage.setItem('expand', (if $expand.is(':checked') then 'true' else 'false'))
-  )
 )
