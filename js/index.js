@@ -23,7 +23,7 @@
       if (reversed == null) {
         reversed = false;
       }
-      this.videos = localStorage.getItem(JSON.parse(localStorage.getItem(this.storageString))) || [];
+      this.videos = JSON.parse(localStorage.getItem(this.storageString)) || [];
       this.order = reversed ? 1 : -1;
     }
 
@@ -409,8 +409,8 @@
       return refreshScreen();
     });
     $(window).bind('scroll', refreshScreen);
+    readDataInterval = null;
     updateInput = new SavedInput('#update-interval', 'update-interval', 5, function() {
-      var readDataInterval;
       window.clearInterval(readDataInterval);
       return readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.value());
     });

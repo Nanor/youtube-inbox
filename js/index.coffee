@@ -3,7 +3,7 @@
 
   class VideoList
     constructor: (@storageString, reversed = false) ->
-      @videos = localStorage.getItem(JSON.parse(localStorage.getItem(@storageString))) or []
+      @videos = JSON.parse(localStorage.getItem(@storageString)) or []
       @order = if reversed then 1 else -1
 
     add: (newVideo) ->
@@ -267,10 +267,12 @@
 
     $(window).bind('scroll', refreshScreen)
 
+    readDataInterval = null
     updateInput = new SavedInput('#update-interval', 'update-interval', 5, () ->
       window.clearInterval(readDataInterval)
       readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.value())
     )
+    #noinspection CoffeeScriptUnusedLocalSymbols
     readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.value())
 
     $('#refresh').click(readData)
