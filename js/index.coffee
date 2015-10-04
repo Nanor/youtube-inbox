@@ -23,6 +23,7 @@ $(document).ready(() ->
       )
       description.find('p').linkify({target: "_blank"})
 
+      # TODO: Tidy up this code.
       videoContainer = $('<div/>',
         class: 'video-container'
         id: 'video-' + @id).append($('<input/>',
@@ -58,20 +59,43 @@ $(document).ready(() ->
         class: 'compress-player btn btn-default'
         title: 'Compress Video').append($('<i/>', class: 'fa fa-compress fa-3x')))))
 
-      $('.expanded').change(() ->
-        videoElement = $(this).next()
-        videoElement.height(videoElement.width() * 9 / 16)
-      )
-
+      # Place the video into the dom.
       if (index == 0)
         parent.prepend(videoContainer)
       else if (index > $(parent).children().length)
         parent.append(videoContainer);
       else
+        # The :nth-child selector is 1-indexed.
         parent.children(":nth-child(#{index})").after(videoContainer)
+
+      $('.expanded').change(() ->
+        videoElement = $(this).next()
+        videoElement.height(videoElement.width() * 9 / 16)
+      )
 
       if (videoContainer.find('.description').height() >= 250)
         videoContainer.find('.video-info').addClass('long')
+
+      id = @id # Annoying thing to deal with closures.
+      videoContainer.on('click', '.mark', () ->
+        if isUnwatchedVideo
+          watchedVideos.add(unwatchedVideos.remove(id))
+        else
+          unwatchedVideos.add(watchedVideos.remove(id))
+      )
+
+      videoContainer.on('click', '.video', () ->
+        new YT.Player(this, {
+          height: $(this).width * 9 / 16,
+          width: $(this).width,
+          videoId: id,
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange,
+          },
+        })
+      )
+
 
   class VideoList
     constructor: (@storageString, selector, reversed = false) ->
@@ -79,18 +103,27 @@ $(document).ready(() ->
       videoList = JSON.parse(localStorage.getItem(@storageString)) or []
       @videos = (Video.fromJson(video) for video in videoList)
       @order = (if reversed then 1 else -1)
-      @clean()
+      @sort()
+      @deduplicate()
+      @save()
 
     add: (newVideo) ->
       index = @indexOf(newVideo.id)
       if index == -1
+        # New video
         @videos.push(newVideo)
-        @clean()
+        @sort()
+        @deduplicate()
+        @save()
         # Update visuals
         if @htmlElement.children().length > @indexOf(newVideo.id)
           newVideo.addToDom(@htmlElement, @indexOf(newVideo.id))
+          lastChild = @htmlElement.children().last()
+          if lastChild.find('.thumbnail').length > 0
+            lastChild.remove()
         window.refresh()
       else
+        # Video already in list.
         @videos[index] = newVideo
       return @
 
@@ -99,6 +132,7 @@ $(document).ready(() ->
       if index != -1
         video = @videos[index]
         @videos.splice(index, 1)
+        @sort()
         @save()
         # Update visuals
         $('#video-' + video.id).remove()
@@ -124,7 +158,7 @@ $(document).ready(() ->
 
     clearOlderThan: (date) ->
       for video in @videos
-        if new Date(video.publishedDate) < date
+        if video.publishedDate < date
           @remove(video.id)
 
     sort: () ->
@@ -142,12 +176,6 @@ $(document).ready(() ->
     save: () ->
       localStorage.setItem(@storageString, JSON.stringify(@videos))
 
-    clean: () ->
-      @clearOlderThan()
-      @sort()
-      @deduplicate()
-      @save()
-
     addVideoToDom: () ->
       if ($(window).scrollTop() + $(window).innerHeight() * 2 >= $(document).height())
         for i in [0...@length()]
@@ -159,20 +187,23 @@ $(document).ready(() ->
 
     addAllFrom: (sourceList) ->
       @videos = @videos.concat(sourceList.videos)
-      @clean()
+      @sort()
+      @deduplicate()
+      @save()
       sourceList.videos = []
-      sourceList.clean()
-      for i in [0...@htmlElement.children().length]
-        video = @get(i)
-        if @htmlElement.children('#video-' + video.id).length == 0
-          video.addToDom(@htmlElement, i)
+      sourceList.save()
+      # Unrender all non playing videos. When they're re-rendered they'll be in the right order.
+      for child in @htmlElement.children('.video-container')
+        element = $(child)
+        if element.find('.thumbnail').length > 0
+          element.remove()
       sourceList.htmlElement.children('.video-container').remove()
       window.refresh()
 
   class SavedInput
     constructor: (@selector, @storageString, defaultValue, listener) ->
       @property = (if $(@selector).prop('type') == 'checkbox' then 'checked' else 'value')
-      value = localStorage.getItem(@storageString) or defaultValue
+      value = JSON.parse(localStorage.getItem(@storageString)) or defaultValue
       localStorage.setItem(@storageString, value)
       $(@selector).prop(@property, value)
       self = @
@@ -184,29 +215,21 @@ $(document).ready(() ->
       if value?
         localStorage.setItem(@storageString, value)
         $(@selector).prop(@property, value)
-      localStorage.getItem(@storageString)
+      JSON.parse(localStorage.getItem(@storageString))
 
   title = $('title').text()
-  watchedVideos = new VideoList("watched-videos", '.watched-videos')
-  unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', true)
 
   # Saved input boxes.
   historyInput = new SavedInput('#history-length', 'days-into-history', 28)
-  # TODO: Work out why this doesn't work.
-#  autoplayInput = new SavedInput('#autoplay', 'autoplay', false)
-#  expandInput = new SavedInput('#expand', 'expand', false)
-  $autoplay = $('#autoplay')
-  $autoplay.prop('checked', localStorage.getItem('autoplay') == 'true')
-  $autoplay.change(() ->
-    localStorage.setItem('autoplay', (if $autoplay.is(':checked') then 'true' else 'false'))
-  )
-  $expand = $('#expand')
-  $expand.prop('checked', localStorage.getItem('expand') == 'true')
-  $expand.change(() ->
-    localStorage.setItem('expand', (if $expand.is(':checked') then 'true' else 'false'))
-  )
+  autoplayInput = new SavedInput('#autoplay', 'autoplay', false)
+  expandInput = new SavedInput('#expand', 'expand', false)
+
+  watchedVideos = new VideoList("watched-videos", '.watched-videos')
+  unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', true)
 
   window.readData = () ->
+    watchedVideos.clearOlderThan(new Date() - 1000 * 60 * 60 * 24 * historyInput.value())
+
     getSubs = (pageToken) ->
       gapi.client.youtube.subscriptions.list({
         mine: true
@@ -259,6 +282,18 @@ $(document).ready(() ->
 
     getSubs() if window.API_LOADED
 
+  $('#refresh').click(window.readData)
+
+  # Update interval
+  readDataInterval = null
+  updateInput = new SavedInput('#update-interval', 'update-interval', 5, () ->
+    window.clearInterval(readDataInterval)
+    if updateInput.value() > 0
+      readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.value())
+  )
+  #noinspection CoffeeScriptUnusedLocalSymbols
+  readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.value())
+
   window.refresh = () ->
     $('title').text((if unwatchedVideos.length() > 0 then "(#{unwatchedVideos.length()}) " else '') + title)
 
@@ -270,18 +305,9 @@ $(document).ready(() ->
     else
       watchedVideos.addVideoToDom()
   window.refresh()
-
   $(window).bind('scroll', window.refresh)
 
   # Click binds
-  $videos = $('.videos')
-  $videos.on('click', '.mark', () ->
-    id = $(this).parent().parent().attr('id')[6..]
-    if unwatchedVideos.find(id)?
-      watchedVideos.add(unwatchedVideos.remove(id))
-    else
-      unwatchedVideos.add(watchedVideos.remove(id))
-  )
   $('#all-done').click(() ->
     watchedVideos.addAllFrom(unwatchedVideos)
   )
@@ -299,42 +325,18 @@ $(document).ready(() ->
     window.refresh()
   )
 
-  # Update interval
-  readDataInterval = null
-  updateInput = new SavedInput('#update-interval', 'update-interval', 5, () ->
-    window.clearInterval(readDataInterval)
-    if updateInput.value() > 0
-      readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.value())
-  )
-  #noinspection CoffeeScriptUnusedLocalSymbols
-  readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.value())
-
-  $('#refresh').click(window.readData)
-
-  # YouTube player
-  $videos.on('click', '.video', () ->
-    new YT.Player(this, {
-      height: $(this).width * 9 / 16,
-      width: $(this).width,
-      videoId: $(this).parent().attr('id')[6..],
-      events: {
-        'onReady': onPlayerReady,
-        'onStateChange': onPlayerStateChange,
-      },
-    })
-  )
-
+  # YouTube player functions
   onPlayerReady = (event) ->
     event.target.playVideo()
 
   onPlayerStateChange = (event) ->
     $video = $(event.target.f).parent()
-    if event.data == YT.PlayerState.ENDED and $autoplay.is(':checked') and $('#tab-unwatched').prop('checked')
+    if event.data == YT.PlayerState.ENDED and autoplayInput.value() and $('#tab-unwatched').prop('checked')
       $video.next().find('.video').click()
       $video.find('.mark').click()
 
     $expanded = $video.find('.expanded')
-    if event.data == YT.PlayerState.PLAYING and $expand.is(':checked')
+    if event.data == YT.PlayerState.PLAYING and expandInput.value()
       $expanded.prop('checked', true)
       $expanded.change()
 
