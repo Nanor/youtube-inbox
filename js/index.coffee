@@ -101,7 +101,7 @@ $(document).ready(() ->
     constructor: (@storageString, selector, reversed = false) ->
       @htmlElement = $(selector)
       videoList = JSON.parse(localStorage.getItem(@storageString)) or []
-      @videos = (Video.fromJson(video) for video in videoList)
+      @videos = (video for video in (Video.fromJson(video) for video in videoList) when video?)
       @order = (if reversed then 1 else -1)
       @sort()
       @deduplicate()

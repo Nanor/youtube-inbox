@@ -146,11 +146,22 @@
         this.htmlElement = $(selector);
         videoList = JSON.parse(localStorage.getItem(this.storageString)) || [];
         this.videos = (function() {
-          var j, len, results;
+          var j, len, ref, results;
+          ref = (function() {
+            var k, len, results1;
+            results1 = [];
+            for (k = 0, len = videoList.length; k < len; k++) {
+              video = videoList[k];
+              results1.push(Video.fromJson(video));
+            }
+            return results1;
+          })();
           results = [];
-          for (j = 0, len = videoList.length; j < len; j++) {
-            video = videoList[j];
-            results.push(Video.fromJson(video));
+          for (j = 0, len = ref.length; j < len; j++) {
+            video = ref[j];
+            if (video != null) {
+              results.push(video);
+            }
           }
           return results;
         })();
