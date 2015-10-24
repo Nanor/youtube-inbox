@@ -35,7 +35,7 @@
         }).append($('<input/>', {
           type: 'checkbox',
           "class": 'expanded',
-          id: 'expand' + this.id
+          id: 'expand-' + this.id
         })).append($('<div/>', {
           "class": 'video'
         }).append($('<div/>', {
@@ -60,10 +60,10 @@
         })).append($('<input/>', {
           type: 'checkbox',
           "class": 'truncated',
-          id: 'trunc' + this.id,
+          id: 'trunc-' + this.id,
           'checked': true
         })).append(description).append($('<label/>', {
-          "for": 'trunc' + this.id
+          "for": 'trunc-' + this.id
         }).append($('<span/>', {
           "class": 'read-more',
           text: 'Read more'
@@ -85,7 +85,7 @@
         }).append($('<i/>', {
           "class": 'fa fa-youtube fa-3x'
         }))).append($('<label/>', {
-          "for": 'expand' + this.id
+          "for": 'expand-' + this.id
         }).append($('<div/>', {
           "class": 'expand-player btn btn-default',
           title: 'Expand Video'
@@ -146,22 +146,11 @@
         this.htmlElement = $(selector);
         videoList = JSON.parse(localStorage.getItem(this.storageString)) || [];
         this.videos = (function() {
-          var j, len, ref, results;
-          ref = (function() {
-            var k, len, results1;
-            results1 = [];
-            for (k = 0, len = videoList.length; k < len; k++) {
-              video = videoList[k];
-              results1.push(Video.fromJson(video));
-            }
-            return results1;
-          })();
+          var j, len, results;
           results = [];
-          for (j = 0, len = ref.length; j < len; j++) {
-            video = ref[j];
-            if (video != null) {
-              results.push(video);
-            }
+          for (j = 0, len = videoList.length; j < len; j++) {
+            video = videoList[j];
+            results.push(Video.fromJson(video));
           }
           return results;
         })();

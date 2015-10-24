@@ -1,22 +1,23 @@
 <!doctype html>
 <html>
 <head>
-	<title>YouTube Inbox</title>
-	<link rel="stylesheet" href="libraries/font-awesome-4.4.0/css/font-awesome.min.css">
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-	<link rel="stylesheet" type="text/css" href="css/index.css">
+    <title>YouTube Inbox</title>
 
-	<script type="text/javascript" src="http://code.jquery.com/jquery-2.0.0.js"></script>
-	<script type="text/javascript" src="libraries/gapi/auth.js"></script>
-	<script type="text/javascript" src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
-	<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="libraries/linkify/linkify.min.js"></script>
-	<script type="text/javascript" src="libraries/linkify/linkify-jquery.min.js"></script>
-	<script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
-	<script type="text/javascript" src="js/index.js"></script>
+    <link rel="stylesheet" href="libraries/font-awesome-4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" type="text/css" href="css/index.css">
 
-	<link rel="icon" href="favicon-vflz7uhzw.ico" sizes="32x32">
+    <script type="text/javascript" src="http://code.jquery.com/jquery-2.0.0.js"></script>
+    <script type="text/javascript" src="libraries/gapi/auth.js"></script>
+    <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="libraries/linkify/linkify.min.js"></script>
+    <script type="text/javascript" src="libraries/linkify/linkify-jquery.min.js"></script>
+    <script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+
+    <link rel="icon" href="favicon-vflz7uhzw.ico" sizes="32x32">
 </head>
 <body>
 
@@ -35,22 +36,26 @@
     <button id="all-undone" class="btn btn-default" title="Mark all as unwatched"><i class="fa fa-remove"></i></button>
 </div>
 <div class="videos">
-<div class="watched-videos"></div>
-<div class="unwatched-videos"></div>
-<div class="no-videos">
-    End of videos.
-</div>
-</div>
-<input id="settings-toggle" type="checkbox">
-<div class="settings">
-    <label for="settings-toggle" class="btn btn-default settings-toggle"><i class="fa fa-gear"></i></label>
-	<button class="btn btn-default pre-auth" id="login-link">Log in</button>
-	<button class="btn btn-default post-auth" id="logout-link">Log out</button>
-	<label>Update interval:<input id="update-interval" type="number" value="5"/>minutes.<div class="note">(0 for never)</div></label>
-	<label>Discard watched videos older than<input id="history-length" type="number" value="28"/>days old.</label>
-	<p class="note">(Unwatched videos will be kept forever)</p>
-	<label for="autoplay">Auto-play videos?<input type="checkbox" id="autoplay"></label>
-	<label for="expand">Expand playing videos?<input type="checkbox" id="expand"></label>
+    <div class="watched-videos"></div>
+    <div class="unwatched-videos"></div>
+    <div class="no-videos">
+        End of videos.
+    </div>
+    <input id="settings-toggle" type="checkbox">
+
+    <div class="settings">
+        <label for="settings-toggle" class="btn btn-default settings-toggle"><i class="fa fa-gear"></i></label>
+        <button class="btn btn-default pre-auth" id="login-link">Log in</button>
+        <button class="btn btn-default post-auth" id="logout-link">Log out</button>
+        <label>Update interval:<input id="update-interval" type="number" value="5"/>minutes.
+            <div class="note">(0 for never)</div>
+        </label>
+        <label>Discard watched videos older than<input id="history-length" type="number" value="28"/>days old.</label>
+
+        <p class="note">(Unwatched videos will be kept forever)</p>
+        <label for="autoplay">Auto-play videos?<input type="checkbox" id="autoplay"></label>
+        <label for="expand">Expand playing videos?<input type="checkbox" id="expand"></label>
+    </div>
 </div>
 </body>
 </html>

@@ -23,41 +23,44 @@ $(document).ready(() ->
       )
       description.find('p').linkify({target: "_blank"})
 
-      # TODO: Tidy up this code.
-      videoContainer = $('<div/>',
-        class: 'video-container'
-        id: 'video-' + @id).append($('<input/>',
-        type: 'checkbox'
-        class: 'expanded'
-        id: 'expand' + @id)).append($('<div/>', class: 'video').append($('<div/>',
-        class: 'thumbnail').append($('<p/>', text: @title)).append($('<img/>', src: @thumbnail)).append($('<i/>',
-        class: 'fa fa-play fa-3x')))).append($('<div/>', class: 'video-info').append($('<div/>',
-        class: 'author').append($('<a/>',
-        href: 'http://www.youtube.com/channel/' + @authorId
+      videoContainer = $('<div/>', {class: 'video-container', id: 'video-' + @id})
+      .append($('<input/>', {type: 'checkbox', class: 'expanded', id: 'expand-' + @id}))
+      .append($('<div/>', class: 'video')
+      .append($('<div/>', class: 'thumbnail')
+      .append($('<p/>', text: @title))
+      .append($('<img/>', src: @thumbnail))
+      .append($('<i/>', class: 'fa fa-play fa-3x'))))
+      .append($('<div/>', class: 'video-info')
+      .append($('<div/>', class: 'author')
+      .append($('<a/>', {
+        href: 'http://www.youtube.com/channel/' + @authorId,
+        target: '_blank',
+        text: 'by ' + @author
+      })))
+      .append($('<div/>', {class: 'upload-date', text: 'uploaded ' + new Date(@publishedDate).toLocaleString()}))
+      .append($('<input/>', {type: 'checkbox', class: 'truncated', id: 'trunc-' + @id, 'checked': true}))
+      .append(description)
+      .append($('<label/>', for: 'trunc-' + @id)
+      .append($('<span/>', {class: 'read-more', text: 'Read more'}))
+      .append($('<span/>', {class: 'read-less', text: 'Read less'}))))
+      .append($('<div/>', class: 'side-buttons')
+      .append($('<button/>', {
+        class: 'mark btn btn-default',
+        title: 'Mark as ' + (if isUnwatchedVideo then 'watched' else 'unwatched')
+      })
+      .append($('<i/>', class: 'fa fa-' + (if isUnwatchedVideo then 'check' else 'remove') + ' fa-3x')))
+      .append($('<a/>', {
+        class: 'youtube-watch btn btn-default',
+        title: 'Watch on YouTube',
+        href: 'https://www.youtube.com/watch?v=' + @id,
         target: '_blank'
-        text: 'by ' + @author))).append($('<div/>',
-        class: 'upload-date'
-        text: 'uploaded ' + new Date(@publishedDate).toLocaleString())).append($('<input/>',
-        type: 'checkbox'
-        class: 'truncated'
-        id: 'trunc' + @id
-        'checked': true)).append(description).append($('<label/>', for: 'trunc' + @id).append($('<span/>',
-        class: 'read-more'
-        text: 'Read more')).append($('<span/>',
-        class: 'read-less'
-        text: 'Read less')))).append($('<div/>', class: 'side-buttons').append($('<button/>',
-        class: 'mark btn btn-default'
-        title: 'Mark as ' + (if isUnwatchedVideo then 'watched' else 'unwatched')).append($('<i/>',
-        class: 'fa fa-' + (if isUnwatchedVideo then 'check' else 'remove') + ' fa-3x'))).append($('<a/>',
-        class: 'youtube-watch btn btn-default'
-        title: 'Watch on YouTube'
-        href: 'https://www.youtube.com/watch?v=' + @id
-        target: '_blank').append($('<i/>', class: 'fa fa-youtube fa-3x'))).append($('<label/>',
-        for: 'expand' + @id).append($('<div/>',
-        class: 'expand-player btn btn-default'
-        title: 'Expand Video').append($('<i/>', class: 'fa fa-expand fa-3x'))).append($('<div/>',
-        class: 'compress-player btn btn-default'
-        title: 'Compress Video').append($('<i/>', class: 'fa fa-compress fa-3x')))))
+      })
+      .append($('<i/>', class: 'fa fa-youtube fa-3x')))
+      .append($('<label/>', for: 'expand-' + @id)
+      .append($('<div/>', {class: 'expand-player btn btn-default', title: 'Expand Video'})
+      .append($('<i/>', class: 'fa fa-expand fa-3x')))
+      .append($('<div/>', {class: 'compress-player btn btn-default', title: 'Compress Video'})
+      .append($('<i/>', class: 'fa fa-compress fa-3x')))))
 
       # Place the video into the dom.
       if (index == 0)
@@ -101,7 +104,7 @@ $(document).ready(() ->
     constructor: (@storageString, selector, reversed = false) ->
       @htmlElement = $(selector)
       videoList = JSON.parse(localStorage.getItem(@storageString)) or []
-      @videos = (video for video in (Video.fromJson(video) for video in videoList) when video?)
+      @videos = (Video.fromJson(video) for video in videoList)
       @order = (if reversed then 1 else -1)
       @sort()
       @deduplicate()
