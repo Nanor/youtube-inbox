@@ -197,4 +197,12 @@ input[type=checkbox] {
 .fa-check.fa-3x {
   margin-left: -4px; }
 
+h4 {
+  font-family: sans-serif;
+  font-weight: 600; }
+
+.filter-panel {
+  padding-left: 15px;
+  width: 550px; }
+
 /*# sourceMappingURL=index.css.map */

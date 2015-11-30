@@ -68,7 +68,7 @@ $(document).ready(() ->
       else if (index > $(parent).children().length)
         parent.append(videoContainer);
       else
-        # The :nth-child selector is 1-indexed.
+# The :nth-child selector is 1-indexed.
         parent.children(":nth-child(#{index})").after(videoContainer)
 
       $('.expanded').change(() ->
@@ -101,10 +101,11 @@ $(document).ready(() ->
 
 
   class VideoList
-    constructor: (@storageString, selector, reversed = false) ->
+    constructor: (@storageString, selector, @filterClass, reversed = false) ->
       @htmlElement = $(selector)
       videoList = JSON.parse(localStorage.getItem(@storageString)) or []
       @videos = (Video.fromJson(video) for video in videoList)
+      @filter()
       @order = (if reversed then 1 else -1)
       @sort()
       @deduplicate()
@@ -113,7 +114,7 @@ $(document).ready(() ->
     add: (newVideo) ->
       index = @indexOf(newVideo.id)
       if index == -1
-        # New video
+# New video
         @videos.push(newVideo)
         @sort()
         @deduplicate()
@@ -126,7 +127,7 @@ $(document).ready(() ->
             lastChild.remove()
         window.refresh()
       else
-        # Video already in list.
+# Video already in list.
         @videos[index] = newVideo
       return @
 
@@ -203,6 +204,66 @@ $(document).ready(() ->
       sourceList.htmlElement.children('.video-container').remove()
       window.refresh()
 
+    filter: () ->
+      for video in @videos
+        if not @filterClass.allows(video)
+          @remove(video.id)
+
+  class Filter
+    constructor: (@storageString, elementSelector) ->
+      @contents = JSON.parse(localStorage.getItem(@storageString)) or []
+      @element = $(elementSelector)
+
+      filterClass = @
+
+      addRow = (channel, type, regex) ->
+        row = $('<div/>', {class: 'row'})
+        row.append($('<input/>', {class: 'author', type: 'text', value: channel}))
+
+        type = $('<select/>', {class: 'type'})
+        type.append($('<option/>', {value: 'blacklist', selected: type == 'blacklist'}).text('Blacklist'))
+        type.append($('<option/>', {value: 'whitelist', selected: type == 'whitelist'}).text('Whitelist'))
+        row.append(type)
+        row.append($('<input/>', {class: 'regex', type: 'text', value: regex}))
+        row.append($('<button/>', {class: 'btn btn-default'}).text('Remove').click(() ->
+          element = $(@).parent().parent()
+          $(@).parent().remove()
+          element.change()
+        ))
+        filterClass.element.append(row)
+
+      for filter in @contents
+        addRow(filter.channel, filter.type, filter.regex)
+
+      $('#add-filter').click(() ->
+        addRow()
+      )
+
+      @element.change(() ->
+        filterClass.contents = []
+        filterClass.element.children().each(() ->
+          filterClass.contents.push({
+            channel: $(@).children('.author').val()
+            type: $(@).children('.type').children(':selected').val()
+            regex: $(@).children('.regex').val()
+          })
+        )
+
+        filterClass.save()
+      )
+
+    save: () ->
+      localStorage.setItem(@storageString, JSON.stringify(@contents))
+
+    allows: (video) ->
+      for filter in @contents
+        if video.author == filter.channel
+          if filter.type == 'blacklist' and video.title.match(filter.regex)
+            return false
+          if filter.type == 'whitelist' and not video.title.match(filter.regex)
+            return false
+      return true
+
   class SavedInput
     constructor: (@selector, @storageString, defaultValue, listener) ->
       @property = (if $(@selector).prop('type') == 'checkbox' then 'checked' else 'value')
@@ -227,8 +288,10 @@ $(document).ready(() ->
   autoplayInput = new SavedInput('#autoplay', 'autoplay', false)
   expandInput = new SavedInput('#expand', 'expand', false)
 
-  watchedVideos = new VideoList("watched-videos", '.watched-videos')
-  unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', true)
+  filter = new Filter('video-filter', '.filter-panel')
+
+  watchedVideos = new VideoList("watched-videos", '.watched-videos', filter)
+  unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', filter, true)
 
   window.readData = () ->
     watchedVideos.clearOlderThan(new Date() - 1000 * 60 * 60 * 24 * historyInput.value())
@@ -278,10 +341,11 @@ $(document).ready(() ->
         thumbnail.url
       )
       if video.publishedDate > (new Date() - 1000 * 60 * 60 * 24 * historyInput.value())
-        if watchedVideos.find(video.id)?
-          watchedVideos.add(video)
-        else
-          unwatchedVideos.add(video)
+        if filter.allows(video)
+          if watchedVideos.find(video.id)?
+            watchedVideos.add(video)
+          else
+            unwatchedVideos.add(video)
 
     getSubs() if window.API_LOADED
 
