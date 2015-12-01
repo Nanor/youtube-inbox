@@ -32,12 +32,17 @@
     <label for="tab-watched" id="watched" class="tab">
         <div class="text">Watched (0)</div>
     </label>
+    <input type="radio" name="tab" value="blocked" id="tab-blocked">
+    <label for="tab-blocked" id="blocked" class="tab">
+        <div class="text">Blocked (0)</div>
+    </label>
     <button id="all-done" class="btn btn-default" title="Mark all as watched"><i class="fa fa-check"></i></button>
     <button id="all-undone" class="btn btn-default" title="Mark all as unwatched"><i class="fa fa-remove"></i></button>
 </div>
 <div class="videos">
-    <div class="watched-videos"></div>
-    <div class="unwatched-videos"></div>
+    <div class="watched-videos video-list"></div>
+    <div class="unwatched-videos video-list"></div>
+    <div class="blocked-videos video-list"></div>
     <div class="no-videos">
         End of videos.
     </div>

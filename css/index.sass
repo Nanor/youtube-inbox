@@ -20,7 +20,7 @@ html
 
   .tab
     position: absolute
-    width: 25%
+    width: 20%
     height: $top-bar-height
 
     .text
@@ -31,10 +31,13 @@ html
       font-size: large
 
   #unwatched
-    left: 25%
+    left: 20%
 
   #watched
-    left: 50%
+    left: 40%
+
+  #blocked
+    left: 60%
 
   #all-done, #all-undone
     float: right
@@ -52,7 +55,8 @@ html
 
   input[type='radio'],
   #tab-unwatched:checked ~ #all-undone,
-  #tab-watched:checked ~ #all-done
+  #tab-watched:checked ~ #all-done,
+  #tab-blocked:checked ~ button
     display: none
 
 .post-auth
@@ -114,7 +118,7 @@ input[type=checkbox]
   height: 100%
   background-color: lightgray
 
-  .watched-videos, .unwatched-videos
+  .video-list
     .video-container
       margin: 0 10px 10px 10px
       background-color: white
