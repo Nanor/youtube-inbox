@@ -201,7 +201,23 @@ h4 {
   font-weight: 600; }
 
 .filter-panel {
-  padding-left: 15px;
   width: 550px; }
+  .filter-panel .header {
+    display: inline-block;
+    width: 100%; }
+    .filter-panel .header div {
+      font-weight: 600;
+      color: #777;
+      display: inline-block; }
+  .filter-panel .row {
+    margin-left: 0; }
+  .filter-panel .row > * {
+    margin: 2px; }
+  .filter-panel .author {
+    width: 150px; }
+  .filter-panel .type {
+    width: 80px; }
+  .filter-panel .regex {
+    width: 220px; }
 
 /*# sourceMappingURL=index.css.map */

@@ -17,9 +17,9 @@
         return new Video(json.title, json.id, json.author, json.authorId, json.publishedDate, json.description, json.thumbnail);
       };
 
-      Video.prototype.addToDom = function(parent, index) {
+      Video.prototype.addToDom = function(parent, index, parentName) {
         var description, id, isUnwatchedVideo, videoContainer;
-        isUnwatchedVideo = unwatchedVideos.find(this.id) != null;
+        isUnwatchedVideo = parentName === 'Unwatched';
         description = $('<div/>', {
           "class": "description"
         });
@@ -137,41 +137,28 @@
 
     })();
     VideoList = (function() {
-      function VideoList(storageString, selector, filterClass1, reversedOrder, reversedFilter) {
+      function VideoList(storageString, selector, reversedOrder, name, tabTextSelector, tabRadioSelector) {
         var video, videoList;
         this.storageString = storageString;
-        this.filterClass = filterClass1;
-        if (reversedOrder == null) {
-          reversedOrder = false;
-        }
-        this.reversedFilter = reversedFilter != null ? reversedFilter : false;
+        this.name = name;
+        this.tabTextSelector = tabTextSelector;
+        this.tabRadioSelector = tabRadioSelector;
         this.htmlElement = $(selector);
         videoList = JSON.parse(localStorage.getItem(this.storageString)) || [];
         this.videos = (function() {
-          var j, len, ref, results;
-          ref = (function() {
-            var k, len, results1;
-            results1 = [];
-            for (k = 0, len = videoList.length; k < len; k++) {
-              video = videoList[k];
-              results1.push(Video.fromJson(video));
-            }
-            return results1;
-          })();
+          var j, len, results;
           results = [];
-          for (j = 0, len = ref.length; j < len; j++) {
-            video = ref[j];
-            if (video != null) {
-              results.push(video);
-            }
+          for (j = 0, len = videoList.length; j < len; j++) {
+            video = videoList[j];
+            results.push(Video.fromJson(video));
           }
           return results;
         })();
-        this.filter();
         this.order = (reversedOrder ? 1 : -1);
         this.sort();
         this.deduplicate();
         this.save();
+        this.update();
       }
 
       VideoList.prototype.add = function(newVideo) {
@@ -183,13 +170,13 @@
           this.deduplicate();
           this.save();
           if (this.htmlElement.children().length > this.indexOf(newVideo.id)) {
-            newVideo.addToDom(this.htmlElement, this.indexOf(newVideo.id));
+            newVideo.addToDom(this.htmlElement, this.indexOf(newVideo.id), this.name);
             lastChild = this.htmlElement.children().last();
             if (lastChild.find('.thumbnail').length > 0) {
               lastChild.remove();
             }
           }
-          window.refresh();
+          this.update();
         } else {
           this.videos[index] = newVideo;
         }
@@ -205,7 +192,8 @@
           this.sort();
           this.save();
           $('#video-' + video.id).remove();
-          window.refresh();
+          this.update();
+          this.decideVisible();
           return video;
         }
       };
@@ -283,21 +271,38 @@
         return localStorage.setItem(this.storageString, JSON.stringify(this.videos));
       };
 
+      VideoList.prototype.update = function() {
+        $(this.tabTextSelector).find('.text').text(this.name + " (" + (this.length()) + ")");
+        if (this.name === 'Unwatched') {
+          return $('title').text((this.length() > 0 ? "(" + (this.length()) + ") " : '') + title);
+        }
+      };
+
+      VideoList.prototype.decideVisible = function() {
+        if ($(this.tabRadioSelector).prop('checked')) {
+          return this.htmlElement.show();
+        } else {
+          return this.htmlElement.hide();
+        }
+      };
+
       VideoList.prototype.addVideoToDom = function() {
         var i, j, ref, results, video;
-        if ($(window).scrollTop() + $(window).innerHeight() * 2 >= $(document).height()) {
-          results = [];
-          for (i = j = 0, ref = this.length(); 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
-            video = this.get(i);
-            if ($("#video-" + video.id).length === 0) {
-              video.addToDom(this.htmlElement, i);
-              this.addVideoToDom();
-              break;
-            } else {
-              results.push(void 0);
+        if ($(this.tabRadioSelector).prop('checked')) {
+          if ($(window).scrollTop() + $(window).innerHeight() * 2 >= $(document).height()) {
+            results = [];
+            for (i = j = 0, ref = this.length(); 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
+              video = this.get(i);
+              if ($("#video-" + video.id).length === 0) {
+                video.addToDom(this.htmlElement, i, this.name);
+                this.addVideoToDom();
+                break;
+              } else {
+                results.push(void 0);
+              }
             }
+            return results;
           }
-          return results;
         }
       };
 
@@ -321,49 +326,18 @@
         return window.refresh();
       };
 
-      VideoList.prototype.filter = function() {
-        var j, len, ref, results, video;
-        if (this.filterClass != null) {
-          ref = this.videos;
-          results = [];
-          for (j = 0, len = ref.length; j < len; j++) {
-            video = ref[j];
-            if (video != null) {
-              if (this.reversedFilter) {
-                if (this.filterClass.allows(video)) {
-                  this.remove(video.id);
-                  results.push(typeof unwatchedVideos !== "undefined" && unwatchedVideos !== null ? unwatchedVideos.add(video) : void 0);
-                } else {
-                  results.push(void 0);
-                }
-              } else {
-                if (!this.filterClass.allows(video)) {
-                  this.remove(video.id);
-                  results.push(typeof blockedVideos !== "undefined" && blockedVideos !== null ? blockedVideos.add(video) : void 0);
-                } else {
-                  results.push(void 0);
-                }
-              }
-            } else {
-              results.push(void 0);
-            }
-          }
-          return results;
-        }
-      };
-
       return VideoList;
 
     })();
     Filter = (function() {
       function Filter(storageString, elementSelector) {
-        var addRow, filter, filterClass, j, len, ref;
+        var addRow, filter, j, len, ref, self;
         this.storageString = storageString;
         this.contents = JSON.parse(localStorage.getItem(this.storageString)) || [];
         this.element = $(elementSelector);
-        filterClass = this;
+        self = this;
         addRow = function(channel, type, regexes) {
-          var row;
+          var row, typeElement;
           if (regexes == null) {
             regexes = [];
           }
@@ -375,18 +349,17 @@
             type: 'text',
             value: channel
           }));
-          type = $('<select/>', {
+          typeElement = $('<select/>', {
             "class": 'type'
           });
-          type.append($('<option/>', {
-            value: 'blacklist',
-            selected: type === 'blacklist'
+          typeElement.append($('<option/>', {
+            value: 'blacklist'
           }).text('Blacklist'));
-          type.append($('<option/>', {
-            value: 'whitelist',
-            selected: type === 'whitelist'
+          typeElement.append($('<option/>', {
+            value: 'whitelist'
           }).text('Whitelist'));
-          row.append(type);
+          typeElement.val(type);
+          row.append(typeElement);
           row.append($('<input/>', {
             "class": 'regex',
             type: 'text',
@@ -398,9 +371,10 @@
             var element;
             element = $(this).parent().parent();
             $(this).parent().remove();
+            console.log(element);
             return element.change();
           }));
-          return filterClass.element.append(row);
+          return self.element.append(row);
         };
         ref = this.contents;
         for (j = 0, len = ref.length; j < len; j++) {
@@ -411,19 +385,19 @@
           return addRow();
         });
         this.element.change(function() {
-          filterClass.contents = [];
-          filterClass.element.children().each(function() {
-            return filterClass.contents.push({
+          self.contents = [];
+          self.element.children('.row').each(function() {
+            return self.contents.push({
               channel: $(this).children('.author').val(),
               type: $(this).children('.type').children(':selected').val(),
               regexes: $(this).children('.regex').val().split(',')
             });
           });
-          filterClass.save();
-          watchedVideos.filter();
-          unwatchedVideos.filter();
-          return blockedVideos.filter();
+          self.save();
+          self.filterAll();
+          return window.refresh();
         });
+        this.filterAll();
       }
 
       Filter.prototype.save = function() {
@@ -461,6 +435,41 @@
           return true;
         }
         return false;
+      };
+
+      Filter.prototype.filterAll = function() {
+        var blocked, j, len, ref, ref1, results, video, videoList;
+        if ((typeof unwatchedVideos !== "undefined" && unwatchedVideos !== null) && (typeof watchedVideos !== "undefined" && watchedVideos !== null) && (typeof blockedVideos !== "undefined" && blockedVideos !== null)) {
+          ref = [[unwatchedVideos, false], [watchedVideos, false], [blockedVideos, true]];
+          results = [];
+          for (j = 0, len = ref.length; j < len; j++) {
+            ref1 = ref[j], videoList = ref1[0], blocked = ref1[1];
+            results.push((function() {
+              var k, len1, ref2, results1;
+              ref2 = videoList.videos;
+              results1 = [];
+              for (k = 0, len1 = ref2.length; k < len1; k++) {
+                video = ref2[k];
+                if (video != null) {
+                  if (this.allows(video) === blocked) {
+                    videoList.remove(video.id);
+                    if (blocked) {
+                      results1.push(unwatchedVideos.add(video));
+                    } else {
+                      results1.push(blockedVideos.add(video));
+                    }
+                  } else {
+                    results1.push(void 0);
+                  }
+                } else {
+                  results1.push(void 0);
+                }
+              }
+              return results1;
+            }).call(this));
+          }
+          return results;
+        }
       };
 
       return Filter;
@@ -579,28 +588,27 @@
       }
     };
     window.refresh = function() {
-      if ((typeof unwatchedVideos !== "undefined" && unwatchedVideos !== null) && (typeof watchedVideos !== "undefined" && watchedVideos !== null) && (typeof blockedVideos !== "undefined" && blockedVideos !== null)) {
-        $('title').text((unwatchedVideos.length() > 0 ? "(" + (unwatchedVideos.length()) + ") " : '') + title);
-        $('#unwatched').find('.text').text("Unwatched (" + (unwatchedVideos.length()) + ")");
-        $('#watched').find('.text').text("Watched (" + (watchedVideos.length()) + ")");
-        $('#blocked').find('.text').text("Blocked (" + (blockedVideos.length()) + ")");
-        if ($('#tab-unwatched').prop('checked')) {
-          return unwatchedVideos.addVideoToDom();
-        } else if ($('#tab-watched').prop('checked')) {
-          return watchedVideos.addVideoToDom();
-        } else if ($('#tab-blocked').prop('checked')) {
-          return blockedVideos.addVideoToDom();
-        }
+      var j, k, len, len1, results, videoList, videoLists;
+      videoLists = [watchedVideos, unwatchedVideos, blockedVideos];
+      for (j = 0, len = videoLists.length; j < len; j++) {
+        videoList = videoLists[j];
+        videoList.decideVisible();
       }
+      results = [];
+      for (k = 0, len1 = videoLists.length; k < len1; k++) {
+        videoList = videoLists[k];
+        results.push(videoList.addVideoToDom());
+      }
+      return results;
     };
     title = $('title').text();
     historyInput = new SavedInput('#history-length', 'days-into-history', 28);
     autoplayInput = new SavedInput('#autoplay', 'autoplay', false);
     expandInput = new SavedInput('#expand', 'expand', false);
+    watchedVideos = new VideoList("watched-videos", '.watched-videos', false, 'Watched', '#watched', '#tab-watched');
+    unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', true, 'Unwatched', '#unwatched', '#tab-unwatched');
+    blockedVideos = new VideoList("blocked-videos", '.blocked-videos', false, 'Blocked', '#blocked', '#tab-blocked');
     filter = new Filter('video-filter', '.filter-panel');
-    watchedVideos = new VideoList("watched-videos", '.watched-videos', filter, false, false);
-    unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', filter, true, false);
-    blockedVideos = new VideoList("blocked-videos", '.blocked-videos', filter, false, true);
     readDataInterval = null;
     updateInput = new SavedInput('#update-interval', 'update-interval', 5, function() {
       window.clearInterval(readDataInterval);
@@ -618,21 +626,8 @@
       return unwatchedVideos.addAllFrom(watchedVideos);
     });
     $('input[name="tab"]').change(function() {
-      if ($('#tab-unwatched').prop('checked')) {
-        $('.unwatched-videos').show();
-        $('.watched-videos').hide();
-        $('.blocked-videos').hide();
-      } else if ($('#tab-watched').prop('checked')) {
-        $('.unwatched-videos').hide();
-        $('.watched-videos').show();
-        $('.blocked-videos').hide();
-      } else if ($('#tab-blocked').prop('checked')) {
-        $('.unwatched-videos').hide();
-        $('.watched-videos').hide();
-        $('.blocked-videos').show();
-      }
-      window.scrollTo(0, 0);
-      return window.refresh();
+      window.refresh();
+      return window.scrollTo(0, 0);
     });
     onPlayerReady = function(event) {
       return event.target.playVideo();

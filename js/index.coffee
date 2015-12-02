@@ -14,8 +14,8 @@ $(document).ready(() ->
         json.thumbnail
       )
 
-    addToDom: (parent, index) ->
-      isUnwatchedVideo = unwatchedVideos.find(@id)?
+    addToDom: (parent, index, parentName) ->
+      isUnwatchedVideo = parentName == 'Unwatched'
 
       description = $('<div/>', {class: "description"})
       @description.split(/\n(?:\n)+/).forEach((paragraph) ->
@@ -101,15 +101,15 @@ $(document).ready(() ->
 
 
   class VideoList
-    constructor: (@storageString, selector, @filterClass, reversedOrder = false, @reversedFilter = false) ->
+    constructor: (@storageString, selector, reversedOrder, @name, @tabTextSelector, @tabRadioSelector) ->
       @htmlElement = $(selector)
       videoList = JSON.parse(localStorage.getItem(@storageString)) or []
-      @videos = (video for video in (Video.fromJson(video) for video in videoList) when video?)
-      @filter()
+      @videos = (Video.fromJson(video) for video in videoList)
       @order = (if reversedOrder then 1 else -1)
       @sort()
       @deduplicate()
       @save()
+      @update()
 
     add: (newVideo) ->
       index = @indexOf(newVideo.id)
@@ -121,11 +121,11 @@ $(document).ready(() ->
         @save()
         # Update visuals
         if @htmlElement.children().length > @indexOf(newVideo.id)
-          newVideo.addToDom(@htmlElement, @indexOf(newVideo.id))
+          newVideo.addToDom(@htmlElement, @indexOf(newVideo.id), @name)
           lastChild = @htmlElement.children().last()
           if lastChild.find('.thumbnail').length > 0
             lastChild.remove()
-        window.refresh()
+        @update()
       else
 # Video already in list.
         @videos[index] = newVideo
@@ -140,7 +140,8 @@ $(document).ready(() ->
         @save()
         # Update visuals
         $('#video-' + video.id).remove()
-        window.refresh()
+        @update()
+        @decideVisible()
         video
 
     indexOf: (id) ->
@@ -180,14 +181,27 @@ $(document).ready(() ->
     save: () ->
       localStorage.setItem(@storageString, JSON.stringify(@videos))
 
+    update: () ->
+      $(@tabTextSelector).find('.text').text("#{@name} (#{@length()})")
+
+      if @name == 'Unwatched'
+        $('title').text((if @length() > 0 then "(#{@length()}) " else '') + title)
+
+    decideVisible: () ->
+      if $(@tabRadioSelector).prop('checked')
+        @htmlElement.show()
+      else
+        @htmlElement.hide()
+
     addVideoToDom: () ->
-      if ($(window).scrollTop() + $(window).innerHeight() * 2 >= $(document).height())
-        for i in [0...@length()]
-          video = @get(i)
-          if ($("#video-" + video.id).length == 0)
-            video.addToDom(@htmlElement, i)
-            @addVideoToDom()
-            break
+      if $(@tabRadioSelector).prop('checked')
+        if ($(window).scrollTop() + $(window).innerHeight() * 2 >= $(document).height())
+          for i in [0...@length()]
+            video = @get(i)
+            if ($("#video-" + video.id).length == 0)
+              video.addToDom(@htmlElement, i, @name)
+              @addVideoToDom()
+              break
 
     addAllFrom: (sourceList) ->
       @videos = @videos.concat(sourceList.videos)
@@ -204,41 +218,30 @@ $(document).ready(() ->
       sourceList.htmlElement.children('.video-container').remove()
       window.refresh()
 
-    filter: () ->
-      if @filterClass?
-        for video in @videos
-          if video?
-            if @reversedFilter
-              if @filterClass.allows(video)
-                @remove(video.id)
-                unwatchedVideos?.add(video)
-            else
-              if not @filterClass.allows(video)
-                @remove(video.id)
-                blockedVideos?.add(video)
-
   class Filter
     constructor: (@storageString, elementSelector) ->
       @contents = JSON.parse(localStorage.getItem(@storageString)) or []
       @element = $(elementSelector)
 
-      filterClass = @
+      self = @
 
       addRow = (channel, type, regexes = []) ->
         row = $('<div/>', {class: 'row'})
         row.append($('<input/>', {class: 'author', type: 'text', value: channel}))
 
-        type = $('<select/>', {class: 'type'})
-        type.append($('<option/>', {value: 'blacklist', selected: type == 'blacklist'}).text('Blacklist'))
-        type.append($('<option/>', {value: 'whitelist', selected: type == 'whitelist'}).text('Whitelist'))
-        row.append(type)
+        typeElement = $('<select/>', {class: 'type'})
+        typeElement.append($('<option/>', {value: 'blacklist'}).text('Blacklist'))
+        typeElement.append($('<option/>', {value: 'whitelist'}).text('Whitelist'))
+        typeElement.val(type)
+        row.append(typeElement)
         row.append($('<input/>', {class: 'regex', type: 'text', value: regexes.join()}))
         row.append($('<button/>', {class: 'btn btn-default'}).text('Remove').click(() ->
           element = $(@).parent().parent()
           $(@).parent().remove()
+          console.log(element)
           element.change()
         ))
-        filterClass.element.append(row)
+        self.element.append(row)
 
       for filter in @contents
         addRow(filter.channel, filter.type, filter.regexes)
@@ -248,21 +251,20 @@ $(document).ready(() ->
       )
 
       @element.change(() ->
-        filterClass.contents = []
-        filterClass.element.children().each(() ->
-          filterClass.contents.push({
+        self.contents = []
+        self.element.children('.row').each(() ->
+          self.contents.push({
             channel: $(@).children('.author').val()
             type: $(@).children('.type').children(':selected').val()
             regexes: $(@).children('.regex').val().split(',')
           })
         )
-
-        filterClass.save()
-
-        watchedVideos.filter()
-        unwatchedVideos.filter()
-        blockedVideos.filter()
+        self.save()
+        self.filterAll()
+        window.refresh()
       )
+
+      @filterAll()
 
     save: () ->
       localStorage.setItem(@storageString, JSON.stringify(@contents))
@@ -282,6 +284,18 @@ $(document).ready(() ->
               return false
         return true
       return false
+
+    filterAll: () ->
+      if unwatchedVideos? and watchedVideos? and blockedVideos?
+        for [videoList, blocked] in [[unwatchedVideos, false], [watchedVideos, false], [blockedVideos, true]]
+          for video in videoList.videos
+            if video?
+              if @allows(video) == blocked
+                videoList.remove(video.id)
+                if blocked
+                  unwatchedVideos.add(video)
+                else
+                  blockedVideos.add(video)
 
   class SavedInput
     constructor: (@selector, @storageString, defaultValue, listener) ->
@@ -360,19 +374,11 @@ $(document).ready(() ->
     getSubs() if window.API_LOADED
 
   window.refresh = () ->
-    if unwatchedVideos? and watchedVideos? and blockedVideos?
-      $('title').text((if unwatchedVideos.length() > 0 then "(#{unwatchedVideos.length()}) " else '') + title)
-
-      $('#unwatched').find('.text').text("Unwatched (#{unwatchedVideos.length()})")
-      $('#watched').find('.text').text("Watched (#{watchedVideos.length()})")
-      $('#blocked').find('.text').text("Blocked (#{blockedVideos.length()})")
-
-      if $('#tab-unwatched').prop('checked')
-        unwatchedVideos.addVideoToDom()
-      else if $('#tab-watched').prop('checked')
-        watchedVideos.addVideoToDom()
-      else if $('#tab-blocked').prop('checked')
-        blockedVideos.addVideoToDom()
+    videoLists = [watchedVideos, unwatchedVideos, blockedVideos]
+    for videoList in videoLists
+      videoList.decideVisible()
+    for videoList in videoLists
+      videoList.addVideoToDom()
 
   title = $('title').text()
 
@@ -381,11 +387,11 @@ $(document).ready(() ->
   autoplayInput = new SavedInput('#autoplay', 'autoplay', false)
   expandInput = new SavedInput('#expand', 'expand', false)
 
-  filter = new Filter('video-filter', '.filter-panel')
+  watchedVideos = new VideoList("watched-videos", '.watched-videos', false, 'Watched', '#watched', '#tab-watched')
+  unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', true, 'Unwatched', '#unwatched', '#tab-unwatched')
+  blockedVideos = new VideoList("blocked-videos", '.blocked-videos', false, 'Blocked', '#blocked', '#tab-blocked')
 
-  watchedVideos = new VideoList("watched-videos", '.watched-videos', filter, false, false)
-  unwatchedVideos = new VideoList("unwatched-videos", '.unwatched-videos', filter, true, false)
-  blockedVideos = new VideoList("blocked-videos", '.blocked-videos', filter, false, true)
+  filter = new Filter('video-filter', '.filter-panel')
 
   # Update interval
   readDataInterval = null
@@ -408,20 +414,8 @@ $(document).ready(() ->
     unwatchedVideos.addAllFrom(watchedVideos)
   )
   $('input[name="tab"]').change(() ->
-    if $('#tab-unwatched').prop('checked')
-      $('.unwatched-videos').show()
-      $('.watched-videos').hide()
-      $('.blocked-videos').hide()
-    else if $('#tab-watched').prop('checked')
-      $('.unwatched-videos').hide()
-      $('.watched-videos').show()
-      $('.blocked-videos').hide()
-    else if $('#tab-blocked').prop('checked')
-      $('.unwatched-videos').hide()
-      $('.watched-videos').hide()
-      $('.blocked-videos').show()
-    window.scrollTo(0, 0);
     window.refresh()
+    window.scrollTo(0, 0);
   )
 
   # YouTube player functions
