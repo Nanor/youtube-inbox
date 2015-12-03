@@ -203,8 +203,8 @@ h4 {
 .filter-panel {
   width: 550px; }
   .filter-panel .header {
-    display: inline-block;
-    width: 100%; }
+    width: 100%;
+    margin-left: 5px; }
     .filter-panel .header div {
       font-weight: 600;
       color: #777;
@@ -212,12 +212,16 @@ h4 {
   .filter-panel .row {
     margin-left: 0; }
   .filter-panel .row > * {
-    margin: 2px; }
+    margin: 2px;
+    display: inline-block; }
   .filter-panel .author {
     width: 150px; }
   .filter-panel .type {
     width: 80px; }
   .filter-panel .regex {
     width: 220px; }
+
+.form-control {
+  padding: 0; }
 
 /*# sourceMappingURL=index.css.map */

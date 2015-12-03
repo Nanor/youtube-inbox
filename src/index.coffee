@@ -15,13 +15,19 @@ $(document).ready(() ->
       )
 
     addToDom: (parent, index, parentName) ->
-      isUnwatchedVideo = parentName == 'Unwatched'
-
       description = $('<div/>', {class: "description"})
       @description.split(/\n(?:\n)+/).forEach((paragraph) ->
         description.append($('<p>' + paragraph.replace(/\n/g, '<br>') + '</p>'))
       )
       description.find('p').linkify({target: "_blank"})
+
+      markButton = $('<button/>', {
+        class: 'mark btn btn-default',
+        title: 'Mark as ' + (if parentName == 'Unwatched' then 'watched' else 'unwatched')
+      }).append($('<i/>', class: 'fa fa-' + (if parentName == 'Unwatched' then 'check' else 'remove') + ' fa-3x'))
+
+      if parentName == 'Blocked'
+        markButton = null
 
       videoContainer = $('<div/>', {class: 'video-container', id: 'video-' + @id})
       .append($('<input/>', {type: 'checkbox', class: 'expanded', id: 'expand-' + @id}))
@@ -44,11 +50,7 @@ $(document).ready(() ->
       .append($('<span/>', {class: 'read-more', text: 'Read more'}))
       .append($('<span/>', {class: 'read-less', text: 'Read less'}))))
       .append($('<div/>', class: 'side-buttons')
-      .append($('<button/>', {
-        class: 'mark btn btn-default',
-        title: 'Mark as ' + (if isUnwatchedVideo then 'watched' else 'unwatched')
-      })
-      .append($('<i/>', class: 'fa fa-' + (if isUnwatchedVideo then 'check' else 'remove') + ' fa-3x')))
+      .append(markButton)
       .append($('<a/>', {
         class: 'youtube-watch btn btn-default',
         title: 'Watch on YouTube',
@@ -81,7 +83,7 @@ $(document).ready(() ->
 
       id = @id # Annoying thing to deal with closures.
       videoContainer.on('click', '.mark', () ->
-        if isUnwatchedVideo
+        if parentName == 'Unwatched'
           watchedVideos.add(unwatchedVideos.remove(id))
         else
           unwatchedVideos.add(watchedVideos.remove(id))
@@ -141,7 +143,6 @@ $(document).ready(() ->
         # Update visuals
         $('#video-' + video.id).remove()
         @update()
-        @decideVisible()
         video
 
     indexOf: (id) ->
@@ -187,14 +188,18 @@ $(document).ready(() ->
       if @name == 'Unwatched'
         $('title').text((if @length() > 0 then "(#{@length()}) " else '') + title)
 
+      @addVideoToDom()
+
     decideVisible: () ->
       if $(@tabRadioSelector).prop('checked')
         @htmlElement.show()
+        return true
       else
         @htmlElement.hide()
+        return false
 
     addVideoToDom: () ->
-      if $(@tabRadioSelector).prop('checked')
+      if @decideVisible()
         if ($(window).scrollTop() + $(window).innerHeight() * 2 >= $(document).height())
           for i in [0...@length()]
             video = @get(i)
@@ -216,7 +221,8 @@ $(document).ready(() ->
         if element.find('.thumbnail').length > 0
           element.remove()
       sourceList.htmlElement.children('.video-container').remove()
-      window.refresh()
+      sourceList.update()
+      @update()
 
   class Filter
     constructor: (@storageString, elementSelector) ->
@@ -229,7 +235,7 @@ $(document).ready(() ->
         row = $('<div/>', {class: 'row'})
         row.append($('<input/>', {class: 'author', type: 'text', value: channel}))
 
-        typeElement = $('<select/>', {class: 'type'})
+        typeElement = $('<select/>', {class: 'type form-control'})
         typeElement.append($('<option/>', {value: 'blacklist'}).text('Blacklist'))
         typeElement.append($('<option/>', {value: 'whitelist'}).text('Whitelist'))
         typeElement.val(type)
@@ -238,7 +244,6 @@ $(document).ready(() ->
         row.append($('<button/>', {class: 'btn btn-default'}).text('Remove').click(() ->
           element = $(@).parent().parent()
           $(@).parent().remove()
-          console.log(element)
           element.change()
         ))
         self.element.append(row)

@@ -18,8 +18,7 @@
       };
 
       Video.prototype.addToDom = function(parent, index, parentName) {
-        var description, id, isUnwatchedVideo, videoContainer;
-        isUnwatchedVideo = parentName === 'Unwatched';
+        var description, id, markButton, videoContainer;
         description = $('<div/>', {
           "class": "description"
         });
@@ -29,6 +28,15 @@
         description.find('p').linkify({
           target: "_blank"
         });
+        markButton = $('<button/>', {
+          "class": 'mark btn btn-default',
+          title: 'Mark as ' + (parentName === 'Unwatched' ? 'watched' : 'unwatched')
+        }).append($('<i/>', {
+          "class": 'fa fa-' + (parentName === 'Unwatched' ? 'check' : 'remove') + ' fa-3x'
+        }));
+        if (parentName === 'Blocked') {
+          markButton = null;
+        }
         videoContainer = $('<div/>', {
           "class": 'video-container',
           id: 'video-' + this.id
@@ -72,12 +80,7 @@
           text: 'Read less'
         })))).append($('<div/>', {
           "class": 'side-buttons'
-        }).append($('<button/>', {
-          "class": 'mark btn btn-default',
-          title: 'Mark as ' + (isUnwatchedVideo ? 'watched' : 'unwatched')
-        }).append($('<i/>', {
-          "class": 'fa fa-' + (isUnwatchedVideo ? 'check' : 'remove') + ' fa-3x'
-        }))).append($('<a/>', {
+        }).append(markButton).append($('<a/>', {
           "class": 'youtube-watch btn btn-default',
           title: 'Watch on YouTube',
           href: 'https://www.youtube.com/watch?v=' + this.id,
@@ -114,7 +117,7 @@
         }
         id = this.id;
         videoContainer.on('click', '.mark', function() {
-          if (isUnwatchedVideo) {
+          if (parentName === 'Unwatched') {
             return watchedVideos.add(unwatchedVideos.remove(id));
           } else {
             return unwatchedVideos.add(watchedVideos.remove(id));
@@ -193,7 +196,6 @@
           this.save();
           $('#video-' + video.id).remove();
           this.update();
-          this.decideVisible();
           return video;
         }
       };
@@ -274,21 +276,24 @@
       VideoList.prototype.update = function() {
         $(this.tabTextSelector).find('.text').text(this.name + " (" + (this.length()) + ")");
         if (this.name === 'Unwatched') {
-          return $('title').text((this.length() > 0 ? "(" + (this.length()) + ") " : '') + title);
+          $('title').text((this.length() > 0 ? "(" + (this.length()) + ") " : '') + title);
         }
+        return this.addVideoToDom();
       };
 
       VideoList.prototype.decideVisible = function() {
         if ($(this.tabRadioSelector).prop('checked')) {
-          return this.htmlElement.show();
+          this.htmlElement.show();
+          return true;
         } else {
-          return this.htmlElement.hide();
+          this.htmlElement.hide();
+          return false;
         }
       };
 
       VideoList.prototype.addVideoToDom = function() {
         var i, j, ref, results, video;
-        if ($(this.tabRadioSelector).prop('checked')) {
+        if (this.decideVisible()) {
           if ($(window).scrollTop() + $(window).innerHeight() * 2 >= $(document).height()) {
             results = [];
             for (i = j = 0, ref = this.length(); 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
@@ -323,7 +328,8 @@
           }
         }
         sourceList.htmlElement.children('.video-container').remove();
-        return window.refresh();
+        sourceList.update();
+        return this.update();
       };
 
       return VideoList;
@@ -350,7 +356,7 @@
             value: channel
           }));
           typeElement = $('<select/>', {
-            "class": 'type'
+            "class": 'type form-control'
           });
           typeElement.append($('<option/>', {
             value: 'blacklist'
@@ -371,7 +377,6 @@
             var element;
             element = $(this).parent().parent();
             $(this).parent().remove();
-            console.log(element);
             return element.change();
           }));
           return self.element.append(row);
