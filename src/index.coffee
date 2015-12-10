@@ -15,8 +15,7 @@ $(document).ready(() ->
       )
 
     addToDom: (parent, index, parentName) ->
-
-      videoContainer = $('<div/>', {class: 'video-container', id: 'video-'+@id})
+      videoContainer = $('<div/>', {class: 'video-container', id: 'video-' + @id})
       new Ractive({
         el: videoContainer
         template: '#video-template'
@@ -193,65 +192,51 @@ $(document).ready(() ->
       @update()
 
   class Filter
-    constructor: (@storageString, elementSelector) ->
+    constructor: (@storageString) ->
       @contents = JSON.parse(localStorage.getItem(@storageString)) or []
-      @element = $(elementSelector)
 
       self = @
 
-      addRow = (channel, type, regexes = []) ->
-        row = $('<div/>', {class: 'row'})
-        row.append($('<input/>', {class: 'author', type: 'text', value: channel}))
+      ractive = new Ractive({
+        el: '.filter-panel'
+        template: '#filter-template'
+        data: {
+          filter: @
+        }
+      })
 
-        typeElement = $('<select/>', {class: 'type form-control'})
-        typeElement.append($('<option/>', {value: 'blacklist'}).text('Blacklist'))
-        typeElement.append($('<option/>', {value: 'whitelist'}).text('Whitelist'))
-        typeElement.val(type)
-        row.append(typeElement)
-        row.append($('<input/>', {class: 'regex', type: 'text', value: regexes.join()}))
-        row.append($('<button/>', {class: 'btn btn-default'}).text('Remove').click(() ->
-          element = $(@).parent().parent()
-          $(@).parent().remove()
-          element.change()
-        ))
-        self.element.append(row)
-
-      for filter in @contents
-        addRow(filter.channel, filter.type, filter.regexes)
-
-      $('#add-filter').click(() ->
-        addRow()
-      )
-
-      @element.change(() ->
-        self.contents = []
-        self.element.children('.row').each(() ->
+      ractive.on({
+        add: () ->
           self.contents.push({
-            channel: $(@).children('.author').val()
-            type: $(@).children('.type').children(':selected').val()
-            regexes: $(@).children('.regex').val().split(',')
+            channel: ""
+            type: "blacklist"
+            regexes: ""
           })
-        )
-        self.save()
-        self.filterAll()
-        window.refresh()
+        remove: (event, index) ->
+          self.contents.splice(index, 1)
+      })
+
+      ractive.observe('filter', () ->
+        self.update()
       )
 
-      @filterAll()
+      @update()
 
-    save: () ->
+    update: () ->
       localStorage.setItem(@storageString, JSON.stringify(@contents))
+      @filterAll()
+      window.refresh()
 
     allows: (video) ->
       if video?
         for filter in @contents
           if video.author == filter.channel
             if filter.type == 'blacklist'
-              for regex in filter.regexes
+              for regex in filter.regexes.split(',')
                 if video.title.match(regex)
                   return false
             if filter.type == 'whitelist'
-              for regex in filter.regexes
+              for regex in filter.regexes.split(',')
                 if video.title.match(regex)
                   return true
               return false

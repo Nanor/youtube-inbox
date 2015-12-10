@@ -64,14 +64,7 @@
 
         <h4>Filters:</h4>
 
-        <div class="filter-panel">
-            <div class="header">
-                <div class="author">Channel Name:</div>
-                <div class="type"></div>
-                <div class="regex">Filter:</div>
-            </div>
-        </div>
-        <button class="btn btn-default" id="add-filter">Add</button>
+        <div class="filter-panel"></div>
     </div>
 </div>
 </body>
@@ -114,6 +107,30 @@
             </div>
         </label>
     </div>
+    {{/with}}
+</script>
+
+<script id='filter-template' type="text/html">
+    {{#with filter}}
+    <div class="header">
+        <div class="author">Channel Name:</div>
+        <div class="type"></div>
+        <div class="regex">Filter:</div>
+    </div>
+    <div class="rows">
+        {{#each contents:index}}
+        <div class="row">
+            <input class="author" type="text" value="{{channel}}">
+            <select class="type form-control" value="{{type}}">
+                <option value="blacklist">Blacklist</option>
+                <option value="whitelist">Whitelist</option>
+            </select>
+            <input class="regex" type="text" value="{{regexes}}">
+            <button class="btn btn-default" on-click="remove:{{index}}">Remove</button>
+        </div>
+        {{/each}}
+    </div>
+    <button class="btn btn-default" on-click="add">Add</button>
     {{/with}}
 </script>
 </html>
