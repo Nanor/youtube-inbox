@@ -8,14 +8,15 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
     <link rel="stylesheet" type="text/css" href="index.css">
 
-    <script type="text/javascript" src="http://code.jquery.com/jquery-2.0.0.js"></script>
-    <script type="text/javascript" src="libraries/gapi/auth.js"></script>
-    <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
-    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="libraries/linkify/linkify.min.js"></script>
-    <script type="text/javascript" src="libraries/linkify/linkify-jquery.min.js"></script>
-    <script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
-    <script type="text/javascript" src="index.js"></script>
+    <script src="http://code.jquery.com/jquery-2.0.0.js"></script>
+    <script src="libraries/gapi/auth.js"></script>
+    <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="libraries/linkify/linkify.min.js"></script>
+    <script src="libraries/linkify/linkify-jquery.min.js"></script>
+    <script src='http://cdn.ractivejs.org/latest/ractive.min.js'></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="index.js"></script>
 
     <link rel="icon" href="favicon-vflz7uhzw.ico" sizes="32x32">
 </head>
@@ -62,6 +63,7 @@
         <label for="expand">Expand playing videos?<input type="checkbox" id="expand"></label>
 
         <h4>Filters:</h4>
+
         <div class="filter-panel">
             <div class="header">
                 <div class="author">Channel Name:</div>
@@ -73,4 +75,45 @@
     </div>
 </div>
 </body>
+
+<script id='video-template' type="text/html">
+    {{#with video}}
+    <input type="checkbox" class="expanded" id="expand-{{id}}">
+    <div class="video">
+        <div class="thumbnail">
+            <p>{{title}}</p>
+            <img src={{thumbnail}}>
+            <i class="fa fa-play fa-3x"></i>
+        </div>
+    </div>
+    <div class="video-info">
+        <div class="author">
+            <a href="http://www.youtube.com/channel/{{authorId}}" target="_blank">{{author}}</a>
+        </div>
+        <div class="upload-date">uploaded {{publishedDate}}</div>
+        <input type="checkbox" class="truncated" id="trunc-{{id}}" checked="checked">
+
+        <div class="description"></div>
+
+        <label for="trunc-{{id}}">
+            <span class="read-more">Read more</span>
+            <span class="read-less">Read less</span>
+        </label>
+    </div>
+    <div class="side-buttons">
+        {{#if mark}}
+        <button class="mark btn btn-default" title="Mark as {{mark}}"><i class="fa {{icon}} fa-3x"></i></button>
+        {{/if}}
+        <a class="youtube-watch btn btn-default" title="Watch on YouTube"
+           href="https://www.youtube.com/watch?v={{id}}" target="_blank">
+            <i class="fa fa-youtube fa-3x"></i>
+        </a>
+        <label for="expand-{{id}}">
+            <div class="expand-player btn btn-default" title="Expand Video"><i class="fa fa-expand fa-3x"></i></div>
+            <div class="compress-player btn btn-default" title="Compress Video"><i class="fa fa-compress fa-3x"></i>
+            </div>
+        </label>
+    </div>
+    {{/with}}
+</script>
 </html>

@@ -15,54 +15,22 @@ $(document).ready(() ->
       )
 
     addToDom: (parent, index, parentName) ->
-      description = $('<div/>', {class: "description"})
-      @description.split(/\n(?:\n)+/).forEach((paragraph) ->
-        description.append($('<p>' + paragraph.replace(/\n/g, '<br>') + '</p>'))
-      )
-      description.find('p').linkify({target: "_blank"})
 
-      markButton = $('<button/>', {
-        class: 'mark btn btn-default',
-        title: 'Mark as ' + (if parentName == 'Unwatched' then 'watched' else 'unwatched')
-      }).append($('<i/>', class: 'fa fa-' + (if parentName == 'Unwatched' then 'check' else 'remove') + ' fa-3x'))
-
-      if parentName == 'Blocked'
-        markButton = null
-
-      videoContainer = $('<div/>', {class: 'video-container', id: 'video-' + @id})
-      .append($('<input/>', {type: 'checkbox', class: 'expanded', id: 'expand-' + @id}))
-      .append($('<div/>', class: 'video')
-      .append($('<div/>', class: 'thumbnail')
-      .append($('<p/>', text: @title))
-      .append($('<img/>', src: @thumbnail))
-      .append($('<i/>', class: 'fa fa-play fa-3x'))))
-      .append($('<div/>', class: 'video-info')
-      .append($('<div/>', class: 'author')
-      .append($('<a/>', {
-        href: 'http://www.youtube.com/channel/' + @authorId,
-        target: '_blank',
-        text: 'by ' + @author
-      })))
-      .append($('<div/>', {class: 'upload-date', text: 'uploaded ' + new Date(@publishedDate).toLocaleString()}))
-      .append($('<input/>', {type: 'checkbox', class: 'truncated', id: 'trunc-' + @id, 'checked': true}))
-      .append(description)
-      .append($('<label/>', for: 'trunc-' + @id)
-      .append($('<span/>', {class: 'read-more', text: 'Read more'}))
-      .append($('<span/>', {class: 'read-less', text: 'Read less'}))))
-      .append($('<div/>', class: 'side-buttons')
-      .append(markButton)
-      .append($('<a/>', {
-        class: 'youtube-watch btn btn-default',
-        title: 'Watch on YouTube',
-        href: 'https://www.youtube.com/watch?v=' + @id,
-        target: '_blank'
+      videoContainer = $('<div/>', {class: 'video-container', id: 'video-'+@id})
+      new Ractive({
+        el: videoContainer
+        template: '#video-template'
+        data: {
+          video: @
+          mark: (if parentName != 'Blocked' then (if parentName == 'Watched' then 'unwatched' else 'watched') else '')
+          icon: (if parentName == 'Watched' then 'fa-remove' else 'fa-check')
+        }
       })
-      .append($('<i/>', class: 'fa fa-youtube fa-3x')))
-      .append($('<label/>', for: 'expand-' + @id)
-      .append($('<div/>', {class: 'expand-player btn btn-default', title: 'Expand Video'})
-      .append($('<i/>', class: 'fa fa-expand fa-3x')))
-      .append($('<div/>', {class: 'compress-player btn btn-default', title: 'Compress Video'})
-      .append($('<i/>', class: 'fa fa-compress fa-3x')))))
+
+      @description.split(/\n(?:\n)+/).forEach((paragraph) ->
+        videoContainer.find('.description').append($('<p>' + paragraph.replace(/\n/g, '<br>') + '</p>'))
+      )
+      videoContainer.find('.description').find('p').linkify({target: "_blank"})
 
       # Place the video into the dom.
       if (index == 0)
