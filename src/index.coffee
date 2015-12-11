@@ -2,6 +2,7 @@ $(document).ready(() ->
   class Video
     constructor: (@title, @id, @author, @authorId, publishedDate, @description, @thumbnail) ->
       @publishedDate = new Date(publishedDate)
+      @paragraphs = (linkifyStr(paragraph) for paragraph in @description.split(/\n\n*/))
 
     @fromJson: (json) ->
       new Video(
@@ -14,9 +15,10 @@ $(document).ready(() ->
         json.thumbnail
       )
 
+
     addToDom: (parent, index, parentName) ->
       videoContainer = $('<div/>', {class: 'video-container', id: 'video-' + @id})
-      new Ractive({
+      ractive = new Ractive({
         el: videoContainer
         template: '#video-template'
         data: {
@@ -26,10 +28,24 @@ $(document).ready(() ->
         }
       })
 
-      @description.split(/\n(?:\n)+/).forEach((paragraph) ->
-        videoContainer.find('.description').append($('<p>' + paragraph.replace(/\n/g, '<br>') + '</p>'))
-      )
-      videoContainer.find('.description').find('p').linkify({target: "_blank"})
+      ractive.on({
+        mark: (event) ->
+          if parentName == 'Unwatched'
+            watchedVideos.add(unwatchedVideos.remove(event.context.id))
+          else
+            unwatchedVideos.add(watchedVideos.remove(event.context.id))
+        play: (event, id) ->
+          console.log event
+          new YT.Player(event.node, {
+            height: event.node.width * 9 / 16,
+            width: event.node.width,
+            videoId: event.context.id,
+            events: {
+              'onReady': onPlayerReady,
+              'onStateChange': onPlayerStateChange,
+            },
+          })
+      })
 
       # Place the video into the dom.
       if (index == 0)
@@ -47,26 +63,6 @@ $(document).ready(() ->
 
       if (videoContainer.find('.description').height() >= 250)
         videoContainer.find('.video-info').addClass('long')
-
-      id = @id # Annoying thing to deal with closures.
-      videoContainer.on('click', '.mark', () ->
-        if parentName == 'Unwatched'
-          watchedVideos.add(unwatchedVideos.remove(id))
-        else
-          unwatchedVideos.add(watchedVideos.remove(id))
-      )
-
-      videoContainer.on('click', '.video', () ->
-        new YT.Player(this, {
-          height: $(this).width * 9 / 16,
-          width: $(this).width,
-          videoId: id,
-          events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange,
-          },
-        })
-      )
 
 
   class VideoList

@@ -80,7 +80,6 @@ html
 
   label ~ label
     display: block
-    margin: 5px 0
     font-weight: normal
 
   label input
@@ -94,23 +93,6 @@ html
   .note
     display: inline
     font-style: italic
-
-#autoplay, #expand
-  margin: 0
-  width: 40px
-
-input[type=checkbox]
-  /* Double-sized Checkboxes */
-  $scale: scale(1.5)
-  padding-top: 10px
-  /* IE */
-  -webkit-transform: $scale
-  /* FF */
-  -moz-transform: $scale
-  /* Safari and Chrome */
-  -ms-transform: $scale
-  /* Opera */
-  -o-transform: $scale
 
 .videos
   padding-top: $top-bar-height + 10px
@@ -134,15 +116,9 @@ input[type=checkbox]
         height: $video-height
 
         .thumbnail
-          overflow: hidden
           height: 100%
-
-        img
-          position: relative
-          top: 50%
-          z-index: 0
-          width: 100%
-          transform: translateY(-50%)
+          background-size: cover
+          background: no-repeat center
 
         &:after
           position: absolute

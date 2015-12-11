@@ -13,7 +13,7 @@
     <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <script src="libraries/linkify/linkify.min.js"></script>
-    <script src="libraries/linkify/linkify-jquery.min.js"></script>
+    <script src="libraries/linkify/linkify-string.min.js"></script>
     <script src='http://cdn.ractivejs.org/latest/ractive.min.js'></script>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="index.js"></script>
@@ -52,15 +52,18 @@
     <div class="settings">
         <label for="settings-toggle" class="btn btn-default settings-toggle"><i class="fa fa-gear"></i></label>
         <button class="btn btn-default pre-auth" id="login-link">Log in</button>
-        <button class="btn btn-default post-auth" id="logout-link">Log out</button>
         <label>Update interval:<input id="update-interval" type="number" value="5"/>minutes.
             <div class="note">(0 for never)</div>
         </label>
         <label>Discard watched videos older than<input id="history-length" type="number" value="28"/>days old.</label>
 
         <p class="note">(Unwatched videos will be kept forever)</p>
-        <label for="autoplay">Auto-play videos?<input type="checkbox" id="autoplay"></label>
-        <label for="expand">Expand playing videos?<input type="checkbox" id="expand"></label>
+        <div class="checkbox">
+            <label><input type="checkbox" id="autoplay">Auto-play videos?</label>
+        </div>
+        <div class="checkbox">
+            <label><input type="checkbox" id="expand">Expand playing videos?</label>
+        </div>
 
         <h4>Filters:</h4>
 
@@ -72,10 +75,9 @@
 <script id='video-template' type="text/html">
     {{#with video}}
     <input type="checkbox" class="expanded" id="expand-{{id}}">
-    <div class="video">
-        <div class="thumbnail">
+    <div class="video" on-click="play">
+        <div class="thumbnail" style="background-image: url({{thumbnail}})">
             <p>{{title}}</p>
-            <img src={{thumbnail}}>
             <i class="fa fa-play fa-3x"></i>
         </div>
     </div>
@@ -86,7 +88,11 @@
         <div class="upload-date">uploaded {{publishedDate}}</div>
         <input type="checkbox" class="truncated" id="trunc-{{id}}" checked="checked">
 
-        <div class="description"></div>
+        <div class="description">
+            {{#each paragraphs}}
+            <p>{{{this}}}</p>
+            {{/each}}
+        </div>
 
         <label for="trunc-{{id}}">
             <span class="read-more">Read more</span>
@@ -95,7 +101,8 @@
     </div>
     <div class="side-buttons">
         {{#if mark}}
-        <button class="mark btn btn-default" title="Mark as {{mark}}"><i class="fa {{icon}} fa-3x"></i></button>
+        <button class="mark btn btn-default" title="Mark as {{mark}}" on-click="mark"><i class="fa {{icon}} fa-3x"></i>
+        </button>
         {{/if}}
         <a class="youtube-watch btn btn-default" title="Watch on YouTube"
            href="https://www.youtube.com/watch?v={{id}}" target="_blank">
