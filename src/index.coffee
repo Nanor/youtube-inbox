@@ -2,6 +2,7 @@ $(document).ready(() ->
   class Video
     constructor: (@title, @id, @author, @authorId, publishedDate, @description, @thumbnail) ->
       @publishedDate = new Date(publishedDate)
+      @paragraphs = (linkifyStr(paragraph) for paragraph in @description.split(/\n\n*/))
 
     @fromJson: (json) ->
       new Video(
@@ -14,55 +15,37 @@ $(document).ready(() ->
         json.thumbnail
       )
 
+
     addToDom: (parent, index, parentName) ->
-      description = $('<div/>', {class: "description"})
-      @description.split(/\n(?:\n)+/).forEach((paragraph) ->
-        description.append($('<p>' + paragraph.replace(/\n/g, '<br>') + '</p>'))
-      )
-      description.find('p').linkify({target: "_blank"})
-
-      markButton = $('<button/>', {
-        class: 'mark btn btn-default',
-        title: 'Mark as ' + (if parentName == 'Unwatched' then 'watched' else 'unwatched')
-      }).append($('<i/>', class: 'fa fa-' + (if parentName == 'Unwatched' then 'check' else 'remove') + ' fa-3x'))
-
-      if parentName == 'Blocked'
-        markButton = null
-
       videoContainer = $('<div/>', {class: 'video-container', id: 'video-' + @id})
-      .append($('<input/>', {type: 'checkbox', class: 'expanded', id: 'expand-' + @id}))
-      .append($('<div/>', class: 'video')
-      .append($('<div/>', class: 'thumbnail')
-      .append($('<p/>', text: @title))
-      .append($('<img/>', src: @thumbnail))
-      .append($('<i/>', class: 'fa fa-play fa-3x'))))
-      .append($('<div/>', class: 'video-info')
-      .append($('<div/>', class: 'author')
-      .append($('<a/>', {
-        href: 'http://www.youtube.com/channel/' + @authorId,
-        target: '_blank',
-        text: 'by ' + @author
-      })))
-      .append($('<div/>', {class: 'upload-date', text: 'uploaded ' + new Date(@publishedDate).toLocaleString()}))
-      .append($('<input/>', {type: 'checkbox', class: 'truncated', id: 'trunc-' + @id, 'checked': true}))
-      .append(description)
-      .append($('<label/>', for: 'trunc-' + @id)
-      .append($('<span/>', {class: 'read-more', text: 'Read more'}))
-      .append($('<span/>', {class: 'read-less', text: 'Read less'}))))
-      .append($('<div/>', class: 'side-buttons')
-      .append(markButton)
-      .append($('<a/>', {
-        class: 'youtube-watch btn btn-default',
-        title: 'Watch on YouTube',
-        href: 'https://www.youtube.com/watch?v=' + @id,
-        target: '_blank'
+      ractive = new Ractive({
+        el: videoContainer
+        template: '#video-template'
+        data: {
+          video: @
+          mark: (if parentName != 'Blocked' then (if parentName == 'Watched' then 'unwatched' else 'watched') else '')
+          icon: (if parentName == 'Watched' then 'fa-remove' else 'fa-check')
+        }
       })
-      .append($('<i/>', class: 'fa fa-youtube fa-3x')))
-      .append($('<label/>', for: 'expand-' + @id)
-      .append($('<div/>', {class: 'expand-player btn btn-default', title: 'Expand Video'})
-      .append($('<i/>', class: 'fa fa-expand fa-3x')))
-      .append($('<div/>', {class: 'compress-player btn btn-default', title: 'Compress Video'})
-      .append($('<i/>', class: 'fa fa-compress fa-3x')))))
+
+      ractive.on({
+        mark: (event) ->
+          if parentName == 'Unwatched'
+            watchedVideos.add(unwatchedVideos.remove(event.context.id))
+          else
+            unwatchedVideos.add(watchedVideos.remove(event.context.id))
+        play: (event, id) ->
+          console.log event
+          new YT.Player(event.node, {
+            height: event.node.width * 9 / 16,
+            width: event.node.width,
+            videoId: event.context.id,
+            events: {
+              'onReady': onPlayerReady,
+              'onStateChange': onPlayerStateChange,
+            },
+          })
+      })
 
       # Place the video into the dom.
       if (index == 0)
@@ -80,26 +63,6 @@ $(document).ready(() ->
 
       if (videoContainer.find('.description').height() >= 250)
         videoContainer.find('.video-info').addClass('long')
-
-      id = @id # Annoying thing to deal with closures.
-      videoContainer.on('click', '.mark', () ->
-        if parentName == 'Unwatched'
-          watchedVideos.add(unwatchedVideos.remove(id))
-        else
-          unwatchedVideos.add(watchedVideos.remove(id))
-      )
-
-      videoContainer.on('click', '.video', () ->
-        new YT.Player(this, {
-          height: $(this).width * 9 / 16,
-          width: $(this).width,
-          videoId: id,
-          events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange,
-          },
-        })
-      )
 
 
   class VideoList
@@ -225,65 +188,51 @@ $(document).ready(() ->
       @update()
 
   class Filter
-    constructor: (@storageString, elementSelector) ->
+    constructor: (@storageString) ->
       @contents = JSON.parse(localStorage.getItem(@storageString)) or []
-      @element = $(elementSelector)
 
       self = @
 
-      addRow = (channel, type, regexes = []) ->
-        row = $('<div/>', {class: 'row'})
-        row.append($('<input/>', {class: 'author', type: 'text', value: channel}))
+      ractive = new Ractive({
+        el: '.filter-panel'
+        template: '#filter-template'
+        data: {
+          filter: @
+        }
+      })
 
-        typeElement = $('<select/>', {class: 'type form-control'})
-        typeElement.append($('<option/>', {value: 'blacklist'}).text('Blacklist'))
-        typeElement.append($('<option/>', {value: 'whitelist'}).text('Whitelist'))
-        typeElement.val(type)
-        row.append(typeElement)
-        row.append($('<input/>', {class: 'regex', type: 'text', value: regexes.join()}))
-        row.append($('<button/>', {class: 'btn btn-default'}).text('Remove').click(() ->
-          element = $(@).parent().parent()
-          $(@).parent().remove()
-          element.change()
-        ))
-        self.element.append(row)
-
-      for filter in @contents
-        addRow(filter.channel, filter.type, filter.regexes)
-
-      $('#add-filter').click(() ->
-        addRow()
-      )
-
-      @element.change(() ->
-        self.contents = []
-        self.element.children('.row').each(() ->
+      ractive.on({
+        add: () ->
           self.contents.push({
-            channel: $(@).children('.author').val()
-            type: $(@).children('.type').children(':selected').val()
-            regexes: $(@).children('.regex').val().split(',')
+            channel: ""
+            type: "blacklist"
+            regexes: ""
           })
-        )
-        self.save()
-        self.filterAll()
-        window.refresh()
+        remove: (event, index) ->
+          self.contents.splice(index, 1)
+      })
+
+      ractive.observe('filter', () ->
+        self.update()
       )
 
-      @filterAll()
+      @update()
 
-    save: () ->
+    update: () ->
       localStorage.setItem(@storageString, JSON.stringify(@contents))
+      @filterAll()
+      window.refresh()
 
     allows: (video) ->
       if video?
         for filter in @contents
           if video.author == filter.channel
             if filter.type == 'blacklist'
-              for regex in filter.regexes
+              for regex in filter.regexes.split(',')
                 if video.title.match(regex)
                   return false
             if filter.type == 'whitelist'
-              for regex in filter.regexes
+              for regex in filter.regexes.split(',')
                 if video.title.match(regex)
                   return true
               return false
