@@ -8,14 +8,15 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
     <link rel="stylesheet" type="text/css" href="index.css">
 
-    <script type="text/javascript" src="http://code.jquery.com/jquery-2.0.0.js"></script>
-    <script type="text/javascript" src="libraries/gapi/auth.js"></script>
-    <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
-    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="libraries/linkify/linkify.min.js"></script>
-    <script type="text/javascript" src="libraries/linkify/linkify-jquery.min.js"></script>
-    <script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
-    <script type="text/javascript" src="index.js"></script>
+    <script src="http://code.jquery.com/jquery-2.0.0.js"></script>
+    <script src="libraries/gapi/auth.js"></script>
+    <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="libraries/linkify/linkify.min.js"></script>
+    <script src="libraries/linkify/linkify-string.min.js"></script>
+    <script src='http://cdn.ractivejs.org/latest/ractive.min.js'></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="index.js"></script>
 
     <link rel="icon" href="favicon-vflz7uhzw.ico" sizes="32x32">
 </head>
@@ -51,26 +52,92 @@
     <div class="settings">
         <label for="settings-toggle" class="btn btn-default settings-toggle"><i class="fa fa-gear"></i></label>
         <button class="btn btn-default pre-auth" id="login-link">Log in</button>
-        <button class="btn btn-default post-auth" id="logout-link">Log out</button>
         <label>Update interval:<input id="update-interval" type="number" value="5"/>minutes.
             <div class="note">(0 for never)</div>
         </label>
         <label>Discard watched videos older than<input id="history-length" type="number" value="28"/>days old.</label>
 
         <p class="note">(Unwatched videos will be kept forever)</p>
-        <label for="autoplay">Auto-play videos?<input type="checkbox" id="autoplay"></label>
-        <label for="expand">Expand playing videos?<input type="checkbox" id="expand"></label>
+        <div class="checkbox">
+            <label><input type="checkbox" id="autoplay">Auto-play videos?</label>
+        </div>
+        <div class="checkbox">
+            <label><input type="checkbox" id="expand">Expand playing videos?</label>
+        </div>
 
         <h4>Filters:</h4>
-        <div class="filter-panel">
-            <div class="header">
-                <div class="author">Channel Name:</div>
-                <div class="type"></div>
-                <div class="regex">Filter:</div>
-            </div>
-        </div>
-        <button class="btn btn-default" id="add-filter">Add</button>
+
+        <div class="filter-panel"></div>
     </div>
 </div>
 </body>
+
+<script id='video-template' type="text/html">
+    {{#with video}}
+    <input type="checkbox" class="expanded" id="expand-{{id}}">
+    <div class="video" on-click="play">
+        <div class="thumbnail" style="background-image: url({{thumbnail}})">
+            <p>{{title}}</p>
+            <i class="fa fa-play fa-3x"></i>
+        </div>
+    </div>
+    <div class="video-info">
+        <div class="author">
+            <a href="http://www.youtube.com/channel/{{authorId}}" target="_blank">{{author}}</a>
+        </div>
+        <div class="upload-date">uploaded {{publishedDate}}</div>
+        <input type="checkbox" class="truncated" id="trunc-{{id}}" checked="checked">
+
+        <div class="description">
+            {{#each paragraphs}}
+            <p>{{{this}}}</p>
+            {{/each}}
+        </div>
+
+        <label for="trunc-{{id}}">
+            <span class="read-more">Read more</span>
+            <span class="read-less">Read less</span>
+        </label>
+    </div>
+    <div class="side-buttons">
+        {{#if mark}}
+        <button class="mark btn btn-default" title="Mark as {{mark}}" on-click="mark"><i class="fa {{icon}} fa-3x"></i>
+        </button>
+        {{/if}}
+        <a class="youtube-watch btn btn-default" title="Watch on YouTube"
+           href="https://www.youtube.com/watch?v={{id}}" target="_blank">
+            <i class="fa fa-youtube fa-3x"></i>
+        </a>
+        <label for="expand-{{id}}">
+            <div class="expand-player btn btn-default" title="Expand Video"><i class="fa fa-expand fa-3x"></i></div>
+            <div class="compress-player btn btn-default" title="Compress Video"><i class="fa fa-compress fa-3x"></i>
+            </div>
+        </label>
+    </div>
+    {{/with}}
+</script>
+
+<script id='filter-template' type="text/html">
+    {{#with filter}}
+    <div class="header">
+        <div class="author">Channel Name:</div>
+        <div class="type"></div>
+        <div class="regex">Filter:</div>
+    </div>
+    <div class="rows">
+        {{#each contents:index}}
+        <div class="row">
+            <input class="author" type="text" value="{{channel}}">
+            <select class="type form-control" value="{{type}}">
+                <option value="blacklist">Blacklist</option>
+                <option value="whitelist">Whitelist</option>
+            </select>
+            <input class="regex" type="text" value="{{regexes}}">
+            <button class="btn btn-default" on-click="remove:{{index}}">Remove</button>
+        </div>
+        {{/each}}
+    </div>
+    <button class="btn btn-default" on-click="add">Add</button>
+    {{/with}}
+</script>
 </html>
