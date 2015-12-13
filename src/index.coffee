@@ -3,7 +3,10 @@ title = ''
 class Video
   constructor: (@title, @id, @author, @authorId, publishedDate, @description, @thumbnail) ->
     @publishedDate = new Date(publishedDate)
-    @paragraphs = (linkifyStr(paragraph) for paragraph in @description.split(/\n\n*/))
+
+    description = @description
+    @paragraphs = () ->
+      (linkifyStr(paragraph) for paragraph in description.split(/\n\n*/))
 
   @fromJson: (json) ->
     new Video(
@@ -22,7 +25,6 @@ class VideoList
     @videos = (Video.fromJson(video) for video in videoList)
     @order = (if reversedOrder then 1 else -1)
     @sort()
-    @deduplicate()
     @save()
 
   add: (newVideo) ->
@@ -31,7 +33,6 @@ class VideoList
 # New video
       @videos.push(newVideo)
       @sort()
-      @deduplicate()
       @save()
     else
 # Video already in list.
@@ -65,21 +66,12 @@ class VideoList
     @videos.length
 
   clearOlderThan: (date) ->
-    for video in @videos
-      if video.publishedDate < date
-        @remove(video.id)
+    @videos = (video for video in @videos when video.publishedDate > date)
 
   sort: () ->
     order = @order
     @videos = @videos.sort((a, b) -> (if a.publishedDate > b.publishedDate then 1 else -1) * order)
     return @
-
-  deduplicate: () ->
-    temp = @videos
-    @videos = []
-    for video in temp
-      if !@find(video.id)?
-        @videos.push(video)
 
   save: () ->
     localStorage.setItem(@storageString, JSON.stringify(@videos))
@@ -87,7 +79,6 @@ class VideoList
   addAllFrom: (sourceList) ->
     @videos = @videos.concat(sourceList.videos)
     @sort()
-    @deduplicate()
     @save()
     sourceList.videos = []
     sourceList.save()
@@ -95,9 +86,6 @@ class VideoList
 class Filter
   constructor: (@storageString) ->
     @contents = JSON.parse(localStorage.getItem(@storageString)) or []
-
-    self = @
-
     @update()
 
   update: () ->
@@ -136,8 +124,12 @@ class SavedInput
   constructor: (storageString, defaultValue, listener) ->
     @get = () ->
       JSON.parse(localStorage.getItem(storageString))
+
+    self = @
     @set = (value) ->
       localStorage.setItem(storageString, value)
+      if listener?
+        listener(self)
 
     @set(JSON.parse(localStorage.getItem(storageString)) or defaultValue)
 
@@ -174,11 +166,11 @@ window.readData = () ->
     )
 
   loadVideo = (videoSnippet) ->
-    thumbnail = null;
-    $.each(videoSnippet.thumbnails, (key, value) ->
+    thumbnail = null
+    for key in Object.keys(videoSnippet.thumbnails)
+      value = videoSnippet.thumbnails[key]
       if ((thumbnail == null || thumbnail.width < value.width) && value.url != null)
         thumbnail = value
-    );
 
     video = new Video(
       videoSnippet.title,
@@ -210,16 +202,18 @@ unwatchedVideos = new VideoList("unwatched-videos", true, 'unwatched', false, tr
 watchedVideos = new VideoList("watched-videos", false, 'watched', false, false)
 blockedVideos = new VideoList("blocked-videos", false, 'blocked', true, false)
 
+readDataInterval = null
+updateInput = new SavedInput('update-interval', 5, (self) ->
+  if self.get() > 0
+    readDataInterval = window.setInterval(readData, 1000 * 60 * self.get())
+  else if self.get() < 0
+    self.set(0)
+)
+
 videoLists = [unwatchedVideos, watchedVideos, blockedVideos]
 
-readDataInterval = null
-updateInput = new SavedInput('update-interval', 5, () ->
-  window.clearInterval(readDataInterval)
-  if updateInput.get() > 0
-    readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.get())
-)
-#noinspection CoffeeScriptUnusedLocalSymbols
-readDataInterval = window.setInterval(readData, 1000 * 60 * updateInput.get())
+fixVideoAspect = (video) ->
+  video.style.height = video.clientWidth * 9 / 16 + 'px'
 
 ractive = new Ractive({
   el: '#container'
@@ -227,6 +221,9 @@ ractive = new Ractive({
   data: {
     filter: filter
     videoLists: videoLists
+    isLong: (id) ->
+      el = Ractive.find('#'+id)
+      (if el.find('.description').clientHeight >= 240 then 'long' else '')
   }
   computed: {
     historyInput: historyInput
@@ -245,21 +242,33 @@ ractive.on({
     })
   filterRemove: (event, index) ->
     filter.contents.splice(index, 1)
-  done: (event, id) ->
-    watchedVideos.add(unwatchedVideos.remove(id))
-  undone: (event, id) ->
-    unwatchedVideos.add(watchedVideos.remove(id))
-  play: (event, id) ->
-    console.log event
+
+  refresh: () ->
+    window.readData()
+
+  done: (event) ->
+    watchedVideos.add(unwatchedVideos.remove(event.context.id))
+  undone: (event) ->
+    unwatchedVideos.add(watchedVideos.remove(event.context.id))
+  play: (event) ->
     new YT.Player(event.node, {
       height: event.node.width * 9 / 16,
       width: event.node.width,
       videoId: event.context.id,
       events: {
         'onReady': onPlayerReady,
-#        'onStateChange': onPlayerStateChange,
+        'onStateChange': onPlayerStateChange,
       },
     })
+  expandedChange: (event) ->
+    fixVideoAspect(event.node.nextElementSibling)
+  insert: (event) ->
+    console.log 'test'
+
+  allDone: () ->
+    watchedVideos.addAllFrom(unwatchedVideos)
+  allUndone: () ->
+    unwatchedVideos.addAllFrom(watchedVideos)
 })
 
 ractive.observe('filter', () ->
@@ -269,29 +278,15 @@ ractive.observe('filter', () ->
 onPlayerReady = (event) ->
   event.target.playVideo()
 
-$(document).ready(() ->
-  $('#refresh').click(window.readData)
+onPlayerStateChange = (event) ->
+  if event.data == YT.PlayerState.ENDED and autoplayInput.get() and unwatchedVideos.display
+    event.target.f.parentElement.nextElementSibling.children[1].click()
+    event.target.f.nextElementSibling.nextElementSibling.children[0].click()
 
-  # Click binds
-  $('#all-done').click(() ->
-    watchedVideos.addAllFrom(unwatchedVideos)
-  )
-  $('#all-undone').click(() ->
-    unwatchedVideos.addAllFrom(watchedVideos)
-  )
-
-  onPlayerStateChange = (event) ->
-    $video = $(event.target.f).parent()
-    if event.data == YT.PlayerState.ENDED and autoplayInput.get() and $('#tab-unwatched').prop('checked')
-      $video.next().find('.video').click()
-      $video.find('.mark').click()
-
-    $expanded = $video.find('.expanded')
-    if event.data == YT.PlayerState.PLAYING and expandInput.get()
-      $expanded.prop('checked', true)
-      $expanded.change()
+  if expandInput.get()
+    if event.data == YT.PlayerState.PLAYING
+      event.target.f.previousElementSibling.checked = true
 
     if event.data == YT.PlayerState.ENDED
-      $expanded.prop('checked', false)
-      $expanded.change()
-)
+      event.target.f.previousElementSibling.checked = false
+    fixVideoAspect(event.target.f)

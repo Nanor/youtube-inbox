@@ -33,19 +33,19 @@
         </label>
         {{/each}}
 
-        <button id="all-done" class="btn btn-default" title="Mark all as watched"><i class="fa fa-check"></i></button>
-        <button id="all-undone" class="btn btn-default" title="Mark all as unwatched"><i class="fa fa-remove"></i>
+        <button id="all-done" class="btn btn-default" title="Mark all as watched" on-click="allDone">
+            <i class="fa fa-check"></i></button>
+        <button id="all-undone" class="btn btn-default" title="Mark all as unwatched" on-click="allUndone">
+            <i class="fa fa-remove"></i>
         </button>
     </div>
     <div class="videos">
         {{#each videoLists}}
-        {{#if display}}
-        <div class="{{name}}-videos video-list">
+        <div class="{{name}}-videos video-list" style="display: {{#if display}}block{{else}}none{{/if}};">
             {{#each videos}}
             {{>video}}
             {{/each}}
         </div>
-        {{/if}}
         {{/each}}
         <div class="no-videos">
             End of videos.
@@ -98,23 +98,23 @@
     </div>
 
     {{#partial video}}
-    <div class="video-container">
-        <input type="checkbox" class="expanded" id="expand-{{id}}">
+    <div class="video-container" id="video-{{id}}">
+        <input type="checkbox" class="expanded" id="expand-{{id}}" on-change="expandedChange">
         <div class="video" on-click="play">
             <div class="thumbnail" style="background-image: url({{thumbnail}})">
                 <p>{{title}}</p>
                 <i class="fa fa-play fa-3x"></i>
             </div>
         </div>
-        <div class="video-info">
+        <div class="video-info {{isLong(this)}}">
             <div class="author">
-                <a href="http://www.youtube.com/channel/{{authorId}}" target="_blank">{{author}}</a>
+                <a href="http://www.youtube.com/channel/{{authorId}}" target="_blank">{{author}}</a>{{id}}
             </div>
             <div class="upload-date">uploaded {{publishedDate}}</div>
             <input type="checkbox" class="truncated" id="trunc-{{id}}" checked="checked">
 
             <div class="description">
-                {{#each paragraphs}}
+                {{#each paragraphs()}}
                 <p>{{{this}}}</p>
                 {{/each}}
             </div>
@@ -126,17 +126,21 @@
         </div>
         <div class="side-buttons">
             {{#if name === 'unwatched'}}
-            <button class="mark btn btn-default" title="Mark as watched" on-click="done:{{id}}"><i class="fa fa-check fa-3x"></i></button>
+            <button class="btn btn-default" title="Mark as watched" on-click="done">
+                <i class="fa fa-check fa-3x"></i></button>
             {{elseif name == 'watched'}}
-            <button class="mark btn btn-default" title="Mark as unwatched" on-click="undone:{{id}}"><i class="fa fa-remove fa-3x"></i></button>
+            <button class="btn btn-default" title="Mark as unwatched" on-click="undone">
+                <i class="fa fa-remove fa-3x"></i></button>
             {{/if}}
             <a class="youtube-watch btn btn-default" title="Watch on YouTube"
                href="https://www.youtube.com/watch?v={{id}}" target="_blank">
                 <i class="fa fa-youtube fa-3x"></i>
             </a>
             <label for="expand-{{id}}">
-                <div class="expand-player btn btn-default" title="Expand Video"><i class="fa fa-expand fa-3x"></i></div>
-                <div class="compress-player btn btn-default" title="Compress Video"><i class="fa fa-compress fa-3x"></i>
+                <div class="expand-player btn btn-default" title="Expand Video"><i
+                        class="fa fa-expand fa-3x"></i></div>
+                <div class="compress-player btn btn-default" title="Compress Video"><i
+                        class="fa fa-compress fa-3x"></i>
                 </div>
             </label>
         </div>
