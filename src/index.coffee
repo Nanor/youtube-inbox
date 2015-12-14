@@ -1,5 +1,10 @@
 title = document.title
 
+DEFAULT = 'default'
+REVERSE = 'reverse'
+BLOCKED = 'blocked'
+PERMANENT = 'permanent'
+
 class Video
   constructor: (@title, @id, @author, @authorId, publishedDate, @description, @thumbnail) ->
     @publishedDate = new Date(publishedDate)
@@ -20,10 +25,13 @@ class Video
     )
 
 class VideoList
-  constructor: (@storageString, reversedOrder, @name, blocked, @display) ->
+  constructor: (@storageString, @name, options...) ->
     videoList = JSON.parse(localStorage.getItem(@storageString)) or []
     @videos = (Video.fromJson(video) for video in videoList)
-    @order = (if reversedOrder then 1 else -1)
+    @order = (if REVERSE in options then -1 else 1)
+    @display = DEFAULT in options
+    @blocked = BLOCKED in options
+    @permanent = BLOCKED in options
     @sort()
     @save()
 
@@ -33,10 +41,10 @@ class VideoList
 # New video
       @videos.push(newVideo)
       @sort()
-      @save()
     else
-# Video already in list.
+      # Video already in list.
       @videos[index] = newVideo
+    @save()
     return @
 
   remove: (id) ->
@@ -114,9 +122,10 @@ class Filter
       for videoList in videoLists
         for video in videoList.videos
           if video?
-            if @allows(video) == videoList.blocked
+            allowed = @allows(video)
+            if allowed == videoList.blocked
               videoList.remove(video.id)
-              if blocked
+              if allowed
                 unwatchedVideos.add(video)
               else
                 blockedVideos.add(video)
@@ -135,8 +144,9 @@ class SavedInput
     @set(JSON.parse(localStorage.getItem(storageString)) or defaultValue)
 
 window.readData = () ->
-  watchedVideos.clearOlderThan(new Date() - 1000 * 60 * 60 * 24 * historyInput.get())
-  blockedVideos.clearOlderThan(new Date() - 1000 * 60 * 60 * 24 * historyInput.get())
+  for videoList in videoLists
+    if not videoList.permanent
+      videoList.clearOlderThan(new Date() - 1000 * 60 * 60 * 24 * historyInput.get())
 
   getSubs = (pageToken) ->
     gapi.client.youtube.subscriptions.list({
@@ -199,9 +209,9 @@ historyInput = new SavedInput('days-into-history', 28)
 autoplayInput = new SavedInput('autoplay', false)
 expandInput = new SavedInput('expand', false)
 
-unwatchedVideos = new VideoList("unwatched-videos", true, 'unwatched', false, true)
-watchedVideos = new VideoList("watched-videos", false, 'watched', false, false)
-blockedVideos = new VideoList("blocked-videos", false, 'blocked', true, false)
+unwatchedVideos = new VideoList('unwatched-videos', 'unwatched', DEFAULT, PERMANENT)
+watchedVideos = new VideoList('watched-videos', 'watched', REVERSE)
+blockedVideos = new VideoList('blocked-videos', 'blocked', REVERSE, BLOCKED)
 
 readDataInterval = null
 updateInput = new SavedInput('update-interval', 5, (self) ->
@@ -223,8 +233,10 @@ videoComponent = Ractive.extend({
     this.on({
       done: (event, id) ->
         watchedVideos.add(unwatchedVideos.remove(id))
+        ractive.update('videoLists')
       undone: (event, id) ->
         unwatchedVideos.add(watchedVideos.remove(id))
+        ractive.update('videoLists')
       play: (event, id) ->
         new YT.Player(event.node, {
           height: event.node.width * 9 / 16,
@@ -265,20 +277,24 @@ ractive = new Ractive({
 ractive.on({
   filterAdd: () ->
     filter.contents.push({
-      channel: ""
-      type: "blacklist"
-      regexes: ""
+      channel: ''
+      type: 'blacklist'
+      regexes: ''
     })
   filterRemove: (event, index) ->
     filter.contents.splice(index, 1)
 
   refresh: () ->
     window.readData()
+    ractive.update('videoLists')
 
   allDone: () ->
     watchedVideos.addAllFrom(unwatchedVideos)
+    ractive.update('videoLists')
+
   allUndone: () ->
     unwatchedVideos.addAllFrom(watchedVideos)
+    ractive.update('videoLists')
 })
 
 ractive.observe('filter', () ->
@@ -304,3 +320,5 @@ onPlayerStateChange = (event) ->
     if event.data == YT.PlayerState.ENDED
       event.target.f.previousElementSibling.checked = false
     fixVideoAspect(event.target.f)
+
+window.ractive = ractive
