@@ -1,4 +1,4 @@
-title = ''
+title = document.title
 
 class Video
   constructor: (@title, @id, @author, @authorId, publishedDate, @description, @thumbnail) ->
@@ -67,6 +67,7 @@ class VideoList
 
   clearOlderThan: (date) ->
     @videos = (video for video in @videos when video.publishedDate > date)
+    @save()
 
   sort: () ->
     order = @order
@@ -215,21 +216,49 @@ videoLists = [unwatchedVideos, watchedVideos, blockedVideos]
 fixVideoAspect = (video) ->
   video.style.height = video.clientWidth * 9 / 16 + 'px'
 
+videoComponent = Ractive.extend({
+  isolated: false
+  template: '#video-component'
+  oninit: () ->
+    this.on({
+      done: (event, id) ->
+        watchedVideos.add(unwatchedVideos.remove(id))
+      undone: (event, id) ->
+        unwatchedVideos.add(watchedVideos.remove(id))
+      play: (event, id) ->
+        new YT.Player(event.node, {
+          height: event.node.width * 9 / 16,
+          width: event.node.width,
+          videoId: id,
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange,
+          },
+        })
+      expandedChange: (event) ->
+        fixVideoAspect(event.node.nextElementSibling)
+    })
+  oncomplete: () ->
+    videoInfo = this.el.children[2]
+    if (videoInfo.children[3].clientHeight >= 240)
+      videoInfo.classList.add('long')
+})
+
 ractive = new Ractive({
   el: '#container'
   template: '#template'
   data: {
     filter: filter
     videoLists: videoLists
-    isLong: (id) ->
-      el = Ractive.find('#'+id)
-      (if el.find('.description').clientHeight >= 240 then 'long' else '')
   }
   computed: {
     historyInput: historyInput
     autoplayInput: autoplayInput
     expandInput: expandInput
     updateInput: updateInput
+  }
+  components: {
+    Video: videoComponent
   }
 })
 
@@ -246,25 +275,6 @@ ractive.on({
   refresh: () ->
     window.readData()
 
-  done: (event) ->
-    watchedVideos.add(unwatchedVideos.remove(event.context.id))
-  undone: (event) ->
-    unwatchedVideos.add(watchedVideos.remove(event.context.id))
-  play: (event) ->
-    new YT.Player(event.node, {
-      height: event.node.width * 9 / 16,
-      width: event.node.width,
-      videoId: event.context.id,
-      events: {
-        'onReady': onPlayerReady,
-        'onStateChange': onPlayerStateChange,
-      },
-    })
-  expandedChange: (event) ->
-    fixVideoAspect(event.node.nextElementSibling)
-  insert: (event) ->
-    console.log 'test'
-
   allDone: () ->
     watchedVideos.addAllFrom(unwatchedVideos)
   allUndone: () ->
@@ -273,6 +283,10 @@ ractive.on({
 
 ractive.observe('filter', () ->
   filter.update()
+)
+ractive.observe('videoLists[0]', (videoList) ->
+  length = videoList.length()
+  document.title = (if length > 0 then "(#{length}) #{title}" else title)
 )
 
 onPlayerReady = (event) ->

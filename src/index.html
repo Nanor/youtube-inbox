@@ -24,7 +24,7 @@
 <script id="template" type="text/html">
     <div class="top-bar">
         <label for="settings-toggle" class="btn btn-default settings-toggle"><i class="fa fa-gear"></i></label>
-        <button class="btn btn-default" id="refresh"><i class="fa fa-refresh"></i></button>
+        <button class="btn btn-default" id="refresh" on-click="refresh"><i class="fa fa-refresh"></i></button>
 
         {{#each videoLists}}
         <input type="radio" name="tab" id="tab-{{name}}" checked="{{display}}">
@@ -43,7 +43,9 @@
         {{#each videoLists}}
         <div class="{{name}}-videos video-list" style="display: {{#if display}}block{{else}}none{{/if}};">
             {{#each videos}}
-            {{>video}}
+            <div class="video-container" id="video-{{id}}">
+                <Video/>
+            </div>
             {{/each}}
         </div>
         {{/each}}
@@ -96,69 +98,57 @@
             {{/with}}
         </div>
     </div>
+</script>
 
-    {{#partial video}}
-    <div class="video-container" id="video-{{id}}">
-        <input type="checkbox" class="expanded" id="expand-{{id}}" on-change="expandedChange">
-        <div class="video" on-click="play">
-            <div class="thumbnail" style="background-image: url({{thumbnail}})">
-                <p>{{title}}</p>
-                <i class="fa fa-play fa-3x"></i>
-            </div>
-        </div>
-        <div class="video-info {{isLong(this)}}">
-            <div class="author">
-                <a href="http://www.youtube.com/channel/{{authorId}}" target="_blank">{{author}}</a>{{id}}
-            </div>
-            <div class="upload-date">uploaded {{publishedDate}}</div>
-            <input type="checkbox" class="truncated" id="trunc-{{id}}" checked="checked">
-
-            <div class="description">
-                {{#each paragraphs()}}
-                <p>{{{this}}}</p>
-                {{/each}}
-            </div>
-
-            <label for="trunc-{{id}}">
-                <span class="read-more">Read more</span>
-                <span class="read-less">Read less</span>
-            </label>
-        </div>
-        <div class="side-buttons">
-            {{#if name === 'unwatched'}}
-            <button class="btn btn-default" title="Mark as watched" on-click="done">
-                <i class="fa fa-check fa-3x"></i></button>
-            {{elseif name == 'watched'}}
-            <button class="btn btn-default" title="Mark as unwatched" on-click="undone">
-                <i class="fa fa-remove fa-3x"></i></button>
-            {{/if}}
-            <a class="youtube-watch btn btn-default" title="Watch on YouTube"
-               href="https://www.youtube.com/watch?v={{id}}" target="_blank">
-                <i class="fa fa-youtube fa-3x"></i>
-            </a>
-            <label for="expand-{{id}}">
-                <div class="expand-player btn btn-default" title="Expand Video"><i
-                        class="fa fa-expand fa-3x"></i></div>
-                <div class="compress-player btn btn-default" title="Compress Video"><i
-                        class="fa fa-compress fa-3x"></i>
-                </div>
-            </label>
+<script id="video-component" type="text/html">
+    <input type="checkbox" class="expanded" id="expand-{{id}}" on-change="expandedChange">
+    <div class="video" on-click="play:{{id}}">
+        <div class="thumbnail" style="background-image: url({{thumbnail}})">
+            <p>{{title}}</p>
+            <i class="fa fa-play fa-3x"></i>
         </div>
     </div>
-    {{/partial}}
+    <div class="video-info">
+        <div class="author">
+            <a href="http://www.youtube.com/channel/{{authorId}}" target="_blank">{{author}}</a>
+        </div>
+        <div class="upload-date">uploaded {{publishedDate}}</div>
+        <input type="checkbox" class="truncated" id="trunc-{{id}}" checked="checked">
+
+        <div class="description">
+            {{#each paragraphs()}}
+            <p>{{{this}}}</p>
+            {{/each}}
+        </div>
+
+        <label for="trunc-{{id}}">
+            <span class="read-more">Read more</span>
+            <span class="read-less">Read less</span>
+        </label>
+    </div>
+    <div class="side-buttons">
+        {{#if name === 'unwatched'}}
+        <button class="btn btn-default" title="Mark as watched" on-click="done:{{id}}">
+            <i class="fa fa-check fa-3x"></i></button>
+        {{elseif name == 'watched'}}
+        <button class="btn btn-default" title="Mark as unwatched" on-click="undone:{{id}}">
+            <i class="fa fa-remove fa-3x"></i></button>
+        {{/if}}
+        <a class="youtube-watch btn btn-default" title="Watch on YouTube"
+           href="https://www.youtube.com/watch?v={{id}}" target="_blank">
+            <i class="fa fa-youtube fa-3x"></i>
+        </a>
+        <label for="expand-{{id}}">
+            <div class="expand-player btn btn-default" title="Expand Video">
+                <i class="fa fa-expand fa-3x"></i></div>
+            <div class="compress-player btn btn-default" title="Compress Video">
+                <i class="fa fa-compress fa-3x"></i>
+            </div>
+        </label>
+    </div>
 </script>
 
 <script src='http://cdn.ractivejs.org/latest/ractive.min.js'></script>
 <script src="index.js"></script>
 </body>
-<head>
-    <title>YouTube Inbox</title>
-
-    <link rel="stylesheet" href="libraries/font-awesome-4.4.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-    <link rel="stylesheet" type="text/css" href="index.css">
-
-    <link rel="icon" href="favicon-vflz7uhzw.ico" sizes="32x32">
-</head>
 </html>
