@@ -9,9 +9,8 @@ class Video
   constructor: (@title, @id, @author, @authorId, publishedDate, @description, @thumbnail) ->
     @publishedDate = new Date(publishedDate)
 
-    description = @description
-    @paragraphs = () ->
-      (linkifyStr(paragraph) for paragraph in description.split(/\n\n*/))
+    @truncated = true
+    @expanded = false
 
   @fromJson: (json) ->
     new Video(
@@ -50,8 +49,7 @@ class VideoList
   remove: (id) ->
     index = @indexOf(id)
     if index != -1
-      video = @videos[index]
-      @videos.splice(index, 1)
+      video = @videos.splice(index, 1)[0]
       @sort()
       @save()
       video
@@ -61,9 +59,6 @@ class VideoList
       if @videos[i].id == id
         return i
     -1
-
-  get: (index) ->
-    @videos[index]
 
   find: (id) ->
     for video in @videos
@@ -93,7 +88,7 @@ class VideoList
     sourceList.save()
 
 class Filter
-  constructor: (@storageString) ->
+  constructor: (@storageString, @videoLists) ->
     @contents = JSON.parse(localStorage.getItem(@storageString)) or []
     @update()
 
@@ -118,17 +113,15 @@ class Filter
     return false
 
   filterAll: () ->
-    if unwatchedVideos? and watchedVideos? and blockedVideos?
-      for videoList in videoLists
-        for video in videoList.videos
-          if video?
-            allowed = @allows(video)
-            if allowed == videoList.blocked
-              videoList.remove(video.id)
-              if allowed
-                unwatchedVideos.add(video)
-              else
-                blockedVideos.add(video)
+    for videoList in @videoLists
+      for video in videoList.videos
+        allowed = @allows(video)
+        if allowed == videoList.blocked
+          videoList.remove(video.id)
+          if allowed
+            unwatchedVideos.add(video)
+          else
+            blockedVideos.add(video)
 
 class SavedInput
   constructor: (storageString, defaultValue, listener) ->
@@ -201,17 +194,20 @@ window.readData = () ->
       else
         blockedVideos.add(video)
 
-  getSubs() if window.API_LOADED
-
-filter = new Filter('video-filter')
-
-historyInput = new SavedInput('days-into-history', 28)
-autoplayInput = new SavedInput('autoplay', false)
-expandInput = new SavedInput('expand', false)
+  ractive.set('apiLoaded', window.apiLoaded)
+  if window.apiLoaded
+    getSubs()
 
 unwatchedVideos = new VideoList('unwatched-videos', 'unwatched', DEFAULT, PERMANENT)
 watchedVideos = new VideoList('watched-videos', 'watched', REVERSE)
 blockedVideos = new VideoList('blocked-videos', 'blocked', REVERSE, BLOCKED)
+videoLists = [unwatchedVideos, watchedVideos, blockedVideos]
+
+filter = new Filter('video-filter', videoLists)
+
+historyInput = new SavedInput('days-into-history', 28)
+autoplayInput = new SavedInput('autoplay', false)
+expandInput = new SavedInput('expand', false)
 
 readDataInterval = null
 updateInput = new SavedInput('update-interval', 5, (self) ->
@@ -220,8 +216,6 @@ updateInput = new SavedInput('update-interval', 5, (self) ->
   else if self.get() < 0
     self.set(0)
 )
-
-videoLists = [unwatchedVideos, watchedVideos, blockedVideos]
 
 fixVideoAspect = (video) ->
   video.style.height = video.clientWidth * 9 / 16 + 'px'
@@ -248,12 +242,16 @@ videoComponent = Ractive.extend({
           },
         })
       expandedChange: (event) ->
-        fixVideoAspect(event.node.nextElementSibling)
+        fixVideoAspect(event.node.parentNode.parentNode.parentNode.firstChild)
     })
   oncomplete: () ->
-    videoInfo = this.el.children[2]
-    if (videoInfo.children[3].clientHeight >= 240)
+    videoInfo = this.el.children[1]
+    if (videoInfo.children[2].clientHeight >= 240)
       videoInfo.classList.add('long')
+  data: {
+    paragraphs: (text) ->
+      (linkifyStr(paragraph) for paragraph in text.split(/\n\n*/))
+  }
 })
 
 ractive = new Ractive({
@@ -262,6 +260,10 @@ ractive = new Ractive({
   data: {
     filter: filter
     videoLists: videoLists
+    apiLoaded: window.apiLoaded
+
+    capitalise: (s) ->
+      s[0].toUpperCase() + s.slice(1)
   }
   computed: {
     historyInput: historyInput
@@ -295,6 +297,8 @@ ractive.on({
   allUndone: () ->
     unwatchedVideos.addAllFrom(watchedVideos)
     ractive.update('videoLists')
+
+  login: window.login
 })
 
 ractive.observe('filter', () ->
@@ -314,11 +318,11 @@ onPlayerStateChange = (event) ->
     event.target.f.nextElementSibling.nextElementSibling.children[0].click()
 
   if expandInput.get()
+    checkBox = event.target.f.nextElementSibling.nextElementSibling.lastChild.firstChild
     if event.data == YT.PlayerState.PLAYING
-      event.target.f.previousElementSibling.checked = true
-
+      checkBox.checked = true
     if event.data == YT.PlayerState.ENDED
-      event.target.f.previousElementSibling.checked = false
+      checkBox.checked = false
     fixVideoAspect(event.target.f)
 
 window.ractive = ractive

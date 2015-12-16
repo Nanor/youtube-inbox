@@ -17,6 +17,7 @@ html
 
   .btn
     margin: 5px 0 5px 5px
+    width: 38px
 
   .tab
     position: absolute
@@ -29,6 +30,12 @@ html
       border-bottom: solid
       text-align: center
       font-size: large
+      border-color: transparent
+      font-weight: 300
+
+    input:checked + .text
+      border-color: black
+      font-weight: 600
 
   #unwatched
     left: 20%
@@ -39,28 +46,11 @@ html
   #blocked
     left: 60%
 
-  #all-done, #all-undone
+  .mark-all
     float: right
-    max-width: 45px
 
-  // Tab selecting controls.
-  input[type='radio']:checked + .tab
-    .text
-      border-color: black
-      font-weight: 600
-  input[type='radio']:not(:checked) + .tab
-    .text
-      border-color: transparent
-      font-weight: 300
-
-  input[type='radio'],
-  #tab-unwatched:checked ~ #all-undone,
-  #tab-watched:checked ~ #all-done,
-  #tab-blocked:checked ~ button
+  input[type='radio']
     display: none
-
-.post-auth
-  display: none
 
 #settings-toggle, .settings
   display: none
@@ -166,17 +156,14 @@ html
             color: gray
 
         // Read more/less controls
-        .truncated,
-        .truncated:checked ~ label > span + span,
-        .truncated:not(:checked) ~ label > span:first-child,
-        &:not(.long) label
+        input, &:not(.long) label
           display: none
 
         // Don't allow the description to be so long if truncated.
-        .truncated:checked ~ .description
+        .description.truncated
           max-height: 250px
 
-        &.long .truncated:checked ~ .description:before
+        &.long .truncated:before
           position: absolute
           top: 65%
           bottom: 10px
@@ -194,17 +181,15 @@ html
           margin-bottom: 5px
           width: 80px - 20px
 
-      // Expanded controls
-      .expanded,
-      .expanded:checked ~ .side-buttons label > div:first-child,
-      .expanded:not(:checked) ~ .side-buttons label > div + div
-        display: none
+        input
+          display: none
 
-      .expanded:checked ~ .video
-        width: 100%
+      &.expanded
+        .video
+          width: 100%
 
-      .expanded:checked ~ .video-info
-        width: calc(100% - 90px)
+        .video-info
+          width: calc(100% - 90px)
 
   .no-videos
     padding-bottom: 10px
@@ -214,7 +199,7 @@ html
     font-family: sans-serif
 
 .fa-check
-  padding-left: -2px
+  margin-left: -2px
 .fa-check.fa-3x
   margin-left: -4px
 

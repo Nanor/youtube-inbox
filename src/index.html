@@ -8,10 +8,8 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
     <link rel="stylesheet" type="text/css" href="index.css">
 
-    <script src="http://code.jquery.com/jquery-2.0.0.js"></script>
     <script src="libraries/gapi/auth.js"></script>
     <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <script src="libraries/linkify/linkify.min.js"></script>
     <script src="libraries/linkify/linkify-string.min.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
@@ -24,26 +22,29 @@
 <script id="template" type="text/html">
     <div class="top-bar">
         <label for="settings-toggle" class="btn btn-default settings-toggle"><i class="fa fa-gear"></i></label>
-        <button class="btn btn-default" id="refresh" on-click="refresh"><i class="fa fa-refresh"></i></button>
+        <button class="btn btn-default" on-click="refresh"><i class="fa fa-refresh"></i></button>
 
         {{#each videoLists}}
-        <input type="radio" name="tab" id="tab-{{name}}" checked="{{display}}">
-        <label for="tab-{{name}}" id="{{name}}" class="tab">
-            <div class="text">{{name}} ({{videos.length}})</div>
+        <label class="tab" id="{{name}}">
+            <input type="radio" name="tab" checked="{{display}}">
+            <div class="text">{{capitalise(name)}} ({{videos.length}})</div>
         </label>
         {{/each}}
 
-        <button id="all-done" class="btn btn-default" title="Mark all as watched" on-click="allDone">
+        {{#if videoLists[0].display}}
+        <button class="btn btn-default mark-all" title="Mark all as watched" on-click="allDone">
             <i class="fa fa-check"></i></button>
-        <button id="all-undone" class="btn btn-default" title="Mark all as unwatched" on-click="allUndone">
+        {{elseif videoLists[1].display}}
+        <button class="btn btn-default mark-all" title="Mark all as unwatched" on-click="allUndone">
             <i class="fa fa-remove"></i>
         </button>
+        {{/if}}
     </div>
     <div class="videos">
         {{#each videoLists}}
         <div class="{{name}}-videos video-list" style="display: {{#if display}}block{{else}}none{{/if}};">
             {{#each videos}}
-            <div class="video-container" id="video-{{id}}">
+            <div class="video-container {{#if expanded}}expanded{{/if}}">
                 <Video/>
             </div>
             {{/each}}
@@ -56,19 +57,20 @@
 
         <div class="settings">
             <label for="settings-toggle" class="btn btn-default settings-toggle"><i class="fa fa-gear"></i></label>
-            <button class="btn btn-default pre-auth" id="login-link">Log in</button>
-            <label>Update interval:<input id="update-interval" type="number" value="{{updateInput}}"/>minutes.
+            {{#if !apiLoaded}}
+            <button class="btn btn-default" on-click="login">Log in</button>
+            {{/if}}
+            <label>Update interval:<input type="number" value="{{updateInput}}"/>minutes.
                 <div class="note">(0 for never)</div>
             </label>
-            <label>Discard watched videos older than<input id="history-length" type="number" value="{{historyInput}}"/>days
-                old.</label>
+            <label>Discard watched videos older than<input type="number" value="{{historyInput}}"/>days old.</label>
 
             <p class="note">(Unwatched videos will be kept forever)</p>
             <div class="checkbox">
-                <label><input type="checkbox" id="autoplay" checked="{{autoplayInput}}">Auto-play videos?</label>
+                <label><input type="checkbox" checked="{{autoplayInput}}">Auto-play videos?</label>
             </div>
             <div class="checkbox">
-                <label><input type="checkbox" id="expand" checked="{{expandInput}}">Expand playing videos?</label>
+                <label><input type="checkbox" checked="{{expandInput}}">Expand playing videos?</label>
             </div>
 
             <h4>Filters:</h4>
@@ -101,7 +103,6 @@
 </script>
 
 <script id="video-component" type="text/html">
-    <input type="checkbox" class="expanded" id="expand-{{id}}" on-change="expandedChange">
     <div class="video" on-click="play:{{id}}">
         <div class="thumbnail" style="background-image: url({{thumbnail}})">
             <p>{{title}}</p>
@@ -112,18 +113,21 @@
         <div class="author">
             <a href="http://www.youtube.com/channel/{{authorId}}" target="_blank">{{author}}</a>
         </div>
-        <div class="upload-date">uploaded {{publishedDate}}</div>
-        <input type="checkbox" class="truncated" id="trunc-{{id}}" checked="checked">
+        <div class="upload-date">uploaded {{publishedDate.toLocaleString()}}</div>
 
-        <div class="description">
-            {{#each paragraphs()}}
+        <div class="description {{#if truncated}}truncated{{/if}}">
+            {{#each paragraphs(description)}}
             <p>{{{this}}}</p>
             {{/each}}
         </div>
 
-        <label for="trunc-{{id}}">
+        <label>
+            <input type="checkbox" checked="{{truncated}}">
+            {{#if truncated}}
             <span class="read-more">Read more</span>
+            {{else}}
             <span class="read-less">Read less</span>
+            {{/if}}
         </label>
     </div>
     <div class="side-buttons">
@@ -138,12 +142,16 @@
            href="https://www.youtube.com/watch?v={{id}}" target="_blank">
             <i class="fa fa-youtube fa-3x"></i>
         </a>
-        <label for="expand-{{id}}">
-            <div class="expand-player btn btn-default" title="Expand Video">
-                <i class="fa fa-expand fa-3x"></i></div>
-            <div class="compress-player btn btn-default" title="Compress Video">
+        <label>
+            <input type="checkbox" checked="{{expanded}}" on-change="expandedChange">
+            {{#if expanded}}
+            <div class="btn btn-default" title="Compress Video">
                 <i class="fa fa-compress fa-3x"></i>
             </div>
+            {{else}}
+            <div class="btn btn-default" title="Expand Video">
+                <i class="fa fa-expand fa-3x"></i></div>
+            {{/if}}
         </label>
     </div>
 </script>

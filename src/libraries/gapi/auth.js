@@ -7,7 +7,7 @@ var OAUTH2_CLIENT_ID = '821457625314-acmfo1dvnlfeea149csscmfasjgq1vsf.apps.googl
 var OAUTH2_SCOPES = [
   'https://www.googleapis.com/auth/youtube'
 ];
-window.API_LOADED = false;
+window.apiLoaded = false;
 
 // Upon loading, the Google APIs JS client automatically invokes this callback.
 var googleApiClientReady = function() {
@@ -35,35 +35,21 @@ function handleAuthResult(authResult) {
   if (authResult && !authResult.error) {
     // Authorization was successful. Hide authorization prompts and show
     // content that should be visible after authorization succeeds.
-    $('.pre-auth').hide();
-    $('.post-auth').show();
-
-	  $('#logout-link').click(function () {
-		  API_LOADED = false;
-		  gapi.auth.signOut();
-		  handleAuthResult(null);
-	  });
-
     loadAPIClientInterfaces();
-  } else {
-	  $('.pre-auth').show();
-	  $('.post-auth').hide();
-
-    // Make the #login-link clickable. Attempt a non-immediate OAuth 2.0
-    // client flow. The current function is called when that flow completes.
-    $('#login-link').click(function() {
-      gapi.auth.authorize({
-        client_id: OAUTH2_CLIENT_ID,
-        scope: OAUTH2_SCOPES,
-        immediate: false,
-	      cookie_policy: 'single_host_origin',
-        }, handleAuthResult);
-    });
   }
 }
 
+var login = function() {
+    gapi.auth.authorize({
+        client_id: OAUTH2_CLIENT_ID,
+        scope: OAUTH2_SCOPES,
+        immediate: false,
+        cookie_policy: 'single_host_origin',
+    }, handleAuthResult);
+};
+
 function afterLoaded() {
-	window.API_LOADED = true;
+	window.apiLoaded = true;
 	window.readData();
 }
 
