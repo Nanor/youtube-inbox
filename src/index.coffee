@@ -97,20 +97,18 @@ class Filter
     @filterAll()
 
   allows: (video) ->
-    if video?
-      for filter in @contents
-        if video.author == filter.channel
-          if filter.type == 'blacklist'
-            for regex in filter.regexes.split(',')
-              if video.title.match(regex)
-                return false
-          if filter.type == 'whitelist'
-            for regex in filter.regexes.split(',')
-              if video.title.match(regex)
-                return true
-            return false
-      return true
-    return false
+    for filter in @contents
+      if video.author == filter.channel
+        if filter.type == 'blacklist'
+          for regex in filter.regexes.split(',')
+            if video.title.match(regex)
+              return false
+        if filter.type == 'whitelist'
+          for regex in filter.regexes.split(',')
+            if video.title.match(regex)
+              return true
+          return false
+    return true
 
   filterAll: () ->
     for videoList in @videoLists
@@ -225,11 +223,10 @@ videoComponent = Ractive.extend({
   template: '#video-component'
   oninit: () ->
     this.on({
-      done: (event, id) ->
-        watchedVideos.add(unwatchedVideos.remove(id))
-        ractive.update('videoLists')
-      undone: (event, id) ->
-        unwatchedVideos.add(watchedVideos.remove(id))
+      mark: (event, id) ->
+        currentList = videoLists[event.index.list]
+        targetList = (if currentList == watchedVideos then unwatchedVideos else watchedVideos)
+        targetList.add(currentList.remove(id))
         ractive.update('videoLists')
       play: (event, id) ->
         new YT.Player(event.node, {
@@ -328,3 +325,5 @@ onPlayerStateChange = (event) ->
     if event.data == YT.PlayerState.ENDED
       checkBox.checked = false
     fixVideoAspect(event.target.f)
+
+window.ractive = ractive
