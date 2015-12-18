@@ -41,7 +41,7 @@ class VideoList
       @videos.push(newVideo)
       @sort()
     else
-      # Video already in list.
+# Video already in list.
       @videos[index] = newVideo
     @save()
     return @
@@ -244,13 +244,17 @@ videoComponent = Ractive.extend({
       expandedChange: (event) ->
         fixVideoAspect(event.node.parentNode.parentNode.parentNode.firstChild)
     })
-  oncomplete: () ->
-    videoInfo = this.el.children[1]
-    if (videoInfo.children[2].clientHeight >= 240)
-      videoInfo.classList.add('long')
   data: {
     paragraphs: (text) ->
       (linkifyStr(paragraph) for paragraph in text.split(/\n\n*/))
+  }
+  decorators: {
+    video: (node) ->
+      if node.children[1].children[2].clientHeight >= 240
+        node.children[1].classList.add('long')
+      return {
+        teardown: (a...) ->
+      }
   }
 })
 
@@ -324,5 +328,3 @@ onPlayerStateChange = (event) ->
     if event.data == YT.PlayerState.ENDED
       checkBox.checked = false
     fixVideoAspect(event.target.f)
-
-window.ractive = ractive

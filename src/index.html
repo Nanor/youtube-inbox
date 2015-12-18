@@ -44,9 +44,7 @@
         {{#each videoLists}}
         <div class="{{name}}-videos video-list" style="display: {{#if display}}block{{else}}none{{/if}};">
             {{#each videos}}
-            <div class="video-container {{#if expanded}}expanded{{/if}}">
-                <Video/>
-            </div>
+            <Video/>
             {{/each}}
         </div>
         {{/each}}
@@ -103,56 +101,58 @@
 </script>
 
 <script id="video-component" type="text/html">
-    <div class="video" on-click="play:{{id}}">
-        <div class="thumbnail" style="background-image: url({{thumbnail}})">
-            <p>{{title}}</p>
-            <i class="fa fa-play fa-3x"></i>
-        </div>
-    </div>
-    <div class="video-info">
-        <div class="author">
-            <a href="http://www.youtube.com/channel/{{authorId}}" target="_blank">{{author}}</a>
-        </div>
-        <div class="upload-date">uploaded {{publishedDate.toLocaleString()}}</div>
-
-        <div class="description {{#if truncated}}truncated{{/if}}">
-            {{#each paragraphs(description)}}
-            <p>{{{this}}}</p>
-            {{/each}}
-        </div>
-
-        <label>
-            <input type="checkbox" checked="{{truncated}}">
-            {{#if truncated}}
-            <span class="read-more">Read more</span>
-            {{else}}
-            <span class="read-less">Read less</span>
-            {{/if}}
-        </label>
-    </div>
-    <div class="side-buttons">
-        {{#if name === 'unwatched'}}
-        <button class="btn btn-default" title="Mark as watched" on-click="done:{{id}}">
-            <i class="fa fa-check fa-3x"></i></button>
-        {{elseif name == 'watched'}}
-        <button class="btn btn-default" title="Mark as unwatched" on-click="undone:{{id}}">
-            <i class="fa fa-remove fa-3x"></i></button>
-        {{/if}}
-        <a class="youtube-watch btn btn-default" title="Watch on YouTube"
-           href="https://www.youtube.com/watch?v={{id}}" target="_blank">
-            <i class="fa fa-youtube fa-3x"></i>
-        </a>
-        <label>
-            <input type="checkbox" checked="{{expanded}}" on-change="expandedChange">
-            {{#if expanded}}
-            <div class="btn btn-default" title="Compress Video">
-                <i class="fa fa-compress fa-3x"></i>
+    <div class="video-container {{#if expanded}}expanded{{/if}}" decorator="video">
+        <div class="video" on-click="play:{{id}}" on-resize="resize">
+            <div class="thumbnail" style="background-image: url({{thumbnail}})">
+                <p>{{title}}</p>
+                <i class="fa fa-play fa-3x"></i>
             </div>
-            {{else}}
-            <div class="btn btn-default" title="Expand Video">
-                <i class="fa fa-expand fa-3x"></i></div>
+        </div>
+        <div class="video-info">
+            <div class="author">
+                <a href="http://www.youtube.com/channel/{{authorId}}" target="_blank">{{author}}</a>
+            </div>
+            <div class="upload-date">uploaded {{publishedDate.toLocaleString()}}</div>
+
+            <div class="description {{#if truncated}}truncated{{/if}}">
+                {{#each paragraphs(description)}}
+                <p>{{{this}}}</p>
+                {{/each}}
+            </div>
+
+            <label>
+                <input type="checkbox" checked="{{truncated}}">
+                {{#if truncated}}
+                <span class="read-more">Read more</span>
+                {{else}}
+                <span class="read-less">Read less</span>
+                {{/if}}
+            </label>
+        </div>
+        <div class="side-buttons">
+            {{#if name === 'unwatched'}}
+            <button class="btn btn-default" title="Mark as watched" on-click="done:{{id}}">
+                <i class="fa fa-check fa-3x"></i></button>
+            {{elseif name == 'watched'}}
+            <button class="btn btn-default" title="Mark as unwatched" on-click="undone:{{id}}">
+                <i class="fa fa-remove fa-3x"></i></button>
             {{/if}}
-        </label>
+            <a class="youtube-watch btn btn-default" title="Watch on YouTube"
+               href="https://www.youtube.com/watch?v={{id}}" target="_blank">
+                <i class="fa fa-youtube fa-3x"></i>
+            </a>
+            <label>
+                <input type="checkbox" checked="{{expanded}}" on-change="expandedChange">
+                {{#if expanded}}
+                <div class="btn btn-default" title="Compress Video">
+                    <i class="fa fa-compress fa-3x"></i>
+                </div>
+                {{else}}
+                <div class="btn btn-default" title="Expand Video">
+                    <i class="fa fa-expand fa-3x"></i></div>
+                {{/if}}
+            </label>
+        </div>
     </div>
 </script>
 
