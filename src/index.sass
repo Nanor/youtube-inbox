@@ -33,9 +33,9 @@ html
       border-color: transparent
       font-weight: 300
 
-    input:checked + .text
-      border-color: black
-      font-weight: 600
+      &.selected
+        border-color: black
+        font-weight: 600
 
   #unwatched
     left: 20%
@@ -48,40 +48,6 @@ html
 
   .mark-all
     float: right
-
-  input[type='radio']
-    display: none
-
-#settings-toggle, .settings
-  display: none
-
-#settings-toggle:checked + .settings
-  display: block
-
-.settings
-  position: fixed
-  top: 5px
-  left: 5px
-  z-index: 100
-  padding: 4px
-  border: 2px solid black
-  border-radius: 7px
-  background-color: white
-
-  label ~ label
-    display: block
-    font-weight: normal
-
-  label input[type=number]
-    width: 60px
-    margin: 2px
-
-  label .note
-    padding-left: 5px
-
-  .note
-    display: inline
-    font-style: italic
 
 .videos
   padding-top: $top-bar-height + 10px
@@ -155,10 +121,6 @@ html
             padding-left: 40%
             color: gray
 
-        // Read more/less controls
-        input, &:not(.long) label
-          display: none
-
         // Don't allow the description to be so long if truncated.
         .description.truncated
           max-height: 250px
@@ -181,9 +143,6 @@ html
           margin-bottom: 5px
           width: 80px - 20px
 
-        input
-          display: none
-
       &.expanded
         .video
           width: 100%
@@ -198,40 +157,65 @@ html
     text-align: center
     font-family: sans-serif
 
+.settings
+  position: fixed
+  top: 50px
+  left: 5px
+  z-index: 100
+  padding: 5px
+  border: 2px solid black
+  border-radius: 7px
+  background-color: white
+
+  label
+    display: block
+    font-weight: normal
+
+  label input[type=number]
+    width: 60px
+    margin: 2px
+
+  .note
+    display: inline
+    font-style: italic
+
+  h4
+    font-family: sans-serif
+    font-weight: 600
+
+  .filter-panel
+    width: 500px
+
+    .header
+      width: 100%
+      div
+        font-weight: 600
+        color: #777
+        display: inline-block
+
+    .row
+      margin-left: 0
+    .row > *
+      margin: 2px
+      display: inline-block
+
+    .author
+      width: 150px
+
+    .type
+      width: 90px
+
+    .regex
+      width: 220px
+
 .fa-check
   margin-left: -2px
+
 .fa-check.fa-3x
   margin-left: -4px
 
-h4
-  font-family: sans-serif
-  font-weight: 600
-
-.filter-panel
-  width: 560px
-
-  .header
-    width: 100%
-    margin-left: 5px
-    div
-      font-weight: 600
-      color: #777
-      display: inline-block
-
-  .row
-    margin-left: 0
-  .row > *
-    margin: 2px
-    display: inline-block
-
-  .author
-    width: 150px
-
-  .type
-    width: 80px
-
-  .regex
-    width: 220px
-
 .form-control
   padding: 0
+
+.hidden
+  display: none

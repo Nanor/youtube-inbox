@@ -1,16 +1,6 @@
-title = document.title
-
-DEFAULT = 'default'
-REVERSE = 'reverse'
-BLOCKED = 'blocked'
-PERMANENT = 'permanent'
-
 class Video
   constructor: (@title, @id, @author, @authorId, publishedDate, @description, @thumbnail) ->
     @publishedDate = new Date(publishedDate)
-
-    @truncated = true
-    @expanded = false
 
   @fromJson: (json) ->
     new Video(
@@ -23,47 +13,40 @@ class Video
       json.thumbnail
     )
 
+REVERSE = 'reverse'
+BLOCKED = 'blocked'
+PERMANENT = 'permanent'
+
 class VideoList
   constructor: (@storageString, @name, options...) ->
     videoList = JSON.parse(localStorage.getItem(@storageString)) or []
     @videos = (Video.fromJson(video) for video in videoList)
     @order = (if REVERSE in options then -1 else 1)
-    @display = DEFAULT in options
     @blocked = BLOCKED in options
     @permanent = BLOCKED in options
-    @sort()
-    @save()
 
   add: (newVideo) ->
     index = @indexOf(newVideo.id)
-    if index == -1
+    if index?
+# Video already in list.
+      @videos[index] = newVideo
+    else
 # New video
       @videos.push(newVideo)
       @sort()
-    else
-# Video already in list.
-      @videos[index] = newVideo
     @save()
     return @
 
-  remove: (id) ->
-    index = @indexOf(id)
-    if index != -1
-      video = @videos.splice(index, 1)[0]
-      @sort()
-      @save()
-      video
+  remove: (index) ->
+    video = @videos.splice(index, 1)[0]
+    @save()
+    video
 
   indexOf: (id) ->
     for i in [0...@videos.length]
       if @videos[i].id == id
         return i
-    -1
-
-  find: (id) ->
-    for video in @videos
-      if video.id == id
-        return video
+    null
 
   length: () ->
     @videos.length
@@ -112,10 +95,10 @@ class Filter
 
   filterAll: () ->
     for videoList in @videoLists
-      for video in videoList.videos
+      for video, index in videoList.videos
         allowed = @allows(video)
         if allowed == videoList.blocked
-          videoList.remove(video.id)
+          videoList.remove(index)
           if allowed
             unwatchedVideos.add(video)
           else
@@ -185,7 +168,7 @@ window.readData = () ->
     )
     if video.publishedDate > (new Date() - 1000 * 60 * 60 * 24 * historyInput.get())
       if filter.allows(video)
-        if watchedVideos.find(video.id)?
+        if watchedVideos.indexOf(video.id)?
           watchedVideos.add(video)
         else
           unwatchedVideos.add(video)
@@ -196,7 +179,7 @@ window.readData = () ->
   if window.apiLoaded
     getSubs()
 
-unwatchedVideos = new VideoList('unwatched-videos', 'unwatched', DEFAULT, PERMANENT)
+unwatchedVideos = new VideoList('unwatched-videos', 'unwatched', PERMANENT)
 watchedVideos = new VideoList('watched-videos', 'watched', REVERSE)
 blockedVideos = new VideoList('blocked-videos', 'blocked', REVERSE, BLOCKED)
 videoLists = [unwatchedVideos, watchedVideos, blockedVideos]
@@ -223,10 +206,11 @@ videoComponent = Ractive.extend({
   template: '#video-component'
   oninit: () ->
     this.on({
-      mark: (event, id) ->
+      mark: (event) ->
+        console.log event.index
         currentList = videoLists[event.index.list]
         targetList = (if currentList == watchedVideos then unwatchedVideos else watchedVideos)
-        targetList.add(currentList.remove(id))
+        targetList.add(currentList.remove(event.index.video))
         ractive.update('videoLists')
       play: (event, id) ->
         new YT.Player(event.node, {
@@ -242,6 +226,9 @@ videoComponent = Ractive.extend({
         fixVideoAspect(event.node.parentNode.parentNode.parentNode.firstChild)
     })
   data: {
+    truncated: true
+    expanded: false
+
     paragraphs: (text) ->
       (linkifyStr(paragraph) for paragraph in text.split(/\n\n*/))
   }
@@ -262,6 +249,8 @@ ractive = new Ractive({
     filter: filter
     videoLists: videoLists
     apiLoaded: window.apiLoaded
+    showSettings: false
+    selectedList: 0
 
     capitalise: (s) ->
       s[0].toUpperCase() + s.slice(1)
@@ -305,6 +294,7 @@ ractive.on({
 ractive.observe('filter', () ->
   filter.update()
 )
+title = document.title
 ractive.observe('videoLists[0]', (videoList) ->
   length = videoList.length()
   document.title = (if length > 0 then "(#{length}) #{title}" else title)
