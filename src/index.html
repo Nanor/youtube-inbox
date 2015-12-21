@@ -29,7 +29,7 @@
         {{#each videoLists:list}}
         <label class="tab" id="{{name}}">
             <input type="radio" name="{{selectedList}}" value="{{list}}" class="hidden">
-            <div class="text {{#if selectedList === list}}selected{{/if}}">{{capitalise(name)}} ({{videos.length}})
+            <div class="text {{#if selectedList === list}}selected{{/if}}">{{capitalise(name)}} ({{listLength(this)}})
             </div>
         </label>
         {{/each}}
@@ -46,8 +46,10 @@
     <div class="videos">
         {{#each videoLists:list}}
         <div class="{{name}}-videos video-list {{#if selectedList !== list}}hidden{{/if}}">
-            {{#each videos:video}}
+            {{#each sortList(videos, reversed)}}
+            {{#if filter(this)}}
             <Video/>
+            {{/if}}
             {{/each}}
         </div>
         {{/each}}
@@ -129,12 +131,14 @@
             </label>
         </div>
         <div class="side-buttons">
-            {{#if name === 'unwatched'}}
-            <button class="btn btn-default" title="Mark as watched" on-click="mark">
-                <i class="fa fa-check fa-3x"></i></button>
-            {{elseif name == 'watched'}}
-            <button class="btn btn-default" title="Mark as unwatched" on-click="mark">
-                <i class="fa fa-remove fa-3x"></i></button>
+            {{#if !blocked}}
+                {{#if !watched}}
+                <button class="btn btn-default" title="Mark as watched" on-click="mark:{{id}}">
+                    <i class="fa fa-check fa-3x"></i></button>
+                {{else}}
+                <button class="btn btn-default" title="Mark as unwatched" on-click="mark:{{id}}">
+                    <i class="fa fa-remove fa-3x"></i></button>
+                {{/if}}
             {{/if}}
             <a class="youtube-watch btn btn-default" title="Watch on YouTube"
                href="https://www.youtube.com/watch?v={{id}}" target="_blank">
