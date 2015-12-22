@@ -3,5 +3,5 @@ env:
   global:
   - GH_REF: github.com/nanor/youtube-inbox.git
 branches:
- only:
- - master
+  only:
+  - master
