@@ -1,7 +1,8 @@
+Ractive.DEBUG = false
+
 class Video
   constructor: (@title, @id, @author, @authorId, publishedDate, @description, @thumbnail, @watched = false) ->
     @publishedDate = new Date(publishedDate)
-    @blocked = filter.blocks(this)
 
   @fromJson: (json) ->
     new Video(
@@ -15,47 +16,53 @@ class Video
       json.watched
     )
 
-class Filter
-  constructor: (@storageString) ->
-    @contents = JSON.parse(localStorage.getItem(@storageString)) or []
+filter = JSON.parse(localStorage.getItem('video-filter')) or []
 
-  update: () ->
-    localStorage.setItem(@storageString, JSON.stringify(@contents))
-    @filterAll()
+blocked = (video) ->
+  for filterRow in filter
+    if video.author == filterRow.channel
+      if filterRow.type == 'blacklist'
+        for regex in filterRow.regexes.split(',')
+          if video.title.match(regex)
+            return true
+      if filterRow.type == 'whitelist'
+        for regex in filterRow.regexes.split(',')
+          if video.title.match(regex)
+            return false
+        return true
+  return false
 
-  allows: (video) ->
-    for filter in @contents
-      if video.author == filter.channel
-        if filter.type == 'blacklist'
-          for regex in filter.regexes.split(',')
-            if video.title.match(regex)
-              return false
-        if filter.type == 'whitelist'
-          for regex in filter.regexes.split(',')
-            if video.title.match(regex)
-              return true
-          return false
-    return true
+historyInput = JSON.parse(localStorage.getItem('days-into-history')) or 7
+autoplayInput = JSON.parse(localStorage.getItem('autoplay')) or false
+expandInput = JSON.parse(localStorage.getItem('expand')) or false
+updateInput = JSON.parse(localStorage.getItem('update-interval')) or 5
+readDataInterval = null
 
-  blocks: (video) ->
-    !@allows(video)
+videoList = (Video.fromJson(video) for video in (JSON.parse(localStorage.getItem('videos')) or []))
 
-  filterAll: () ->
-    for video in videoList
-      video.blocked = @blocks(video)
+videoLists = [
+  {
+    name: 'unwatched'
+    filter: (video) ->
+      !blocked(video) and !video.watched
+    reversed: false
+  }
+  {
+    name: 'watched'
+    filter: (video) ->
+      !blocked(video) and video.watched
+    reversed: true
+  }
+  {
+    name: 'blocked'
+    filter: (video) ->
+      blocked(video)
+    reversed: true
+  }
+]
 
-class SavedInput
-  constructor: (storageString, defaultValue, listener) ->
-    @get = () ->
-      JSON.parse(localStorage.getItem(storageString))
-
-    self = @
-    @set = (value) ->
-      localStorage.setItem(storageString, value)
-      if listener?
-        listener(self)
-
-    @set(JSON.parse(localStorage.getItem(storageString)) or defaultValue)
+saveData = (variable, storageString) ->
+  localStorage.setItem(storageString, JSON.stringify(variable))
 
 window.readData = () ->
   getSubs = (pageToken) ->
@@ -102,7 +109,7 @@ window.readData = () ->
       videoSnippet.description,
       thumbnail.url
     )
-    if video.publishedDate > (new Date() - 1000 * 60 * 60 * 24 * historyInput.get())
+    if video.publishedDate > (new Date() - 1000 * 60 * 60 * 24 * historyInput)
       for v, index in videoList
         if v.id == video.id
           video.watched = v.watched
@@ -113,46 +120,6 @@ window.readData = () ->
   ractive.set('apiLoaded', window.apiLoaded)
   if window.apiLoaded
     getSubs()
-
-filter = new Filter('video-filter')
-
-videoList = (Video.fromJson(video) for video in (JSON.parse(localStorage.getItem('videos')) or []))
-#TODO: Get rid of old videos
-saveVideos = () ->
-  localStorage.setItem('videos', JSON.stringify(videoList))
-
-videoLists = [
-  {
-    name: 'unwatched'
-    filter: (video) ->
-      !video.blocked and !video.watched
-    reversed: false
-  }
-  {
-    name: 'watched'
-    filter: (video) ->
-      !video.blocked and video.watched
-    reversed: true
-  }
-  {
-    name: 'blocked'
-    filter: (video) ->
-      video.blocked
-    reversed: true
-  }
-]
-
-historyInput = new SavedInput('days-into-history', 28)
-autoplayInput = new SavedInput('autoplay', false)
-expandInput = new SavedInput('expand', false)
-
-readDataInterval = null
-updateInput = new SavedInput('update-interval', 5, (self) ->
-  if self.get() > 0
-    readDataInterval = window.setInterval(readData, 1000 * 60 * self.get())
-  else if self.get() < 0
-    self.set(0)
-)
 
 fixVideoAspect = (video) ->
   video.style.height = video.clientWidth * 9 / 16 + 'px'
@@ -180,7 +147,7 @@ videoComponent = Ractive.extend({
           },
         })
       expandedChange: (event) ->
-        fixVideoAspect(event.node.parentNode.parentNode.parentNode.firstChild)
+        fixVideoAspect(event.node.nextElementSibling)
     })
   data: {
     truncated: true
@@ -189,19 +156,12 @@ videoComponent = Ractive.extend({
     paragraphs: (text) ->
       (linkifyStr(paragraph) for paragraph in text.split(/\n\n*/))
   }
-  decorators: {
-    video: (node) ->
-      if node.children[1].children[2].clientHeight >= 240
-        node.children[1].classList.add('long')
-      return {
-        teardown: (a...) ->
-      }
-  }
 })
 
 ractive = new Ractive({
   el: '#container'
   template: '#template'
+  magic: true
   data: {
     filter: filter
     videoLists: videoLists
@@ -209,18 +169,16 @@ ractive = new Ractive({
     apiLoaded: window.apiLoaded
     showSettings: false
     selectedList: 0
+    historyInput: historyInput
+    autoplayInput: autoplayInput
+    expandInput: expandInput
+    updateInput: updateInput
 
     capitalise: (s) ->
       s[0].toUpperCase() + s.slice(1)
     listLength: listLength
     sortList: (videos, reversed) ->
-      videos.slice().sort((a,b) -> (if a.publishedDate > b.publishedDate then -1 else 1) * (if reversed then 1 else -1))
-  }
-  computed: {
-    historyInput: historyInput
-    autoplayInput: autoplayInput
-    expandInput: expandInput
-    updateInput: updateInput
+      videos.slice().sort((a, b) -> (if a.publishedDate > b.publishedDate then -1 else 1) * (if reversed then 1 else -1))
   }
   components: {
     Video: videoComponent
@@ -229,42 +187,67 @@ ractive = new Ractive({
 
 ractive.on({
   filterAdd: () ->
-    filter.contents.push({
+    filter.push({
       channel: ''
       type: 'blacklist'
       regexes: ''
     })
   filterRemove: (event, index) ->
-    filter.contents.splice(index, 1)
+    filter.splice(index, 1)
 
   refresh: () ->
     window.readData()
-    ractive.update('videoLists')
 
   allDone: () ->
     for video in videoList
       video.watched = true
+    saveData(videoList, 'videos')
     ractive.update('videoLists')
 
   allUndone: () ->
     for video in videoList
       video.watched = false
+    saveData(videoList, 'videos')
     ractive.update('videoLists')
 
   login: window.login
 })
 
 ractive.observe('filter', () ->
-  filter.update()
+  saveData(filter, 'video-filter')
   ractive.update('videos')
 )
 title = document.title
-ractive.observe('videos', () ->
-  saveVideos()
+ractive.observe('videos', (value) ->
+  saveData(value, 'videos')
+  videoList = value
 
   length = listLength(videoLists[0])
   document.title = (if length > 0 then "(#{length}) #{title}" else title)
   ractive.update('videoLists')
+)
+ractive.observe('autoplayInput', (value) ->
+  saveData(value, 'autoplay')
+  autoplayInput = value
+)
+ractive.observe('expandInput', (value) ->
+  saveData(value, 'expand')
+  expandInput = value
+)
+ractive.observe('historyInput', (value) ->
+  saveData(value, 'days-into-history')
+  historyInput = value
+  videoList = (video for video in videoList when videoLists[0].filter(video) or
+    video.publishedDate > (new Date() - 1000 * 60 * 60 * 24 * historyInput))
+  ractive.set('videos', videoList)
+)
+ractive.observe('updateInput', (value) ->
+  saveData(value, 'update-interval')
+  updateInput = value
+  if value > 0
+    readDataInterval = window.setInterval(readData, 1000 * 60 * value)
+  else if value < 0
+    ractive.set('updateInput', 0)
 )
 
 onPlayerReady = (event) ->
@@ -273,13 +256,12 @@ onPlayerReady = (event) ->
 onPlayerStateChangeBuilder = (id) ->
   (event) ->
     video = (video for video in videoList when video.id == id)[0]
-    if event.data == YT.PlayerState.ENDED and autoplayInput.get() and videoLists[0].filter(video)
-      event.target.f.parentElement.nextElementSibling.children[0].click()
+    if event.data == YT.PlayerState.ENDED and autoplayInput and videoLists[0].filter(video)
+      event.target.f.parentElement.nextElementSibling.children[1].click()
       event.target.f.nextElementSibling.nextElementSibling.children[0].click()
 
-    #TODO: FIX
-    if expandInput.get()
-      checkBox = event.target.f.nextElementSibling.nextElementSibling.lastChild.firstChild
+    if expandInput
+      checkBox = event.target.f.previousElementSibling
       if event.data == YT.PlayerState.PLAYING
         checkBox.checked = true
       if event.data == YT.PlayerState.ENDED

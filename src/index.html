@@ -77,7 +77,6 @@
 
         <h4>Filters:</h4>
 
-        {{#with filter}}
         <div class="filter-panel">
             <div class="header">
                 <div class="author">Channel Name:</div>
@@ -85,7 +84,7 @@
                 <div class="regex">Filter:</div>
             </div>
             <div class="rows">
-                {{#each contents:index}}
+                {{#each filter:index}}
                 <div class="row">
                     <input class="author" type="text" value="{{channel}}">
                     <select class="type form-control" value="{{type}}">
@@ -101,12 +100,12 @@
             </div>
             <button class="btn btn-default" on-click="filterAdd" title="Add new filter">Add</button>
         </div>
-        {{/with}}
     </div>
 </script>
 
 <script id="video-component" type="text/html">
-    <div class="video-container {{#if expanded}}expanded{{/if}}" decorator="video">
+    <div class="video-container">
+        <input type="checkbox" id="expanded-{{id}}" checked="{{expanded}}" on-change="expandedChange" class="hidden">
         <div class="video" on-click="play:{{id}}" on-resize="resize">
             <div class="thumbnail" style="background-image: url({{thumbnail}})">
                 <p>{{title}}</p>
@@ -144,8 +143,7 @@
                href="https://www.youtube.com/watch?v={{id}}" target="_blank">
                 <i class="fa fa-youtube fa-3x"></i>
             </a>
-            <label>
-                <input type="checkbox" checked="{{expanded}}" on-change="expandedChange" class="hidden">
+            <label for="expanded-{{id}}">
                 {{#if expanded}}
                 <div class="btn btn-default" title="Compress Video">
                     <i class="fa fa-compress fa-3x"></i>
