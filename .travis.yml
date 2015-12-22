@@ -1,5 +1,7 @@
-script:
- - [ $TRAVIS_BRANCH = 'master' ] && ./deploy-gh-pages.sh || exit 0
-env:
-  global:
-  - GH_REF: github.com/nanor/youtube-inbox.git
+script: bash ./deploy-gh-pages.sh
+ env:
+   global:
+   - GH_REF: github.com/nanor/youtube-inbox.git
+branches:
+ only:
+ - master
