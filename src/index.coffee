@@ -1,4 +1,5 @@
 Ractive.DEBUG = false
+VERSION = 1
 
 class Video
   constructor: (@title, @id, @author, @authorId, publishedDate, @description, @thumbnail, @watched = false) ->
@@ -16,29 +17,26 @@ class Video
       json.watched
     )
 
-filter = JSON.parse(localStorage.getItem('video-filter')) or []
+current_version = JSON.parse(localStorage.getItem('version')) or 0
+if current_version != VERSION
+  localStorage.setItem('video-filter', null)
+  localStorage.setItem('days-into-history', null)
+  localStorage.setItem('autoplay', null)
+  localStorage.setItem('expand', null)
+  localStorage.setItem('update-interval', null)
+  localStorage.setItem('videos', null)
+localStorage.setItem('version', VERSION)
 
-blocked = (video) ->
-  for filterRow in filter
-    if video.author == filterRow.channel
-      if filterRow.type == 'blacklist'
-        for regex in filterRow.regexes.split(',')
-          if video.title.match(regex)
-            return true
-      if filterRow.type == 'whitelist'
-        for regex in filterRow.regexes.split(',')
-          if video.title.match(regex)
-            return false
-        return true
-  return false
+filter = JSON.parse(localStorage.getItem('video-filter')) or []
 
 historyInput = JSON.parse(localStorage.getItem('days-into-history')) or 7
 autoplayInput = JSON.parse(localStorage.getItem('autoplay')) or false
 expandInput = JSON.parse(localStorage.getItem('expand')) or false
 updateInput = JSON.parse(localStorage.getItem('update-interval')) or 5
-readDataInterval = null
 
 videoList = (Video.fromJson(video) for video in (JSON.parse(localStorage.getItem('videos')) or []))
+
+readDataInterval = null
 
 videoLists = [
   {
@@ -63,6 +61,20 @@ videoLists = [
 
 saveData = (variable, storageString) ->
   localStorage.setItem(storageString, JSON.stringify(variable))
+
+blocked = (video) ->
+  for filterRow in filter
+    if video.author == filterRow.channel
+      if filterRow.type == 'blacklist'
+        for regex in filterRow.regexes.split(',')
+          if video.title.match(regex)
+            return true
+      if filterRow.type == 'whitelist'
+        for regex in filterRow.regexes.split(',')
+          if video.title.match(regex)
+            return false
+        return true
+  return false
 
 window.readData = () ->
   getSubs = (pageToken) ->
