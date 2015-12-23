@@ -1,22 +1,6 @@
 Ractive.DEBUG = false
 VERSION = 1
 
-class Video
-  constructor: (@title, @id, @author, @authorId, publishedDate, @description, @thumbnail, @watched = false) ->
-    @publishedDate = new Date(publishedDate)
-
-  @fromJson: (json) ->
-    new Video(
-      json.title,
-      json.id,
-      json.author,
-      json.authorId,
-      json.publishedDate,
-      json.description,
-      json.thumbnail
-      json.watched
-    )
-
 current_version = JSON.parse(localStorage.getItem('version')) or 0
 if current_version != VERSION
   localStorage.setItem('video-filter', null)
@@ -29,12 +13,8 @@ localStorage.setItem('version', VERSION)
 
 filter = JSON.parse(localStorage.getItem('video-filter')) or []
 
-historyInput = JSON.parse(localStorage.getItem('days-into-history')) or 7
-autoplayInput = JSON.parse(localStorage.getItem('autoplay')) or false
-expandInput = JSON.parse(localStorage.getItem('expand')) or false
-updateInput = JSON.parse(localStorage.getItem('update-interval')) or 5
-
-videoList = (Video.fromJson(video) for video in (JSON.parse(localStorage.getItem('videos')) or []))
+videoList = JSON.parse(localStorage.getItem('videos')) or []
+videoList.sort((a, b) -> if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1)
 
 readDataInterval = null
 
@@ -76,6 +56,12 @@ blocked = (video) ->
         return true
   return false
 
+fixVideoAspect = (video) ->
+  video.style.height = video.clientWidth * 9 / 16 + 'px'
+
+listLength = (list) ->
+  (video for video in ractive.get('videos') when list.filter(video)).length
+
 window.readData = () ->
   getSubs = (pageToken) ->
     gapi.client.youtube.subscriptions.list({
@@ -112,32 +98,46 @@ window.readData = () ->
       if ((thumbnail == null || thumbnail.width < value.width) && value.url != null)
         thumbnail = value
 
-    video = new Video(
-      videoSnippet.title,
-      videoSnippet.resourceId.videoId,
-      videoSnippet.channelTitle,
-      videoSnippet.channelId,
-      videoSnippet.publishedAt,
-      videoSnippet.description,
-      thumbnail.url
-    )
-    if video.publishedDate > (new Date() - 1000 * 60 * 60 * 24 * historyInput)
-      for v, index in videoList
+    video = {
+      title: videoSnippet.title
+      id: videoSnippet.resourceId.videoId
+      author: videoSnippet.channelTitle
+      authorId: videoSnippet.channelId
+      publishedDate: videoSnippet.publishedAt
+      description: videoSnippet.description
+      thumbnail: thumbnail.url
+      watched: false
+    }
+
+    if new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history'))
+      for v, index in ractive.get('videos')
         if v.id == video.id
           video.watched = v.watched
-          videoList[index] = video
+          ractive.set("videos[#{index}]", video)
           return
-      videoList.push(video)
+      ractive.push('videos', video)
 
   ractive.set('apiLoaded', window.apiLoaded)
   if window.apiLoaded
     getSubs()
 
-fixVideoAspect = (video) ->
-  video.style.height = video.clientWidth * 9 / 16 + 'px'
+onPlayerReady = (event) ->
+  event.target.playVideo()
 
-listLength = (list) ->
-  (video for video in videoList when list.filter(video)).length
+onPlayerStateChangeBuilder = (id) ->
+  (event) ->
+    video = (video for video in ractive.get('videos') when video.id == id)[0]
+    if event.data == YT.PlayerState.ENDED and ractive.get('autoplay') and videoLists[0].filter(video)
+      event.target.f.parentElement.nextElementSibling?.children[1].click()
+      event.target.f.nextElementSibling.nextElementSibling.children[0].click()
+
+    if ractive.get('expand')
+      checkBox = event.target.f.previousElementSibling
+      if event.data == YT.PlayerState.PLAYING
+        checkBox.checked = true
+      if event.data == YT.PlayerState.ENDED
+        checkBox.checked = false
+    fixVideoAspect(event.target.f)
 
 videoComponent = Ractive.extend({
   isolated: false
@@ -145,9 +145,8 @@ videoComponent = Ractive.extend({
   oninit: () ->
     this.on({
       mark: (event, id) ->
-        video = (video for video in videoList when video.id == id)[0]
-        video.watched = !video.watched
-        ractive.update('videos')
+        index = (i for video, i in ractive.get('videos') when video.id == id)[0]
+        ractive.toggle("videos[#{index}].watched")
       play: (event, id) ->
         new YT.Player(event.node, {
           height: event.node.width * 9 / 16,
@@ -167,13 +166,14 @@ videoComponent = Ractive.extend({
 
     paragraphs: (text) ->
       (linkifyStr(paragraph) for paragraph in text.split(/\n\n*/))
+    formatDate: (date) ->
+      new Date(date).toLocaleString()
   }
 })
 
 ractive = new Ractive({
   el: '#container'
   template: '#template'
-  magic: true
   data: {
     filter: filter
     videoLists: videoLists
@@ -181,16 +181,15 @@ ractive = new Ractive({
     apiLoaded: window.apiLoaded
     showSettings: false
     selectedList: 0
-    historyInput: historyInput
-    autoplayInput: autoplayInput
-    expandInput: expandInput
-    updateInput: updateInput
+
+    history: JSON.parse(localStorage.getItem('days-into-history')) or 7
+    autoplay: JSON.parse(localStorage.getItem('autoplay')) or false
+    expand: JSON.parse(localStorage.getItem('expand')) or false
+    update: JSON.parse(localStorage.getItem('update-interval')) or 5
 
     capitalise: (s) ->
       s[0].toUpperCase() + s.slice(1)
     listLength: listLength
-    sortList: (videos, reversed) ->
-      videos.slice().sort((a, b) -> (if a.publishedDate > b.publishedDate then -1 else 1) * (if reversed then 1 else -1))
   }
   components: {
     Video: videoComponent
@@ -210,17 +209,12 @@ ractive.on({
   refresh: () ->
     window.readData()
 
-  allDone: () ->
-    for video in videoList
-      video.watched = true
-    saveData(videoList, 'videos')
+  markAll: (event, done) ->
+    for video in ractive.get('videos')
+      video.watched = done
+    saveData(ractive.get('videos'), 'videos')
     ractive.update('videoLists')
-
-  allUndone: () ->
-    for video in videoList
-      video.watched = false
-    saveData(videoList, 'videos')
-    ractive.update('videoLists')
+    ractive.update('videos')
 
   login: window.login
 })
@@ -232,50 +226,27 @@ ractive.observe('filter', () ->
 title = document.title
 ractive.observe('videos', (value) ->
   saveData(value, 'videos')
-  videoList = value
 
   length = listLength(videoLists[0])
   document.title = (if length > 0 then "(#{length}) #{title}" else title)
   ractive.update('videoLists')
 )
-ractive.observe('autoplayInput', (value) ->
+ractive.observe('autoplay', (value) ->
   saveData(value, 'autoplay')
-  autoplayInput = value
 )
-ractive.observe('expandInput', (value) ->
+ractive.observe('expand', (value) ->
   saveData(value, 'expand')
-  expandInput = value
 )
-ractive.observe('historyInput', (value) ->
+ractive.observe('history', (value) ->
   saveData(value, 'days-into-history')
-  historyInput = value
-  videoList = (video for video in videoList when videoLists[0].filter(video) or
-    video.publishedDate > (new Date() - 1000 * 60 * 60 * 24 * historyInput))
-  ractive.set('videos', videoList)
+  ractive.set('videos', (video for video in ractive.get('videos') when videoLists[0].filter(video) or
+    new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * value)))
 )
-ractive.observe('updateInput', (value) ->
+ractive.observe('update', (value) ->
   saveData(value, 'update-interval')
-  updateInput = value
   if value > 0
     readDataInterval = window.setInterval(readData, 1000 * 60 * value)
-  else if value < 0
-    ractive.set('updateInput', 0)
 )
-
-onPlayerReady = (event) ->
-  event.target.playVideo()
-
-onPlayerStateChangeBuilder = (id) ->
-  (event) ->
-    video = (video for video in videoList when video.id == id)[0]
-    if event.data == YT.PlayerState.ENDED and autoplayInput and videoLists[0].filter(video)
-      event.target.f.parentElement.nextElementSibling.children[1].click()
-      event.target.f.nextElementSibling.nextElementSibling.children[0].click()
-
-    if expandInput
-      checkBox = event.target.f.previousElementSibling
-      if event.data == YT.PlayerState.PLAYING
-        checkBox.checked = true
-      if event.data == YT.PlayerState.ENDED
-        checkBox.checked = false
-      fixVideoAspect(event.target.f)
+ractive.observe('selectedList', () ->
+  window.scrollTo(0, 0)
+)

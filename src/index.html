@@ -35,10 +35,10 @@
         {{/each}}
 
         {{#if selectedList === 0}}
-        <button class="btn btn-default mark-all" title="Mark all as watched" on-click="allDone">
+        <button class="btn btn-default mark-all" title="Mark all as watched" on-click="markAll:{{true}}">
             <i class="fa fa-check"></i></button>
         {{elseif selectedList === 1}}
-        <button class="btn btn-default mark-all" title="Mark all as unwatched" on-click="allUndone">
+        <button class="btn btn-default mark-all" title="Mark all as unwatched" on-click="markAll:{{false}}">
             <i class="fa fa-remove"></i>
         </button>
         {{/if}}
@@ -46,7 +46,7 @@
     <div class="videos">
         {{#each videoLists:list}}
         <div class="{{name}}-videos video-list {{#if selectedList !== list}}hidden{{/if}}">
-            {{#each sortList(videos, reversed)}}
+            {{#each (reversed ? videos.slice().reverse() : videos)}}
             {{#if filter(this)}}
             <Video/>
             {{/if}}
@@ -62,17 +62,17 @@
         {{#if !apiLoaded}}
         <button class="btn btn-default" on-click="login">Log in</button>
         {{/if}}
-        <label>Update interval:<input type="number" value="{{updateInput}}"/>minutes.
+        <label>Update interval:<input type="number" value="{{update}}"/>minutes.
             <div class="note">(0 for never)</div>
         </label>
-        <label>Discard watched videos older than<input type="number" value="{{historyInput}}"/>days old.</label>
+        <label>Discard watched videos older than<input type="number" value="{{history}}"/>days old.</label>
 
         <p class="note">(Unwatched videos will be kept forever)</p>
         <div class="checkbox">
-            <label><input type="checkbox" checked="{{autoplayInput}}">Auto-play videos?</label>
+            <label><input type="checkbox" checked="{{autoplay}}">Auto-play videos?</label>
         </div>
         <div class="checkbox">
-            <label><input type="checkbox" checked="{{expandInput}}">Expand playing videos?</label>
+            <label><input type="checkbox" checked="{{expand}}">Expand playing videos?</label>
         </div>
 
         <h4>Filters:</h4>
@@ -116,7 +116,7 @@
             <div class="author">
                 <a href="http://www.youtube.com/channel/{{authorId}}" target="_blank">{{author}}</a>
             </div>
-            <div class="upload-date">uploaded {{publishedDate.toLocaleString()}}</div>
+            <div class="upload-date">uploaded {{formatDate(publishedDate)}}</div>
 
             <div class="description {{#if truncated}}truncated{{/if}}">
                 {{#each paragraphs(description)}}
