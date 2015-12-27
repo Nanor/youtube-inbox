@@ -8,10 +8,11 @@ gem install sass
 rm -rf out || exit 0;
 mkdir out;
 
-cp src/index.html out/
+cp src/*.html out/
 sass --sourcemap=none src/index.sass out/index.css
 coffee --compile --output out/ src/
 cp src/libraries out/ -rf
+cp src/*.ico out/
 
 cd out
 git init
