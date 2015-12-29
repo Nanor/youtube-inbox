@@ -75,14 +75,15 @@
             <label><input type="checkbox" checked="{{expand}}">Expand playing videos?</label>
         </div>
 
-        <h4>Filters:</h4>
-
         <div class="filter-panel">
+            <h4>Filters:</h4>
+            {{#if filter}}
             <div class="header">
                 <div class="author">Channel Name:</div>
                 <div class="type"></div>
                 <div class="regex">Filter:</div>
             </div>
+            {{/if}}
             <div class="rows">
                 {{#each filter:index}}
                 <div class="row">
@@ -99,6 +100,29 @@
                 {{/each}}
             </div>
             <button class="btn btn-default" on-click="filterAdd" title="Add new filter">Add</button>
+        </div>
+
+        <div class="additional-channels-panel">
+            <h4>Additional YouTube Channels:</h4>
+            {{#if additionalChannels}}
+            <div class="header">
+                <div class="name">Name:</div>
+            </div>
+            {{/if}}
+            <div class="rows">
+                {{#each additionalChannels:index}}
+                <div class="row">
+                    <a class="name" href="https://www.youtube.com/channel/{{id}}" target="_blank">{{name}}</a>
+                    <div on-click="channelRemove:{{index}}" title="Remove this channel">
+                        <i class="fa fa-remove"></i>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+            <div class="add-channel">
+                <input type="text" placeholder="channel url" value="{{newChannel}}">
+                <button class="btn btn-default" on-click="channelAdd:{{newChannel}}">Add Channel</button>
+            </div>
         </div>
     </div>
 </script>
@@ -131,13 +155,13 @@
         </div>
         <div class="side-buttons">
             {{#if !blocked(this)}}
-                {{#if !watched}}
-                <button class="btn btn-default" title="Mark as watched" on-click="mark:{{id}}">
-                    <i class="fa fa-check fa-3x"></i></button>
-                {{else}}
-                <button class="btn btn-default" title="Mark as unwatched" on-click="mark:{{id}}">
-                    <i class="fa fa-remove fa-3x"></i></button>
-                {{/if}}
+            {{#if !watched}}
+            <button class="btn btn-default" title="Mark as watched" on-click="mark:{{id}}">
+                <i class="fa fa-check fa-3x"></i></button>
+            {{else}}
+            <button class="btn btn-default" title="Mark as unwatched" on-click="mark:{{id}}">
+                <i class="fa fa-remove fa-3x"></i></button>
+            {{/if}}
             {{/if}}
             <a class="youtube-watch btn btn-default" title="Watch on YouTube"
                href="https://www.youtube.com/watch?v={{id}}" target="_blank">

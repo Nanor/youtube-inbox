@@ -166,6 +166,10 @@ html
   border: 2px solid black
   border-radius: 7px
   background-color: white
+  max-height: 80%
+  overflow-x: hidden
+  overflow-y: auto
+  width: 530px
 
   label
     display: block
@@ -183,15 +187,18 @@ html
     font-family: sans-serif
     font-weight: 600
 
-  .filter-panel
-    width: 500px
+  .header
+    width: 100%
+    div
+      font-weight: 600
+      color: #777
+      display: inline-block
 
-    .header
-      width: 100%
-      div
-        font-weight: 600
-        color: #777
-        display: inline-block
+  .rows
+    .row:nth-child(even)
+      background: whitesmoke
+    .row:nth-child(odd)
+      background: ghostwhite
 
     .row
       margin-left: 0
@@ -199,14 +206,21 @@ html
       margin: 2px
       display: inline-block
 
+  .filter-panel
     .author
       width: 150px
-
     .type
       width: 90px
-
     .regex
       width: 220px
+
+  .additional-channels-panel
+    .name
+      width: 475px
+    input
+      width: 400px
+    .add-channel
+      padding-top: 5px
 
 .fa-check
   margin-left: -2px

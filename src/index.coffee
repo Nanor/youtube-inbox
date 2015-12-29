@@ -16,6 +16,8 @@ filter = JSON.parse(localStorage.getItem('video-filter')) or []
 videoList = JSON.parse(localStorage.getItem('videos')) or []
 videoList.sort((a, b) -> if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1)
 
+additionalChannels = JSON.parse(localStorage.getItem('additional-channels')) or []
+
 readDataInterval = null
 
 videoLists = [
@@ -66,7 +68,7 @@ window.readData = () ->
   getSubs = (pageToken) ->
     gapi.client.youtube.subscriptions.list({
       mine: true
-      part: 'snippet, contentDetails'
+      part: 'snippet'
       maxResults: 50
       pageToken: pageToken
     }).execute((response) ->
@@ -125,6 +127,7 @@ window.readData = () ->
   ractive.set('apiLoaded', window.apiLoaded)
   if window.apiLoaded
     getSubs()
+  loadVideosFromChannel((channel.id for channel in ractive.get('additionalChannels')))
 
 onPlayerReady = (event) ->
   event.target.playVideo()
@@ -184,9 +187,12 @@ ractive = new Ractive({
     filter: filter
     videoLists: videoLists
     videos: videoList
+    additionalChannels: additionalChannels
     apiLoaded: window.apiLoaded
+
     showSettings: false
     selectedList: 0
+    newChannel: ''
 
     history: JSON.parse(localStorage.getItem('days-into-history')) or 7
     autoplay: JSON.parse(localStorage.getItem('autoplay')) or false
@@ -211,6 +217,35 @@ ractive.on({
     })
   filterRemove: (event, index) ->
     filter.splice(index, 1)
+
+  channelAdd: (event, url) ->
+    name = null
+    id = null
+
+    m = url.match(/user\/([^/]+)/)
+    if m
+      name = m[1]
+    m = url.match(/channel\/([^/]+)/)
+    if m
+      id = m[1]
+
+    ractive.set('newChannel', '')
+
+    gapi.client.youtube.channels.list({
+      part: 'snippet'
+      forUsername: name
+      id: id
+    }).execute((response) ->
+      item = response.items?[0]
+      if item
+        ractive.push('additionalChannels', {
+          name: item.snippet.title
+          id: item.id
+        })
+    )
+
+  channelRemove: (event, index) ->
+    additionalChannels.splice(index, 1)
 
   refresh: () ->
     window.readData()
@@ -255,4 +290,7 @@ ractive.observe('update', (value) ->
 )
 ractive.observe('selectedList', () ->
   window.scrollTo(0, 0)
+)
+ractive.observe('additionalChannels', (value) ->
+  saveData(value, 'additional-channels')
 )
