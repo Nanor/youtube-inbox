@@ -115,6 +115,11 @@ window.readData = () ->
           video.watched = v.watched
           ractive.set("videos[#{index}]", video)
           return
+#      for v ,index in ractive.get('videos')
+#        if new Date(v.publishedDate) > new Date(video.publishedDate)
+#          console.log 'splice'
+#          ractive.splice('videos', index, 0, video)
+#          return
       ractive.push('videos', video)
 
   ractive.set('apiLoaded', window.apiLoaded)
@@ -168,6 +173,7 @@ videoComponent = Ractive.extend({
       (linkifyStr(paragraph) for paragraph in text.split(/\n\n*/))
     formatDate: (date) ->
       new Date(date).toLocaleString()
+    blocked: blocked
   }
 })
 

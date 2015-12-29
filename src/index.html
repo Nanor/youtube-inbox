@@ -130,7 +130,7 @@
             </label>
         </div>
         <div class="side-buttons">
-            {{#if !blocked}}
+            {{#if !blocked(this)}}
                 {{#if !watched}}
                 <button class="btn btn-default" title="Mark as watched" on-click="mark:{{id}}">
                     <i class="fa fa-check fa-3x"></i></button>
