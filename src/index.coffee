@@ -127,7 +127,8 @@ window.readData = () ->
   ractive.set('apiLoaded', window.apiLoaded)
   if window.apiLoaded
     getSubs()
-  loadVideosFromChannel((channel.id for channel in ractive.get('additionalChannels')))
+  if ractive.get('additionalChannels')
+    loadVideosFromChannel((channel.id for channel in ractive.get('additionalChannels')))
 
 onPlayerReady = (event) ->
   event.target.playVideo()
