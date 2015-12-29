@@ -219,18 +219,11 @@ ractive.on({
   filterRemove: (event, index) ->
     filter.splice(index, 1)
 
-  channelAdd: (event, url) ->
-    name = null
-    id = null
-
-    m = url.match(/user\/([^/]+)/)
-    if m
-      name = m[1]
-    m = url.match(/channel\/([^/]+)/)
-    if m
-      id = m[1]
-
-    ractive.set('newChannel', '')
+  channelAdd: (event) ->
+    event.original.preventDefault()
+    url = this.get('newChannel')
+    name = url.match(/user\/([^/]+)/)?[1]
+    id = url.match(/channel\/([^/]+)/)?[1]
 
     gapi.client.youtube.channels.list({
       part: 'snippet'
@@ -243,6 +236,7 @@ ractive.on({
           name: item.snippet.title
           id: item.id
         })
+        ractive.set('newChannel', '')
     )
 
   channelRemove: (event, index) ->

@@ -119,10 +119,10 @@
                 </div>
                 {{/each}}
             </div>
-            <div class="add-channel">
-                <input type="text" placeholder="channel url" value="{{newChannel}}">
-                <button class="btn btn-default" on-click="channelAdd:{{newChannel}}">Add Channel</button>
-            </div>
+            <form class="add-channel" on-submit="channelAdd">
+                <input type="text" class="name-input" placeholder="Channel URL" value="{{newChannel}}">
+                <input type="submit" class="btn btn-default" value="Add Channel">
+            </form>
         </div>
     </div>
 </script>
