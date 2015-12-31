@@ -59,7 +59,7 @@ blocked = (video) ->
   return false
 
 fixVideoAspect = (video) ->
-  video.style.height = video.clientWidth * 9 / 16 + 'px'
+  video.style.height = (video.clientWidth * 0.57) + 'px'
 
 listLength = (list) ->
   (video for video in ractive.get('videos') when list.filter(video)).length
@@ -137,17 +137,14 @@ onPlayerStateChangeBuilder = (id) ->
   (event) ->
     video = (video for video in ractive.get('videos') when video.id == id)[0]
     if event.data == YT.PlayerState.ENDED and ractive.get('autoplay') and videoLists[0].filter(video)
-      event.target.f.parentElement.nextElementSibling?.children[1].click()
+      event.target.f.parentElement.nextElementSibling?.children[0].click()
       event.target.f.nextElementSibling.nextElementSibling.children[0].click()
 
     if ractive.get('expand')
-      checkBox = event.target.f.previousElementSibling
+      checkBox = event.target.f.nextElementSibling.nextElementSibling.children[2].firstElementChild
       oldValue = checkBox.checked
-      if event.data == YT.PlayerState.PLAYING
-        checkBox.checked = true
-      if event.data == YT.PlayerState.ENDED
-        checkBox.checked = false
-      if oldValue != checkBox.checked
+      if (event.data == YT.PlayerState.PLAYING and !checkBox.checked) or (event.data == YT.PlayerState.ENDED and checkBox.checked)
+        checkBox.click()
         fixVideoAspect(event.target.f)
 
 videoComponent = Ractive.extend({
@@ -169,7 +166,7 @@ videoComponent = Ractive.extend({
           },
         })
       expandedChange: (event) ->
-        fixVideoAspect(event.node.nextElementSibling)
+        fixVideoAspect(event.node.parentElement.parentElement.parentElement.children[0])
     })
   data: {
     truncated: true

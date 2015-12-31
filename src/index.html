@@ -128,8 +128,7 @@
 </script>
 
 <script id="video-component" type="text/html">
-    <div class="video-container">
-        <input type="checkbox" id="expanded-{{id}}" checked="{{expanded}}" on-change="expandedChange" class="hidden">
+    <div class="video-container {{#if expanded}}expanded{{/if}}">
         <div class="video" on-click="play:{{id}}" on-resize="resize">
             <div class="thumbnail" style="background-image: url({{thumbnail}})">
                 <p>{{title}}</p>
@@ -167,7 +166,8 @@
                href="https://www.youtube.com/watch?v={{id}}" target="_blank">
                 <i class="fa fa-youtube fa-3x"></i>
             </a>
-            <label for="expanded-{{id}}">
+            <label>
+                <input type="checkbox" checked="{{expanded}}" on-change="expandedChange" class="hidden">
                 {{#if expanded}}
                 <div class="btn btn-default" title="Compress Video">
                     <i class="fa fa-compress fa-3x"></i>
