@@ -61,7 +61,6 @@ html
     .video-container
       margin-top: 10px
       background-color: white
-      height: $video-height
 
       .video, .video-info, .side-buttons
         display: inline-block
@@ -70,8 +69,8 @@ html
 
       .video
         position: relative
-        height: 100%
-        width: $video-height * 16 / 9
+        height: $video-height
+        width: $video-height * 1.75
 
         .thumbnail
           height: 100%
@@ -116,7 +115,6 @@ html
         .description
           overflow: hidden
           min-height: 250px
-          height: 100%
 
         label
           width: 100%
@@ -149,7 +147,6 @@ html
           width: 80px - 20px
 
       &.expanded
-        height: auto
         .video
           width: 100%
         .video-info
