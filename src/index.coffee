@@ -142,11 +142,13 @@ onPlayerStateChangeBuilder = (id) ->
 
     if ractive.get('expand')
       checkBox = event.target.f.previousElementSibling
+      oldValue = checkBox.checked
       if event.data == YT.PlayerState.PLAYING
         checkBox.checked = true
       if event.data == YT.PlayerState.ENDED
         checkBox.checked = false
-    fixVideoAspect(event.target.f)
+      if oldValue != checkBox.checked
+        fixVideoAspect(event.target.f)
 
 videoComponent = Ractive.extend({
   isolated: false
