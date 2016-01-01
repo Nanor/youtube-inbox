@@ -58,9 +58,6 @@ blocked = (video) ->
         return true
   return false
 
-fixVideoAspect = (video) ->
-  video.style.height = (video.clientWidth * 0.57) + 'px'
-
 listLength = (list) ->
   (video for video in ractive.get('videos') when list.filter(video)).length
 
@@ -81,19 +78,32 @@ window.readData = () ->
       part: 'contentDetails'
       id: channelIds.join(',')
     }).execute((response) ->
-      loadVideosFromPlaylist(val.contentDetails.relatedPlaylists.uploads) for val in response.items
+      loadVideosFromPlaylist(val.contentDetails.relatedPlaylists.uploads, false) for val in response.items
     )
 
-  loadVideosFromPlaylist = (playlistId) ->
+  loadVideosFromPlaylist = (playlistId, watchLater) ->
     gapi.client.youtube.playlistItems.list({
-      part: 'snippet'
+      part: 'contentDetails'
       playlistId: playlistId
       maxResults: 50
     }).execute((response) ->
-      loadVideo(item.snippet) for item in response.items
+      loadVideosById(({
+        id: item.contentDetails.videoId,
+        playlistId: (if watchLater then item.id else null)
+      } for item in response.items))
     )
 
-  loadVideo = (videoSnippet) ->
+  loadVideosById = (videos) ->
+    gapi.client.youtube.videos.list({
+      part: 'snippet,contentDetails'
+      id: (video.id for video in videos).join(',')
+      maxResults: 50
+    }).execute((response) ->
+      loadVideo(item, (video for video in videos when video.id == item.id)[0].playlistId) for item, i in response.items
+    )
+
+  loadVideo = (item, playlistId) ->
+    videoSnippet = item.snippet
     thumbnail = null
     for key in Object.keys(videoSnippet.thumbnails)
       value = videoSnippet.thumbnails[key]
@@ -102,26 +112,28 @@ window.readData = () ->
 
     video = {
       title: videoSnippet.title
-      id: videoSnippet.resourceId.videoId
+      id: item.id
       author: videoSnippet.channelTitle
       authorId: videoSnippet.channelId
       publishedDate: videoSnippet.publishedAt
       description: videoSnippet.description
       thumbnail: thumbnail.url
+      duration: item.contentDetails.duration
       watched: false
+      playlistId: playlistId
     }
 
-    if new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history'))
+    if playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history'))
       for v, index in ractive.get('videos')
         if v.id == video.id
           video.watched = v.watched
           ractive.set("videos[#{index}]", video)
           return
-#      for v ,index in ractive.get('videos')
-#        if new Date(v.publishedDate) > new Date(video.publishedDate)
-#          console.log 'splice'
-#          ractive.splice('videos', index, 0, video)
-#          return
+      #      for v ,index in ractive.get('videos')
+      #        if new Date(v.publishedDate) > new Date(video.publishedDate)
+      #          console.log 'splice'
+      #          ractive.splice('videos', index, 0, video)
+      #          return
       ractive.push('videos', video)
 
   ractive.set('apiLoaded', window.apiLoaded)
@@ -129,6 +141,14 @@ window.readData = () ->
     getSubs()
   if ractive.get('additionalChannels')
     loadVideosFromChannel((channel.id for channel in ractive.get('additionalChannels')))
+  if ractive.get('watchLater')
+    gapi.client.youtube.channels.list({
+      part: 'contentDetails'
+      mine: true
+    }).execute((response) ->
+      watchLaterId = response.items[0].contentDetails.relatedPlaylists.watchLater
+      loadVideosFromPlaylist(watchLaterId, true)
+    )
 
 onPlayerReady = (event) ->
   event.target.playVideo()
@@ -142,10 +162,8 @@ onPlayerStateChangeBuilder = (id) ->
 
     if ractive.get('expand')
       checkBox = event.target.f.nextElementSibling.nextElementSibling.children[2].firstElementChild
-      oldValue = checkBox.checked
       if (event.data == YT.PlayerState.PLAYING and !checkBox.checked) or (event.data == YT.PlayerState.ENDED and checkBox.checked)
         checkBox.click()
-        fixVideoAspect(event.target.f)
 
 videoComponent = Ractive.extend({
   isolated: false
@@ -153,8 +171,17 @@ videoComponent = Ractive.extend({
   oninit: () ->
     this.on({
       mark: (event, id) ->
-        index = (i for video, i in ractive.get('videos') when video.id == id)[0]
+        [video, index] = ([video, i] for video, i in ractive.get('videos') when video.id == id)[0]
         ractive.toggle("videos[#{index}].watched")
+
+        if video.playlistId? and ractive.get('watchLater') # If this video is in the watchLater playlist and we're using integration
+          if video.watched
+            gapi.client.youtube.playlistItems.delete({
+              id: video.playlistId
+            }).execute((response) ->
+              video.playlistId = null
+            )
+
       play: (event, id) ->
         new YT.Player(event.node, {
           height: event.node.width * 9 / 16,
@@ -166,7 +193,8 @@ videoComponent = Ractive.extend({
           },
         })
       expandedChange: (event) ->
-        fixVideoAspect(event.node.parentElement.parentElement.parentElement.children[0])
+        video = event.node.parentElement.parentElement.parentElement.children[0]
+        video.style.height = (video.clientWidth * 0.57) + 'px'
     })
   data: {
     truncated: true
@@ -176,6 +204,11 @@ videoComponent = Ractive.extend({
       (linkifyStr(paragraph) for paragraph in text.split(/\n\n*/))
     formatDate: (date) ->
       new Date(date).toLocaleString()
+    formatDuration: (date) ->
+      string = ((if s.length == 2 then s else '0' + s) for s in date.match(/\d+/g)).join(':')
+      if string.substring(0, 1) == '0'
+        string = string.substring(1)
+      string
     blocked: blocked
   }
 })
@@ -198,6 +231,7 @@ ractive = new Ractive({
     autoplay: JSON.parse(localStorage.getItem('autoplay')) or false
     expand: JSON.parse(localStorage.getItem('expand')) or false
     update: JSON.parse(localStorage.getItem('update-interval')) or 5
+    watchLater: JSON.parse(localStorage.getItem('watch-later')) or false
 
     capitalise: (s) ->
       s[0].toUpperCase() + s.slice(1)
@@ -281,6 +315,9 @@ ractive.observe('update', (value) ->
   saveData(value, 'update-interval')
   if value > 0
     readDataInterval = window.setInterval(readData, 1000 * 60 * value)
+)
+ractive.observe('watchLater', (value) ->
+  saveData(value, 'watch-later')
 )
 ractive.observe('selectedList', () ->
   window.scrollTo(0, 0)

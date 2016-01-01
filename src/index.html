@@ -74,6 +74,9 @@
         <div class="checkbox">
             <label><input type="checkbox" checked="{{expand}}">Expand playing videos?</label>
         </div>
+        <div class="checkbox">
+            <label><input type="checkbox" checked="{{watchLater}}">Use watch later integration?</label>
+        </div>
 
         <div class="filter-panel">
             <h4>Filters:</h4>
@@ -129,10 +132,11 @@
 
 <script id="video-component" type="text/html">
     <div class="video-container {{#if expanded}}expanded{{/if}}">
-        <div class="video" on-click="play:{{id}}" on-resize="resize">
+        <div class="video" on-click="play:{{id}}">
             <div class="thumbnail" style="background-image: url({{thumbnail}})">
-                <p>{{title}}</p>
-                <i class="fa fa-play fa-3x"></i>
+                <p class="title">{{title}}</p>
+                <i class="play-icon fa fa-play fa-3x"></i>
+                <p class="duration">{{formatDuration(duration)}}</p>
             </div>
         </div>
         <div class="video-info">
