@@ -1,5 +1,6 @@
 $top-bar-height: 45px
-$video-height: 340px
+$video-width: 585px
+$side-buttons-width: 80px
 
 html
   // Always display the scroll bar.
@@ -69,8 +70,8 @@ html
 
       .video
         position: relative
-        height: $video-height
-        width: $video-height * 1.75
+        height: $video-width * 0.5797
+        width: $video-width
 
         .thumbnail
           height: 100%
@@ -147,12 +148,12 @@ html
           content: ''
 
       .side-buttons
-        width: 80px
+        width: $side-buttons-width
         float: right
 
         .btn
           margin-bottom: 5px
-          width: 80px - 20px
+          width: $side-buttons-width - 20px
 
       &.expanded
         .video

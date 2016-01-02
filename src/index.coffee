@@ -184,9 +184,6 @@ videoComponent = Ractive.extend({
             'onStateChange': onPlayerStateChangeBuilder(id)
           },
         })
-      expandedChange: (event) ->
-        video = event.node.parentElement.parentElement.parentElement.children[0]
-        video.style.height = (video.clientWidth * 0.57) + 'px'
     })
     this.observe('watched', ((value, oldValue) ->
       if value and !oldValue # If it's moved from unwatched to watched
@@ -200,6 +197,12 @@ videoComponent = Ractive.extend({
                 playlistId = null
           )
     ))
+    this.observe('expanded', ((expanded) ->
+      node = this.fragment.items[0].node
+      if node?
+        video = node.children[0]
+        video.style.height = (video.clientWidth * (if expanded then 0.57 else 0.5797)) + 'px'
+    ), {defer: true})
   data: {
     truncated: true
     expanded: false
