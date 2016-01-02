@@ -174,14 +174,6 @@ videoComponent = Ractive.extend({
         [video, index] = ([video, i] for video, i in ractive.get('videos') when video.id == id)[0]
         ractive.toggle("videos[#{index}].watched")
 
-        if video.playlistId? and ractive.get('watchLater') # If this video is in the watchLater playlist and we're using integration
-          if video.watched
-            gapi.client.youtube.playlistItems.delete({
-              id: video.playlistId
-            }).execute((response) ->
-              video.playlistId = null
-            )
-
       play: (event, id) ->
         new YT.Player(event.node, {
           height: event.node.width * 9 / 16,
@@ -196,6 +188,18 @@ videoComponent = Ractive.extend({
         video = event.node.parentElement.parentElement.parentElement.children[0]
         video.style.height = (video.clientWidth * 0.57) + 'px'
     })
+    this.observe('watched', ((value, oldValue) ->
+      if value and !oldValue # If it's moved from unwatched to watched
+        playlistId = this.get('playlistId')
+        if playlistId? and ractive.get('watchLater') # If this video is in the watchLater playlist and we're using integration
+          gapi.client.youtube.playlistItems.delete({
+            id: playlistId
+          }).execute(() ->
+            for video in videoList
+              if video.playlistId == playlistId
+                playlistId = null
+          )
+    ))
   data: {
     truncated: true
     expanded: false
