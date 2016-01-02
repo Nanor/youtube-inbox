@@ -186,7 +186,7 @@ videoComponent = Ractive.extend({
         })
     })
     this.observe('watched', ((value, oldValue) ->
-      if value and !oldValue # If it's moved from unwatched to watched
+      if value and oldValue == false # If it's moved from unwatched to watched
         playlistId = this.get('playlistId')
         if playlistId? and ractive.get('watchLater') # If this video is in the watchLater playlist and we're using integration
           gapi.client.youtube.playlistItems.delete({
