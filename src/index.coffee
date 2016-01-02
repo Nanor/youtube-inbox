@@ -209,10 +209,13 @@ videoComponent = Ractive.extend({
     formatDate: (date) ->
       new Date(date).toLocaleString()
     formatDuration: (date) ->
-      string = ((if s.length == 2 then s else '0' + s) for s in date.match(/\d+/g)).join(':')
-      if string.substring(0, 1) == '0'
-        string = string.substring(1)
-      string
+      strings = date.match(/P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/).slice(1, 7)
+      for string, i in strings
+        if string?
+          strings = strings.slice(i)
+          break
+      strings = ((if !string? then '00' else if i == 0 or string.length == 2 then string else '0' + string) for string, i in strings)
+      strings.join(':')
     blocked: blocked
   }
 })
