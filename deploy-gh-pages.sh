@@ -14,6 +14,10 @@ npm install style
 npm install url-loader
 npm install webpack
 npm install youtube-iframe
+npm install css-loader
+npm install sass-loader
+npm install style-loader
+npm install bootstrap
 
 webpack
 
