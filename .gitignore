@@ -1,4 +1,2 @@
-*/*.js.map
-*/*.css.map
-src/index.js
-src/index.css
+out/
+node_modules/

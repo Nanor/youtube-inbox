@@ -1,18 +1,21 @@
 #!/bin/bash
 
-# Basically from https://medium.com/philosophy-logic/publishing-gh-pages-with-travis-ci-53a8270e87db
+npm install coffee-loader
+npm install coffee-script
+npm install css
+npm install file
+npm install file-loader
+npm install font-awesome
+npm install font-awesome-webpack
+npm install html-linkify
+npm install ractive
+npm install sass
+npm install style
+npm install url-loader
+npm install webpack
+npm install youtube-iframe
 
-npm install -g coffee-script
-gem install sass
-
-rm -rf out || exit 0;
-mkdir out;
-
-cp src/*.html out/
-sass --sourcemap=none src/index.sass out/index.css
-coffee --compile --output out/ src/
-cp src/libraries out/ -rf
-cp src/*.ico out/
+webpack
 
 cd out
 git init
