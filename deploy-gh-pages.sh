@@ -1,23 +1,6 @@
 #!/bin/bash
 
-npm install coffee-loader
-npm install coffee-script
-npm install css
-npm install file
-npm install file-loader
-npm install font-awesome
-npm install font-awesome-webpack
-npm install html-linkify
-npm install ractive
-npm install sass
-npm install style
-npm install url-loader
-npm install webpack
-npm install youtube-iframe
-npm install css-loader
-npm install sass-loader
-npm install style-loader
-npm install bootstrap
+npm install coffee-loader coffee-script css file file-loader font-awesome font-awesome-webpack html-linkify ractive sass style url-loader webpack youtube-iframe css-loader sass-loader style-loader bootstrap less node-sass promise uglify
 
 webpack
 

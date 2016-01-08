@@ -2,6 +2,7 @@ script: bash ./deploy-gh-pages.sh
 env:
   global:
   - GH_REF: github.com/nanor/youtube-inbox.git
+  - PROD: 1
 branches:
   only:
   - master
