@@ -1,4 +1,5 @@
-webpack = require('webpack')
+var webpack = require('webpack')
+var PROD = JSON.parse(process.env.PROD_DEV || "0");
 
 module.exports = {
     entry: './src/main.coffee',
@@ -16,7 +17,7 @@ module.exports = {
             { test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "file-loader" }
         ]
     },
-    plugins: [
+    plugins: PROD ? [
         new webpack.optimize.UglifyJsPlugin({minimize: true})
-    ]
+    ] : []
 };

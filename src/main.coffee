@@ -8,8 +8,7 @@ require('./migrate.coffee')
 Ractive = require('ractive')
 linkify = require('html-linkify')
 YouTubeIframeLoader = require('youtube-iframe')
-window.readData = (() -> require('./getData.coffee')(ractive))
-require('./auth.js')
+api = require('./api.coffee')
 
 Ractive.DEBUG = false
 
@@ -104,9 +103,7 @@ videoComponent = Ractive.extend({
       if value and oldValue == false # If it's moved from unwatched to watched
         playlistId = this.get('playlistId')
         if playlistId? and ractive.get('watchLater') # If this video is in the watchLater playlist and we're using integration
-          gapi.client.youtube.playlistItems.delete({
-            id: playlistId
-          }).execute(() ->
+          api.deleteFromPlaylist(playlistId).then(() ->
             for video in videoList
               if video.playlistId == playlistId
                 playlistId = null
@@ -146,7 +143,7 @@ ractive = new Ractive({
     videoLists: videoLists
     videos: videoList
     additionalChannels: additionalChannels
-    apiLoaded: window.apiLoaded
+    apiLoaded: api.loaded
 
     showSettings: false
     selectedList: 0
@@ -183,17 +180,9 @@ ractive.on({
     name = url.match(/user\/([^/]+)/)?[1]
     id = url.match(/channel\/([^/]+)/)?[1]
 
-    gapi.client.youtube.channels.list({
-      part: 'snippet'
-      forUsername: name
-      id: id
-    }).execute((response) ->
-      item = response.items?[0]
-      if item
-        ractive.push('additionalChannels', {
-          name: item.snippet.title
-          id: item.id
-        })
+    api.getChannel(name, id).then((result) ->
+      if result?
+        ractive.push('additionalChannels', result)
         ractive.set('newChannel', '')
     )
 
@@ -201,7 +190,7 @@ ractive.on({
     additionalChannels.splice(index, 1)
 
   refresh: () ->
-    window.readData()
+    api.readData()
 
   markAll: (event, done) ->
     for video in ractive.get('videos')
@@ -210,7 +199,7 @@ ractive.on({
     ractive.update('videoLists')
     ractive.update('videos')
 
-  login: window.login
+  login: api.login
 })
 
 ractive.observe('filter', () ->
@@ -239,14 +228,36 @@ ractive.observe('history', (value) ->
 ractive.observe('update', (value) ->
   saveData(value, 'update-interval')
   if value > 0
-    readDataInterval = window.setInterval(window.readData, 1000 * 60 * value)
+    readDataInterval = window.setInterval(api.readData, 1000 * 60 * value)
 )
 ractive.observe('watchLater', (value) ->
   saveData(value, 'watch-later')
+  api.setWatchLater(value)
 )
 ractive.observe('selectedList', () ->
   window.scrollTo(0, 0)
 )
 ractive.observe('additionalChannels', (value) ->
   saveData(value, 'additional-channels')
+  api.setAdditionalChannels(value)
+)
+api.addApiLoadCallback((loaded) ->
+  ractive.set('apiLoaded', loaded)
+)
+api.addVideosAddCallback((videos) ->
+  for video in videos.sort((a, b) -> (if a.publishedDate < b.publishedDate then -1 else 1))
+    added = false
+    if playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history'))
+      for v, index in ractive.get('videos')
+        if v.id == video.id
+          video.watched = v.watched
+          ractive.set("videos[#{index}]", video)
+          added = true
+          break
+      #      for v ,index in ractive.get('videos')
+      #        if new Date(v.publishedDate) > new Date(video.publishedDate)
+      #          ractive.splice('videos', index, 0, video)
+      #          return
+      if not added
+        ractive.push('videos', video)
 )
