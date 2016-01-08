@@ -1,5 +1,5 @@
 var webpack = require('webpack')
-var PROD = JSON.parse(process.env.PROD_DEV || "0");
+var PROD = JSON.parse(process.env.PROD || "0");
 
 module.exports = {
     entry: './src/main.coffee',
