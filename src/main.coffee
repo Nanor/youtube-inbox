@@ -143,7 +143,7 @@ ractive = new Ractive({
     videoLists: videoLists
     videos: videoList
     additionalChannels: additionalChannels
-    apiLoaded: api.loaded
+    apiLoaded: false
 
     showSettings: false
     selectedList: 0
@@ -190,7 +190,7 @@ ractive.on({
     additionalChannels.splice(index, 1)
 
   refresh: () ->
-    api.readData()
+    api.getVideos()
 
   markAll: (event, done) ->
     for video in ractive.get('videos')
@@ -199,7 +199,8 @@ ractive.on({
     ractive.update('videoLists')
     ractive.update('videos')
 
-  login: api.login
+  login: () ->
+    api.login()
 })
 
 ractive.observe('filter', () ->
@@ -228,7 +229,7 @@ ractive.observe('history', (value) ->
 ractive.observe('update', (value) ->
   saveData(value, 'update-interval')
   if value > 0
-    readDataInterval = window.setInterval(api.readData, 1000 * 60 * value)
+    readDataInterval = window.setInterval(api.getVideos, 1000 * 60 * value)
 )
 ractive.observe('watchLater', (value) ->
   saveData(value, 'watch-later')
@@ -245,7 +246,7 @@ api.addApiLoadCallback((loaded) ->
   ractive.set('apiLoaded', loaded)
 )
 api.addVideosAddCallback((videos) ->
-  for video in videos.sort((a, b) -> (if a.publishedDate < b.publishedDate then -1 else 1))
+  for video in videos.sort((a, b) -> (if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1))
     added = false
     if playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history'))
       for v, index in ractive.get('videos')

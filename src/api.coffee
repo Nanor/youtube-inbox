@@ -1,20 +1,14 @@
-window.gapiCallback = () ->
-# Upon loading, the Google APIs JS client automatically invokes this callback.
-  gapi.auth.init(() ->
-    window.setTimeout(checkAuth, 1)
-  )
-
-gapi = require('./gapi.js')(gapiCallback)
-
-# The client ID is obtained from the Google Developers Console
-# at https:#console.developers.google.com/.
-# If you run this code from a server other than http:#localhost,
-# you need to register your own client ID.
 OAUTH2_CLIENT_ID = '821457625314-acmfo1dvnlfeea149csscmfasjgq1vsf.apps.googleusercontent.com'
 OAUTH2_SCOPES = [
   'https://www.googleapis.com/auth/youtube'
 ]
 loaded = false
+
+window.gapiCallback = () ->
+  gapi.auth.init(() ->
+    window.setTimeout(checkAuth, 1)
+  )
+gapi = require('./gapi.js')(gapiCallback)
 
 onApiLoadCallbacks = []
 addApiLoadCallback = (callback) ->
@@ -39,11 +33,6 @@ additionalChannels = []
 setAdditionalChannels = (value) ->
   additionalChannels = value
 
-# Attempt the immediate OAuth 2.0 client flow as soon as the page loads.
-# If the currently logged-in Google Account has previously authorized
-# the client specified as the OAUTH2_CLIENT_ID, then the authorization
-# succeeds with no user intervention. Otherwise, it fails and the
-# user interface that prompts for authorization needs to display.
 checkAuth = () ->
   gapi.auth.authorize({
     client_id: OAUTH2_CLIENT_ID,
@@ -60,23 +49,14 @@ login = () ->
     cookie_policy: 'single_host_origin',
   }, handleAuthResult)
 
-# Handle the result of a gapi.auth.authorize() call.
 handleAuthResult = (authResult) ->
   if authResult and !authResult.error
-# Authorization was successful. Hide authorization prompts and show
-# content that should be visible after authorization succeeds.
-    loadAPIClientInterfaces()
+    gapi.client.load('youtube', 'v3', () ->
+      apiLoaded(true)
+      getVideos()
+    )
 
-# Load the client interfaces for the YouTube Analytics and Data APIs, which
-# are required to use the Google APIs JS client. More info is available at
-# http:#code.google.com/p/google-api-javascript-client/wiki/GettingStarted#Loading_the_Client
-loadAPIClientInterfaces = () ->
-  gapi.client.load('youtube', 'v3', () ->
-    apiLoaded(true)
-    readData()
-  )
-
-readData = () ->
+getVideos = () ->
   getSubs = (pageToken) ->
     gapi.client.youtube.subscriptions.list({
       mine: true
@@ -174,9 +154,8 @@ getChannel = (name, id) ->
   )
 
 module.exports = {
-  loaded: loaded
-  readData: readData
   login: login
+  getVideos: getVideos
   deleteFromPlaylist: deleteFromPlaylist
   getChannel: getChannel
   addApiLoadCallback: addApiLoadCallback
