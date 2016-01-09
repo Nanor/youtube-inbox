@@ -73,7 +73,8 @@ onPlayerStateChangeBuilder = (id) ->
       event.target.f.nextElementSibling.nextElementSibling.children[0].click()
 
     if ractive.get('expand')
-      checkBox = event.target.f.nextElementSibling.nextElementSibling.children[2].firstElementChild
+      console.log event
+      checkBox = event.target.f.nextElementSibling.nextElementSibling.lastElementChild.firstElementChild
       if (event.data == YT.PlayerState.PLAYING and !checkBox.checked) or (event.data == YT.PlayerState.ENDED and checkBox.checked)
         checkBox.click()
 
