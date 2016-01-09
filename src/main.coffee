@@ -126,6 +126,7 @@ videoComponent = Ractive.extend({
       new Date(date).toLocaleString()
     formatDuration: (date) ->
       strings = date.match(/P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/).slice(1, 7)
+      strings[4] = strings[4] or '0'
       for string, i in strings
         if string?
           strings = strings.slice(i)
