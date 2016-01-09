@@ -248,7 +248,7 @@ api.addApiLoadCallback((loaded) ->
 api.addVideosAddCallback((videos) ->
   for video in videos.sort((a, b) -> (if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1))
     added = false
-    if playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history'))
+    if video.playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history'))
       for v, index in ractive.get('videos')
         if v.id == video.id
           video.watched = v.watched
