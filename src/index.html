@@ -13,7 +13,7 @@
             <i class="fa fa-gear"></i>
             <input class="hidden" type="checkbox" checked="{{showSettings}}">
         </label>
-        <button class="btn btn-default" title="Refresh" on-click="refresh"><i class="fa fa-refresh"></i></button>
+        <button class="btn btn-default" title="Refresh" on-click="refresh"><i class="fa fa-refresh {{#if loading}}fa-spin{{/if}}"></i></button>
         {{#each videoLists:list}}
         <label class="tab" id="{{name}}">
             <input type="radio" name="{{selectedList}}" value="{{list}}" class="hidden">

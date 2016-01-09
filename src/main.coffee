@@ -146,6 +146,7 @@ ractive = new Ractive({
     videos: videoList
     additionalChannels: additionalChannels
     apiLoaded: false
+    loading: false
 
     showSettings: false
     selectedList: 0
@@ -192,7 +193,7 @@ ractive.on({
     additionalChannels.splice(index, 1)
 
   refresh: () ->
-    api.getVideos()
+    loadVideos()
 
   markAll: (event, done) ->
     for video in ractive.get('videos')
@@ -231,7 +232,7 @@ ractive.observe('history', (value) ->
 ractive.observe('update', (value) ->
   saveData(value, 'update-interval')
   if value > 0
-    readDataInterval = window.setInterval(api.getVideos, 1000 * 60 * value)
+    readDataInterval = window.setInterval(loadVideos, 1000 * 60 * value)
 )
 ractive.observe('watchLater', (value) ->
   saveData(value, 'watch-later')
@@ -246,11 +247,15 @@ ractive.observe('additionalChannels', (value) ->
 )
 api.addApiLoadCallback((loaded) ->
   ractive.set('apiLoaded', loaded)
+  loadVideos()
 )
-api.addVideosAddCallback((videos) ->
-  for video in videos.sort((a, b) -> (if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1))
-    added = false
-    if video.playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history'))
+
+loadVideos = () ->
+  ractive.set('loading', true)
+  api.getVideos().then((videos) ->
+    videos = (video for video in videos when video.playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history')))
+    for video in videos.sort((a, b) -> (if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1))
+      added = false
       for v, index in ractive.get('videos')
         if v.id == video.id
           video.watched = v.watched
@@ -263,4 +268,5 @@ api.addVideosAddCallback((videos) ->
       #          return
       if not added
         ractive.push('videos', video)
-)
+    ractive.set('loading', false)
+  )
