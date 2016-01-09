@@ -1,0 +1,36 @@
+{
+  "name": "youtube-inbox",
+  "author": "Ronan Forman <ronan131@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nanor/youtube-inbox.git"
+  },
+  "scripts": {
+    "build": "webpack --progress --colors",
+    "build:prod": "webpack --progress --colors && uglifyjs out/bundle.js --compress --mangle -o out/bundle.js"
+  },
+  "dependencies": {
+    "bootstrap": "^3.3.6",
+    "coffee-loader": "^0.7.2",
+    "coffee-script": "^1.10.0",
+    "css": "^2.2.1",
+    "css-loader": "^0.23.1",
+    "file": "^0.2.2",
+    "file-loader": "^0.8.5",
+    "font-awesome": "^4.5.0",
+    "font-awesome-webpack": "0.0.4",
+    "html-linkify": "^1.2.1",
+    "less": "^2.5.3",
+    "node-sass": "^3.4.2",
+    "promise": "^7.1.1",
+    "ractive": "^0.7.3",
+    "sass": "^0.5.0",
+    "sass-loader": "^3.1.2",
+    "style": "0.0.3",
+    "style-loader": "^0.13.0",
+    "uglify-js": "^2.6.1",
+    "url-loader": "^0.5.7",
+    "webpack": "^1.12.10",
+    "youtube-iframe": "^1.0.2"
+  }
+}
