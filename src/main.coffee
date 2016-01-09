@@ -250,7 +250,7 @@ api.addApiLoadCallback((loaded) ->
 
 loadVideos = () ->
   ractive.set('loading', true)
-  api.getVideos(ractive.get('additional-channels'), ractive.get('watch-later')).then((videos) ->
+  api.getVideos(ractive.get('additionalChannels'), ractive.get('watchLater')).then((videos) ->
     videos = (video for video in videos when video.playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history')))
     for video in videos.sort((a, b) -> (if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1))
       added = false
