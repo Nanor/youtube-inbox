@@ -1,6 +1,6 @@
 #!/bin/bash
 
-npm install
+npm install --production
 npm run build:prod
 
 cd out
