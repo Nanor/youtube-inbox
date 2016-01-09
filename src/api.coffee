@@ -18,14 +18,6 @@ apiLoaded = (value) ->
   for callback in onApiLoadCallbacks
     callback(value)
 
-watchLater = false
-setWatchLater = (value) ->
-  watchLater = value
-
-additionalChannels = []
-setAdditionalChannels = (value) ->
-  additionalChannels = value
-
 checkAuth = () ->
   gapi.auth.authorize({
     client_id: OAUTH2_CLIENT_ID,
@@ -48,7 +40,7 @@ handleAuthResult = (authResult) ->
       apiLoaded(true)
     )
 
-getVideos = () ->
+getVideos = (additionalChannels, watchLater) ->
   if loaded
     videos = []
     channelIds = [(channel.id for channel in additionalChannels)]
@@ -161,6 +153,4 @@ module.exports = {
   deleteFromPlaylist: deleteFromPlaylist
   getChannel: getChannel
   addApiLoadCallback: addApiLoadCallback
-  setWatchLater: setWatchLater
-  setAdditionalChannels: setAdditionalChannels
 }
