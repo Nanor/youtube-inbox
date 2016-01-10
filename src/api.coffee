@@ -43,7 +43,7 @@ handleAuthResult = (authResult) ->
 getVideos = (additionalChannels, watchLater) ->
   if loaded
     videos = []
-    channelIds = [(channel.id for channel in additionalChannels)]
+    channelIds = (channel.id for channel in additionalChannels)
 
     loadVideo = (item, playlistId) ->
       videoSnippet = item.snippet
