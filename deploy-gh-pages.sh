@@ -1,8 +1,5 @@
 #!/bin/bash
 
-npm install --production
-npm run build:prod
-
 cd out
 git init
 git config user.name "Travis-CI"
