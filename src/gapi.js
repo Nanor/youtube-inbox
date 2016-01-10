@@ -273,7 +273,7 @@ module.exports = function (loadedCallback) {
         delete window.gapi._bs;
     })();
     gapi.load("client", {
-        callback: gapiCallback,
+        callback: loadedCallback,
         _c: {
             "jsl": {
                 "ci": {

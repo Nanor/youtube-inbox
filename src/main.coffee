@@ -73,7 +73,6 @@ onPlayerStateChangeBuilder = (id) ->
       event.target.f.nextElementSibling.nextElementSibling.children[0].click()
 
     if ractive.get('expand')
-      console.log event
       checkBox = event.target.f.nextElementSibling.nextElementSibling.lastElementChild.firstElementChild
       if (event.data == YT.PlayerState.PLAYING and !checkBox.checked) or (event.data == YT.PlayerState.ENDED and checkBox.checked)
         checkBox.click()
@@ -243,11 +242,10 @@ ractive.observe('selectedList', () ->
 ractive.observe('additionalChannels', (value) ->
   saveData(value, 'additional-channels')
 )
-api.addApiLoadCallback((loaded) ->
-  ractive.set('apiLoaded', loaded)
+api.loaded.then(() ->
+  ractive.set('apiLoaded', true)
   loadVideos()
 )
-
 loadVideos = () ->
   if ractive.get('loading')
     return

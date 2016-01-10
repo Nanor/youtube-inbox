@@ -2,21 +2,20 @@ OAUTH2_CLIENT_ID = '821457625314-acmfo1dvnlfeea149csscmfasjgq1vsf.apps.googleuse
 OAUTH2_SCOPES = [
   'https://www.googleapis.com/auth/youtube'
 ]
-loaded = false
 
-window.gapiCallback = () ->
+gapiCallback = () ->
   gapi.auth.init(() ->
     window.setTimeout(checkAuth, 1)
   )
 gapi = require('./gapi.js')(gapiCallback)
 
-onApiLoadCallbacks = []
-addApiLoadCallback = (callback) ->
-  onApiLoadCallbacks.push(callback)
-apiLoaded = (value) ->
-  loaded = value
-  for callback in onApiLoadCallbacks
-    callback(value)
+loaded = false
+apiLoaded = null
+loadedPromise = new Promise((resolve) ->
+  apiLoaded = () ->
+    loaded = true
+    resolve()
+)
 
 checkAuth = () ->
   gapi.auth.authorize({
@@ -37,7 +36,7 @@ login = () ->
 handleAuthResult = (authResult) ->
   if authResult and !authResult.error
     gapi.client.load('youtube', 'v3', () ->
-      apiLoaded(true)
+      apiLoaded()
     )
 
 getVideos = (additionalChannels, watchLater) ->
@@ -47,11 +46,8 @@ getVideos = (additionalChannels, watchLater) ->
 
     loadVideo = (item, playlistId) ->
       videoSnippet = item.snippet
-      thumbnail = null
-      for key in Object.keys(videoSnippet.thumbnails)
-        value = videoSnippet.thumbnails[key]
-        if ((thumbnail == null || thumbnail.width < value.width) && value.url != null)
-          thumbnail = value
+      thumbnails = (videoSnippet.thumbnails[key] for key in Object.keys(videoSnippet.thumbnails))
+      thumbnail = thumbnails.reduce((a, b) -> if a.width > b.width then a else b)
 
       return {
         title: videoSnippet.title
@@ -102,17 +98,17 @@ getVideos = (additionalChannels, watchLater) ->
     Promise.all([
       subPromise().then((channelIds) ->
         slice = 50
-        Promise.all(
+        Promise.all((
           gapi.client.youtube.channels.list({
             part: 'contentDetails'
             id: channelIds.slice(n, n + slice).join(',')
           }).then((response) ->
-            Promise.all(
+            Promise.all((
               for item in response.result.items
                 playlistId = item.contentDetails.relatedPlaylists.uploads
                 playlistPromise(playlistId, false)
-            )
-          ) for n in [0...channelIds.length] by slice)
+            ))
+          ) for n in [0...channelIds.length] by slice))
       ),
       if watchLater
         gapi.client.youtube.channels.list({
@@ -152,5 +148,5 @@ module.exports = {
   getVideos: getVideos
   deleteFromPlaylist: deleteFromPlaylist
   getChannel: getChannel
-  addApiLoadCallback: addApiLoadCallback
+  loaded: loadedPromise
 }
