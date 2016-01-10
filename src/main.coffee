@@ -19,8 +19,6 @@ videoList.sort((a, b) -> if new Date(a.publishedDate) > new Date(b.publishedDate
 
 additionalChannels = JSON.parse(localStorage.getItem('additional-channels')) or []
 
-readDataInterval = null
-
 videoLists = [
   {
     name: 'unwatched'
@@ -228,10 +226,12 @@ ractive.observe('history', (value) ->
   ractive.set('videos', (video for video in ractive.get('videos') when videoLists[0].filter(video) or
     new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * value)))
 )
+readDataInterval = null
 ractive.observe('update', (value) ->
   saveData(value, 'update-interval')
+  window.clearInterval(readDataInterval)
   if value > 0
-    readDataInterval = window.setInterval(loadVideos, 1000 * 60 * value)
+    readDataInterval = window.setInterval((() -> loadVideos()), 1000 * 60 * value)
 )
 ractive.observe('watchLater', (value) ->
   saveData(value, 'watch-later')

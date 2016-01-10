@@ -17,27 +17,24 @@ loadedPromise = new Promise((resolve) ->
     resolve()
 )
 
-checkAuth = () ->
+authorize = (displayPopup) ->
   gapi.auth.authorize({
-    client_id: OAUTH2_CLIENT_ID,
-    scope: OAUTH2_SCOPES,
-    immediate: true,
-    cookie_policy: 'single_host_origin',
-  }, handleAuthResult)
+    client_id: OAUTH2_CLIENT_ID
+    scope: OAUTH2_SCOPES
+    immediate: not displayPopup
+    cookie_policy: 'single_host_origin'
+  }).then((authResult) ->
+    if authResult and !authResult.error
+      gapi.client.load('youtube', 'v3', () ->
+        apiLoaded()
+      )
+  )
+
+checkAuth = () ->
+  authorize(false)
 
 login = () ->
-  gapi.auth.authorize({
-    client_id: OAUTH2_CLIENT_ID,
-    scope: OAUTH2_SCOPES,
-    immediate: false,
-    cookie_policy: 'single_host_origin',
-  }, handleAuthResult)
-
-handleAuthResult = (authResult) ->
-  if authResult and !authResult.error
-    gapi.client.load('youtube', 'v3', () ->
-      apiLoaded()
-    )
+  authorize(true)
 
 getVideos = (additionalChannels, watchLater) ->
   if loaded
