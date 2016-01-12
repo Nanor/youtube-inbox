@@ -119,8 +119,8 @@
 </script>
 
 <script id="video-component" type="text/html">
-    <div class="video-container {{#if expanded}}expanded{{/if}}">
-        <div class="video" on-click="play:{{id}}">
+    <div class="video-container {{#if expanded}}expanded{{/if}}" id="video-container">
+        <div class="video" id="video" on-click="play">
             <div class="thumbnail" style="background-image: url({{thumbnail}})">
                 <p class="title">{{title}}</p>
                 <i class="play-icon fa fa-play fa-3x"></i>
@@ -147,10 +147,10 @@
         <div class="side-buttons">
             {{#if !blocked(this)}}
             {{#if !watched}}
-            <button class="btn btn-default" title="Mark as watched" on-click="mark:{{id}}">
+            <button class="btn btn-default" title="Mark as watched" on-click="mark" id="mark">
                 <i class="fa fa-check fa-3x"></i></button>
             {{else}}
-            <button class="btn btn-default" title="Mark as unwatched" on-click="mark:{{id}}">
+            <button class="btn btn-default" title="Mark as unwatched" on-click="mark">
                 <i class="fa fa-remove fa-3x"></i></button>
             {{/if}}
             {{/if}}
@@ -159,7 +159,7 @@
                 <i class="fa fa-youtube fa-3x"></i>
             </a>
             <label>
-                <input type="checkbox" checked="{{expanded}}" class="hidden">
+                <input type="checkbox" checked="{{expanded}}" id="expand" class="hidden">
                 {{#if expanded}}
                 <div class="btn btn-default" title="Compress Video">
                     <i class="fa fa-compress fa-3x"></i>

@@ -14,8 +14,8 @@ Ractive.DEBUG = false
 
 filter = JSON.parse(localStorage.getItem('video-filter')) or []
 
-videoList = JSON.parse(localStorage.getItem('videos')) or []
-videoList.sort((a, b) -> if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1)
+videos = JSON.parse(localStorage.getItem('videos')) or []
+videos.sort((a, b) -> if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1)
 
 additionalChannels = JSON.parse(localStorage.getItem('additional-channels')) or []
 
@@ -58,41 +58,38 @@ blocked = (video) ->
   return false
 
 listLength = (list) ->
-  (video for video in ractive.get('videos') when list.filter(video)).length
-
-onPlayerReady = (event) ->
-  event.target.playVideo()
-
-onPlayerStateChangeBuilder = (id) ->
-  (event) ->
-    video = (v for v in ractive.get('videos') when v.id == id)[0]
-    if event.data == YT.PlayerState.ENDED and ractive.get('autoplay') and videoLists[0].filter(video)
-      event.target.f.parentElement.nextElementSibling?.children[0].click()
-      event.target.f.nextElementSibling.nextElementSibling.children[0].click()
-
-    if ractive.get('expand')
-      checkBox = event.target.f.nextElementSibling.nextElementSibling.lastElementChild.firstElementChild
-      if (event.data == YT.PlayerState.PLAYING and !checkBox.checked) or (event.data == YT.PlayerState.ENDED and checkBox.checked)
-        checkBox.click()
+  (video for video in (if ractive? then ractive.get('videos') else videos) when list.filter(video)).length
 
 videoComponent = Ractive.extend({
   isolated: false
   template: '#video-component'
   oninit: () ->
+    videoContainer = this
     this.on({
-      mark: (event, id) ->
-        [video, index] = ([video, i] for video, i in ractive.get('videos') when video.id == id)[0]
-        ractive.toggle("videos[#{index}].watched")
+      mark: () ->
+        videoContainer.toggle('watched')
+        ractive.update('videos')
 
-      play: (event, id) ->
+      play: (event) ->
         YouTubeIframeLoader.load((YT) ->
           new YT.Player(event.node, {
             height: event.node.width * 9 / 16,
             width: event.node.width,
-            videoId: id,
+            videoId: videoContainer.get('id'),
             events: {
-              'onReady': onPlayerReady
-              'onStateChange': onPlayerStateChangeBuilder(id)
+              onReady: (event) ->
+                event.target.playVideo()
+              onStateChange: (event) ->
+                video = (v for v in ractive.get('videos') when v.id == videoContainer.get('id'))[0]
+                # If the video has ended, the autoplay option is on, and the video is in the unwatched videos list
+                if event.data == YT.PlayerState.ENDED and ractive.get('autoplay') and videoLists[0].filter(video)
+                  videoContainer.nodes['video-container'].nextElementSibling?.firstChild.click() # Click on the next video to play it if it exists
+                  videoContainer.nodes['mark'].click() # Click on the done button for this video
+                if ractive.get('expand')
+                  checkbox = videoContainer.nodes['expand']
+                  # If there's a expand checkbox, and it's playing and not expanded, or ended and expanded
+                  if checkbox? and ((event.data == YT.PlayerState.PLAYING and not checkbox.checked) or (event.data == YT.PlayerState.ENDED and checkbox.checked))
+                    checkbox.click() # Click the expand checkbox
             },
           })
         )
@@ -102,15 +99,16 @@ videoComponent = Ractive.extend({
         playlistId = this.get('playlistId')
         if playlistId? and ractive.get('watchLater') # If this video is in the watchLater playlist and we're using integration
           api.deleteFromPlaylist(playlistId).then(() ->
-            for video in videoList
+            # Clear the playlistId from the video, so we don't try and delete it again
+            for video in videos
               if video.playlistId == playlistId
                 playlistId = null
           )
     ))
     this.observe('expanded', ((expanded) ->
-      node = this.fragment.items[0].node
-      if node?
-        video = node.children[0]
+      container = this.nodes['video-container']
+      if container?
+        video = container.firstChild
         video.style.height = (video.clientWidth * (if expanded then 0.57 else 0.5797)) + 'px'
     ), {defer: true})
   data: {
@@ -122,12 +120,15 @@ videoComponent = Ractive.extend({
     formatDate: (date) ->
       new Date(date).toLocaleString()
     formatDuration: (date) ->
+      # Turn the duration string into a list eg. PT3H12M5S -> [null, null, null, 3, 12, 5]
       strings = date.match(/P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/).slice(1, 7)
+      # Always make sure we have minutes, so it says 0:27 rather than just 27
       strings[4] = strings[4] or '0'
       for string, i in strings
         if string?
           strings = strings.slice(i)
           break
+      # Make every string have 2 digits expect from the first one.
       strings = ((if !string? then '00' else if i == 0 or string.length == 2 then string else '0' + string) for string, i in strings)
       strings.join(':')
     blocked: blocked
@@ -137,24 +138,27 @@ videoComponent = Ractive.extend({
 ractive = new Ractive({
   el: '#container'
   template: '#template'
+  magic: true
   data: {
+    # Saved objects
+    videos: videos
     filter: filter
-    videoLists: videoLists
-    videos: videoList
     additionalChannels: additionalChannels
-    apiLoaded: false
-    loading: false
-
-    showSettings: false
-    selectedList: 0
-    newChannel: ''
-
     history: JSON.parse(localStorage.getItem('days-into-history')) or 7
     autoplay: JSON.parse(localStorage.getItem('autoplay')) or false
     expand: JSON.parse(localStorage.getItem('expand')) or false
     update: JSON.parse(localStorage.getItem('update-interval')) or 5
     watchLater: JSON.parse(localStorage.getItem('watch-later')) or false
 
+    # Unsaved objects
+    videoLists: videoLists
+    apiLoaded: false
+    loading: false
+    showSettings: false
+    selectedList: 0
+    newChannel: ''
+
+    # Methods
     capitalise: (s) ->
       s[0].toUpperCase() + s.slice(1)
     listLength: listLength
@@ -236,8 +240,14 @@ ractive.observe('update', (value) ->
 ractive.observe('watchLater', (value) ->
   saveData(value, 'watch-later')
 )
-ractive.observe('selectedList', () ->
-  window.scrollTo(0, 0)
+scrolls = ({x: 0, y: 0} for list in videoLists)
+ractive.observe('selectedList', (value, oldValue) ->
+  if oldValue?
+    scrolls[oldValue] = {x: window.scrollX, y: window.scrollY}
+  window.scrollTo(scrolls[value].x, scrolls[value].y)
+  window.setTimeout((() ->
+    window.scrollTo(scrolls[value].x, scrolls[value].y)
+  ), 0)
 )
 ractive.observe('additionalChannels', (value) ->
   saveData(value, 'additional-channels')
@@ -250,8 +260,10 @@ loadVideos = () ->
   if ractive.get('loading')
     return
   ractive.set('loading', true)
-  api.getVideos(ractive.get('additionalChannels'), ractive.get('watchLater')).then((videos) ->
+  api.getVideos(ractive.get('additionalChannels'), ractive.get('watchLater')).then(((videos) ->
+    # Remove videos that are too old unless they're from the watch later list
     videos = (video for video in videos when video.playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history')))
+    videosToAdd = []
     for video in videos.sort((a, b) -> (if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1))
       added = false
       for v, index in ractive.get('videos')
@@ -260,11 +272,12 @@ loadVideos = () ->
           ractive.set("videos[#{index}]", video)
           added = true
           break
-      #      for v ,index in ractive.get('videos')
-      #        if new Date(v.publishedDate) > new Date(video.publishedDate)
-      #          ractive.splice('videos', index, 0, video)
-      #          return
       if not added
-        ractive.push('videos', video)
+        videosToAdd.push(video)
+
+    # Add all the video not in the list to the end of the list
+    ractive.splice.apply(ractive, ['videos', ractive.get('videos').length, 0].concat(videosToAdd))
+    ractive.set('loading', false)
+  ), () ->
     ractive.set('loading', false)
   )
