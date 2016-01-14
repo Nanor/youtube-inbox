@@ -48,7 +48,7 @@ getVideos = (callback, additionalChannels, watchLater) ->
         channelIds = (channel.snippet.resourceId.channelId for channel in response.result.items)
         nextPageToken = response.result.nextPageToken
         if nextPageToken?
-          return loadFromSubscriptions(nextPageToken)
+          loadFromSubscriptions(nextPageToken)
         loadFromChannels(channelIds)
       )
 
@@ -85,8 +85,7 @@ getVideos = (callback, additionalChannels, watchLater) ->
     videos = []
     loadTimeout = null
     videosLoaded = () ->
-      callback(videos)
-      videos = []
+      callback(videos.splice(0, videos.length))
 
     loadVideo = (item, playlistId) ->
       videoSnippet = item.snippet

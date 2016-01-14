@@ -276,7 +276,7 @@ loadVideos = () ->
 
   videosCallback = (videos) ->
     # Remove videos that are too old unless they're from the watch later list and sort them
-    videos = (video for video in videos when video.playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history')))
+    videos = (video for video in videos when video.playlistId? or new Date(video.publishedDate) > new Date() - 1000 * 60 * 60 * 24 * ractive.get('history'))
     videos.sort((a, b) -> (if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1))
     videosToAdd = []
     for video in videos
