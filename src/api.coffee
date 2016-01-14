@@ -113,12 +113,14 @@ getVideos = (callback, additionalChannels, watchLater) ->
     loadFromSubscriptions()
     loadFromChannels(additionalChannels)
     if watchLater
-      gapi.client.channels.list({
+      gapi.client.youtube.channels.list({
         part: 'contentDetails'
         mine: true
       }).then((response) ->
         loadVideosFromPlaylist(response.result.items[0].contentDetails.relatedPlaylists.watchLater, true)
       )
+
+  return
 
 deleteFromPlaylist = (playlistId) ->
   gapi.client.youtube.playlistItems.delete({
