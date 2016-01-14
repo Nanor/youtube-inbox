@@ -294,4 +294,4 @@ loadVideos = () ->
     ractive.splice.apply(ractive, ['videos', ractive.get('videos').length, 0].concat(videosToAdd))
     ractive.set('loading', false)
 
-  api.getVideos(videosCallback, ractive.get('additionalChannels'), ractive.get('watchLater'))
+  api.getVideos(videosCallback, (channel.id for channel in ractive.get('additionalChannels')), ractive.get('watchLater'))
