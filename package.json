@@ -8,7 +8,8 @@
   "scripts": {
     "build": "webpack --progress --colors",
     "build:prod": "webpack --progress --colors && uglifyjs out/bundle.js --compress --mangle -o out/bundle.js",
-    "serve": "webpack-dev-server"
+    "serve": "webpack-dev-server",
+    "watch": "webpack --progress --colors --watch"
   },
   "dependencies": {
     "bootstrap": "^3.3.6",

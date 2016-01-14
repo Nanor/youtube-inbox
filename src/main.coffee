@@ -12,12 +12,25 @@ api = require('./api.coffee')
 
 Ractive.DEBUG = false
 
-filter = JSON.parse(localStorage.getItem('video-filter')) or []
+loadData = (storageString, defaultValue) ->
+  value = JSON.parse(localStorage.getItem(storageString))
+  value ?= defaultValue
+  return value
 
-videos = JSON.parse(localStorage.getItem('videos')) or []
+saveData = (variable, storageString) ->
+  localStorage.setItem(storageString, JSON.stringify(variable))
+
+videos = loadData('videos', [])
 videos.sort((a, b) -> if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1)
 
-additionalChannels = JSON.parse(localStorage.getItem('additional-channels')) or []
+filter = loadData('video-filter', [])
+additionalChannels = loadData('additionalChannels', [])
+
+historyValue = loadData('days-into-history', 7)
+updateValue = loadData('update-interval', 5)
+autoplayValue = loadData('autoplay', false)
+expandValue = loadData('expand', false)
+watchLaterValue = loadData('watch-later', false)
 
 videoLists = [
   {
@@ -39,9 +52,6 @@ videoLists = [
     reversed: true
   }
 ]
-
-saveData = (variable, storageString) ->
-  localStorage.setItem(storageString, JSON.stringify(variable))
 
 blocked = (video) ->
   for filterRow in filter
@@ -73,9 +83,9 @@ videoComponent = Ractive.extend({
       play: (event) ->
         YouTubeIframeLoader.load((YT) ->
           new YT.Player(event.node, {
-            height: event.node.width * 9 / 16,
-            width: event.node.width,
-            videoId: videoContainer.get('id'),
+            height: event.node.width * 9 / 16
+            width: event.node.width
+            videoId: videoContainer.get('id')
             events: {
               onReady: (event) ->
                 event.target.playVideo()
@@ -90,7 +100,7 @@ videoComponent = Ractive.extend({
                   # If there's a expand checkbox, and it's playing and not expanded, or ended and expanded
                   if checkbox? and ((event.data == YT.PlayerState.PLAYING and not checkbox.checked) or (event.data == YT.PlayerState.ENDED and checkbox.checked))
                     checkbox.click() # Click the expand checkbox
-            },
+            }
           })
         )
     })
@@ -144,11 +154,11 @@ ractive = new Ractive({
     videos: videos
     filter: filter
     additionalChannels: additionalChannels
-    history: JSON.parse(localStorage.getItem('days-into-history')) or 7
-    autoplay: JSON.parse(localStorage.getItem('autoplay')) or false
-    expand: JSON.parse(localStorage.getItem('expand')) or false
-    update: JSON.parse(localStorage.getItem('update-interval')) or 5
-    watchLater: JSON.parse(localStorage.getItem('watch-later')) or false
+    history: historyValue
+    autoplay: autoplayValue
+    expand: expandValue
+    update: updateValue
+    watchLater: watchLaterValue
 
     # Unsaved objects
     videoLists: videoLists
@@ -225,18 +235,27 @@ ractive.observe('autoplay', (value) ->
 ractive.observe('expand', (value) ->
   saveData(value, 'expand')
 )
-ractive.observe('history', (value) ->
+
+ractive.observe('history', ((value) ->
+  if value < 0
+    value = 0
+    ractive.set('history', value)
   saveData(value, 'days-into-history')
   ractive.set('videos', (video for video in ractive.get('videos') when videoLists[0].filter(video) or
     new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * value)))
-)
+), {defer: true})
+
 readDataInterval = null
-ractive.observe('update', (value) ->
+ractive.observe('update', ((value) ->
+  if value < 0
+    value = 0
+    ractive.set('update', value)
   saveData(value, 'update-interval')
   window.clearInterval(readDataInterval)
   if value > 0
-    readDataInterval = window.setInterval((() -> loadVideos()), 1000 * 60 * value)
-)
+    readDataInterval = window.setInterval(loadVideos, 1000 * 60 * value)
+), {defer: true})
+
 ractive.observe('watchLater', (value) ->
   saveData(value, 'watch-later')
 )

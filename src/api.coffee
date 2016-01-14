@@ -136,7 +136,7 @@ getChannel = (name, id) ->
         return {
           name: item.snippet.title
           id: item.id
-        }),
+        })
     (() ->
       return null
     )
