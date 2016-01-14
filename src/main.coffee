@@ -247,7 +247,7 @@ ractive.observe('update', ((value) ->
   saveData(value, 'update-interval')
   window.clearInterval(readDataInterval)
   if value > 0
-    readDataInterval = window.setInterval(loadVideos, 1000 * 60 * value)
+    readDataInterval = window.setInterval((() -> loadVideos()), 1000 * 60 * value)
 ), {defer: true})
 
 ractive.observe('watchLater', (value) ->
