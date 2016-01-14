@@ -18,7 +18,7 @@ videos = loadData('videos', [])
 videos.sort((a, b) -> if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1)
 
 filter = loadData('video-filter', [])
-additionalChannels = loadData('additionalChannels', [])
+additionalChannels = loadData('additional-channels', [])
 
 historyValue = loadData('days-into-history', 7)
 updateValue = loadData('update-interval', 5)
