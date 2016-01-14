@@ -36,46 +36,34 @@ checkAuth = () ->
 login = () ->
   authorize(true)
 
-getVideos = (additionalChannels, watchLater) ->
+getVideos = (callback, additionalChannels, watchLater) ->
   if loaded
-    videos = []
-    channelIds = (channel.id for channel in additionalChannels)
-
-    loadVideo = (item, playlistId) ->
-      videoSnippet = item.snippet
-      thumbnails = (videoSnippet.thumbnails[key] for key in Object.keys(videoSnippet.thumbnails))
-      thumbnail = thumbnails.reduce((a, b) -> if a.width > b.width then a else b)
-
-      return {
-        title: videoSnippet.title
-        id: item.id
-        author: videoSnippet.channelTitle
-        authorId: videoSnippet.channelId
-        publishedDate: videoSnippet.publishedAt
-        description: videoSnippet.description
-        thumbnail: thumbnail.url
-        duration: item.contentDetails.duration
-        watched: false
-        playlistId: playlistId
-      }
-
-    subPromise = (pageToken) ->
+    loadFromSubscriptions = (pageToken) ->
       gapi.client.youtube.subscriptions.list({
         mine: true
         part: 'snippet'
         maxResults: 50
         pageToken: pageToken
       }).then((response) ->
-        ids = (channel.snippet.resourceId.channelId for channel in response.result.items)
-        channelIds = channelIds.concat(ids)
+        channelIds = (channel.snippet.resourceId.channelId for channel in response.result.items)
         nextPageToken = response.result.nextPageToken
         if nextPageToken?
-          return subPromise(nextPageToken)
-        else
-          return channelIds
+          return loadFromSubscriptions(nextPageToken)
+        loadFromChannels(channelIds)
       )
-    playlistPromise = (playlistId, watchLater) ->
-      playlistIds = {}
+
+    loadFromChannels = (channelIds) ->
+      gapi.client.youtube.channels.list({
+        part: 'contentDetails'
+        id: channelIds.join(',')
+      }).then((response) ->
+        playlistIds = (item.contentDetails.relatedPlaylists.uploads for item in response.result.items)
+        for playlistId in playlistIds
+          loadVideosFromPlaylist(playlistId)
+      )
+
+    loadVideosFromPlaylist = (playlistId, watchLater) ->
+      playlistIds = []
       gapi.client.youtube.playlistItems.list({
         part: 'contentDetails'
         playlistId: playlistId
@@ -90,33 +78,47 @@ getVideos = (additionalChannels, watchLater) ->
           maxResults: 50
         })
       ).then((response) ->
-        videos = videos.concat(loadVideo(video, playlistIds[video.id]) for video in response.result.items)
+        for video in response.result.items
+          loadVideo(video, playlistIds[video.id])
       )
-    Promise.all([
-      subPromise().then((channelIds) ->
-        slice = 50
-        Promise.all((
-          gapi.client.youtube.channels.list({
-            part: 'contentDetails'
-            id: channelIds.slice(n, n + slice).join(',')
-          }).then((response) ->
-            Promise.all((
-              for item in response.result.items
-                playlistId = item.contentDetails.relatedPlaylists.uploads
-                playlistPromise(playlistId, false)
-            ))
-          ) for n in [0...channelIds.length] by slice))
-      ),
-      if watchLater
-        gapi.client.youtube.channels.list({
-          part: 'contentDetails'
-          mine: true
-        }).then((response) ->
-          playlistPromise(response.result.items[0].contentDetails.relatedPlaylists.watchLater, true)
-        )
-    ]).then(() ->
-      return videos
-    )
+
+    videos = []
+    loadTimeout = null
+    videosLoaded = () ->
+      callback(videos)
+      videos = []
+
+    loadVideo = (item, playlistId) ->
+      videoSnippet = item.snippet
+      thumbnails = (videoSnippet.thumbnails[key] for key in Object.keys(videoSnippet.thumbnails))
+      thumbnail = thumbnails.reduce((a, b) -> if a.width > b.width then a else b)
+
+      video = {
+        title: videoSnippet.title
+        id: item.id
+        author: videoSnippet.channelTitle
+        authorId: videoSnippet.channelId
+        publishedDate: videoSnippet.publishedAt
+        description: videoSnippet.description
+        thumbnail: thumbnail.url
+        duration: item.contentDetails.duration
+        watched: false
+        playlistId: playlistId
+      }
+
+      videos.push(video)
+      window.clearTimeout(loadTimeout)
+      loadTimeout = window.setTimeout(videosLoaded, 1000)
+
+    loadFromSubscriptions()
+    loadFromChannels(additionalChannels)
+    if watchLater
+      gapi.client.channels.list({
+        part: 'contentDetails'
+        mine: true
+      }).then((response) ->
+        loadVideosFromPlaylist(response.result.items[0].contentDetails.relatedPlaylists.watchLater, true)
+      )
 
 deleteFromPlaylist = (playlistId) ->
   gapi.client.youtube.playlistItems.delete({

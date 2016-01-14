@@ -260,7 +260,8 @@ loadVideos = () ->
   if ractive.get('loading')
     return
   ractive.set('loading', true)
-  api.getVideos(ractive.get('additionalChannels'), ractive.get('watchLater')).then(((videos) ->
+
+  videosCallback = (videos) ->
     # Remove videos that are too old unless they're from the watch later list
     videos = (video for video in videos when video.playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history')))
     videosToAdd = []
@@ -278,6 +279,5 @@ loadVideos = () ->
     # Add all the video not in the list to the end of the list
     ractive.splice.apply(ractive, ['videos', ractive.get('videos').length, 0].concat(videosToAdd))
     ractive.set('loading', false)
-  ), () ->
-    ractive.set('loading', false)
-  )
+
+  api.getVideos(videosCallback, ractive.get('additionalChannels'), ractive.get('watchLater'))
