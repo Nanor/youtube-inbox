@@ -7,9 +7,13 @@
   },
   "scripts": {
     "build": "webpack --progress --colors",
-    "build:prod": "webpack --progress --colors && uglifyjs out/bundle.js --compress --mangle -o out/bundle.js",
+    "prod": "uglifyjs out/bundle.js --compress --mangle -o out/bundle.js",
     "serve": "webpack-dev-server",
-    "watch": "webpack --progress --colors --watch"
+    "watch": "webpack --progress --colors --watch",
+    "clean": "rm -rf out/",
+    "clean:build": "npm run clean && npm run build",
+    "build:prod": "npm run build && npm run prod",
+    "clean:build:prod": "npm run clean && npm run build && npm run prod"
   },
   "dependencies": {
     "bootstrap": "^3.3.6",
@@ -26,7 +30,6 @@
     "sass-loader": "^3.1.2",
     "style-loader": "^0.13.0",
     "uglify-js": "^2.6.1",
-    "url-loader": "^0.5.7",
     "webpack": "^1.12.10",
     "youtube-iframe": "^1.0.2"
   },

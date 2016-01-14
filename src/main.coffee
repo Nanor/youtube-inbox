@@ -1,9 +1,3 @@
-require('file?name=[name].[ext]!./index.html')
-require('file?name=[name].[ext]!./favicon-vflz7uhzw.ico')
-
-require('./main.sass')
-require('font-awesome-webpack')
-
 require('./migrate.coffee')
 Ractive = require('ractive')
 linkify = require('html-linkify')
@@ -36,13 +30,13 @@ videoLists = [
   {
     name: 'unwatched'
     filter: (video) ->
-      !blocked(video) and !video.watched
+      not blocked(video) and !video.watched
     reversed: false
   }
   {
     name: 'watched'
     filter: (video) ->
-      !blocked(video) and video.watched
+      not blocked(video) and video.watched
     reversed: true
   }
   {
@@ -138,8 +132,8 @@ videoComponent = Ractive.extend({
         if string?
           strings = strings.slice(i)
           break
-      # Make every string have 2 digits expect from the first one.
-      strings = ((if !string? then '00' else if i == 0 or string.length == 2 then string else '0' + string) for string, i in strings)
+      # Make every string has 2 digits except from the first one.
+      strings = ((if not string? then '00' else if i == 0 or string.length == 2 then string else '0' + string) for string, i in strings)
       strings.join(':')
     blocked: blocked
   }
@@ -150,7 +144,7 @@ ractive = new Ractive({
   template: '#template'
   magic: true
   data: {
-    # Saved objects
+  # Saved objects
     videos: videos
     filter: filter
     additionalChannels: additionalChannels
@@ -160,7 +154,7 @@ ractive = new Ractive({
     update: updateValue
     watchLater: watchLaterValue
 
-    # Unsaved objects
+  # Unsaved objects
     videoLists: videoLists
     apiLoaded: false
     loading: false
@@ -168,7 +162,7 @@ ractive = new Ractive({
     selectedList: 0
     newChannel: ''
 
-    # Methods
+  # Methods
     capitalise: (s) ->
       s[0].toUpperCase() + s.slice(1)
     listLength: listLength
@@ -281,10 +275,11 @@ loadVideos = () ->
   ractive.set('loading', true)
 
   videosCallback = (videos) ->
-    # Remove videos that are too old unless they're from the watch later list
+    # Remove videos that are too old unless they're from the watch later list and sort them
     videos = (video for video in videos when video.playlistId? or new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * ractive.get('history')))
+    videos.sort((a, b) -> (if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1))
     videosToAdd = []
-    for video in videos.sort((a, b) -> (if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1))
+    for video in videos
       added = false
       for v, index in ractive.get('videos')
         if v.id == video.id
