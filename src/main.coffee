@@ -120,7 +120,7 @@ videoComponent = Ractive.extend({
     expanded: false
 
     paragraphs: (text) ->
-      (linkify(paragraph) for paragraph in text.split(/\n\n*/))
+      (linkify(paragraph, {attributes: {target: '_blank'}}) for paragraph in text.split(/\n\n*/))
     formatDate: (date) ->
       new Date(date).toLocaleString()
     formatDuration: (date) ->
