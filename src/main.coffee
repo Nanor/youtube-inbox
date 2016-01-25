@@ -170,6 +170,9 @@ ractive = new Ractive({
   components: {
     Video: videoComponent
   }
+  events: {
+    tap: require('ractive-events-tap')
+  }
 })
 
 ractive.on({

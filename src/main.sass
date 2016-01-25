@@ -20,7 +20,7 @@ html
   background: white
 
   .btn
-    margin: 5px 0 5px 5px
+    margin-top: 5px
     width: 38px
 
   .tab
@@ -51,7 +51,8 @@ html
     left: 60%
 
   .mark-all
-    float: right
+    i
+      margin-left: -3px
 
 .videos
   padding-top: $top-bar-height
@@ -76,11 +77,6 @@ html
         height: $video-width * 0.5797
         width: $video-width
 
-        .thumbnail
-          height: 100%
-          background-size: cover
-          background-position: center
-
         &:after
           position: absolute
           top: 10px
@@ -91,31 +87,25 @@ html
           background: linear-gradient(black -10%, transparent 20%, transparent 80%, black 110%)
           content: ''
 
-        .title
-          position: absolute
-          z-index: 2
-          padding: 5px
-          margin-right: 15px
-          color: white
-          font-size: large
-          font-family: sans-serif
+        .thumbnail
+          height: 100%
+          background-size: cover
+          background-position: center
 
-        .play-icon
-          position: absolute
-          top: 45%
-          left: 45%
-          z-index: 3
-          width: 10%
-          height: 10%
-          color: white
-
-        .duration
-          position: absolute
-          z-index: 2
-          bottom: 10px
-          right: 20px
-          color: white
-          font-family: sans-serif
+          *
+            position: absolute
+            color: white
+            z-index: 2
+          .title
+            padding: 5px
+            margin-right: 15px
+            font-size: large
+          .play-icon
+            top: 45%
+            left: 45%
+          .duration
+            bottom: 10px
+            right: 20px
 
       .video-info
         position: relative
@@ -156,7 +146,9 @@ html
 
         .btn
           margin-bottom: 5px
-          width: $side-buttons-width - 20px
+          width: 100%
+          i
+            margin-left: -9px
 
       &.expanded
         .video
@@ -169,7 +161,6 @@ html
     background-color: lightgray
     color: grey
     text-align: center
-    font-family: sans-serif
 
 .settings
   position: fixed
@@ -184,25 +175,14 @@ html
   overflow-y: auto
   width: 530px
 
-  label
-    display: block
-    font-weight: normal
-
-  label input[type=number]
+  input[type=number]
     width: 60px
     margin: 2px
-
-  .note
     display: inline
-    font-style: italic
-
-  h4
-    font-family: sans-serif
-    font-weight: 600
 
   .header
     width: 100%
-    div
+    span
       font-weight: 600
       color: #777
       display: inline-block
@@ -230,19 +210,5 @@ html
   .additional-channels-panel
     .name
       width: 475px
-    .name-input
-      width: 380px
     .add-channel
       padding-top: 5px
-
-.fa-check
-  margin-left: -2px
-
-.fa-check.fa-3x
-  margin-left: -4px
-
-.form-control
-  padding: 0
-
-.hidden
-  visibility: hidden
