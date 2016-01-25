@@ -113,7 +113,7 @@ videoComponent = Ractive.extend({
       container = this.nodes['video-container']
       if container?
         video = container.firstChild
-        video.style.height = (video.clientWidth * (if expanded then 0.57 else 0.5797)) + 'px'
+        video.style.height = (video.clientWidth * (if expanded then 0.567 else 0.57)) + 'px'
     ), {defer: true})
   data: {
     truncated: true

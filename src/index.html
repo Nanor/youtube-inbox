@@ -9,7 +9,7 @@
 
 <script id="template" type="text/html">
     <div class="top-bar">
-        <label class="btn btn-default settings-toggle" title="Settings">
+        <label class="btn btn-default" title="Settings">
             <i class="fa fa-gear"></i>
             <input class="hidden" type="checkbox" checked="{{showSettings}}">
         </label>
@@ -17,27 +17,29 @@
             <i class="fa fa-refresh {{#if loading}}fa-spin{{/if}}"></i>
         </button>
 
-        {{#each videoLists:list}}
-        <label class="tab" id="{{name}}">
-            <input type="radio" name="{{selectedList}}" value="{{list}}" class="hidden">
-            <div class="text {{#if selectedList === list}}selected{{/if}}">{{capitalise(name)}}
-                ({{listLength(this)}})
-            </div>
-        </label>
-        {{/each}}
+        <span class="tabs">
+            {{#each videoLists:list}}
+            <label class="tab">
+                <input type="radio" name="{{selectedList}}" value="{{list}}" class="hidden">
+                <div class="text {{#if selectedList === list}}selected{{/if}}">{{capitalise(name)}}
+                    ({{listLength(this)}})
+                </div>
+            </label>
+            {{/each}}
+        </span>
 
         {{#if selectedList === 0}}
-        <button class="btn btn-default mark-all pull-right" title="Mark all as watched" on-tap="markAll:{{true}}">
+        <button class="btn btn-default pull-right" title="Mark all as watched" on-tap="markAll:{{true}}">
             <i class="fa fa-check fa-fw"></i></button>
         {{elseif selectedList === 1}}
-        <button class="btn btn-default mark-all pull-right" title="Mark all as unwatched" on-tap="markAll:{{false}}">
+        <button class="btn btn-default pull-right" title="Mark all as unwatched" on-tap="markAll:{{false}}">
             <i class="fa fa-remove fa-fw"></i>
         </button>
         {{/if}}
     </div>
     <div class="videos">
         {{#each videoLists:list}}
-        <div class="{{name}}-videos video-list {{#if selectedList !== list}}hidden{{/if}}">
+        <div class="video-list {{#if selectedList !== list}}hidden{{/if}} container-fluid">
             {{#each (reversed ? videos.slice().reverse() : videos)}}
             {{#if filter(this)}}
             <Video/>
@@ -54,10 +56,11 @@
         {{#if !apiLoaded}}
         <button class="btn btn-default" on-tap="login">Log in</button>
         {{/if}}
-        <div>Update interval:<input class="form-control input-sm" type="number" value="{{update}}" maxlength="3"/>minutes.
+        <div>Update interval:<input class="form-control input-sm" type="number" value="{{update}}"/>minutes.
             <em>(0 for never)</em></div>
-        <div>Discard watched videos older than<input class="form-control input-sm" type="number" value=
-                "{{history}}"/>day{{#if history !== 1}}s{{/if}} old.
+        <div>Discard watched videos older than
+            <input class="form-control input-sm" type="number" value="{{history}}"/>
+            day{{#if history !== 1}}s{{/if}} old.
         </div>
         <em>(Unwatched videos will be kept forever)</em>
         <div class="checkbox">
@@ -79,21 +82,19 @@
                 <span class="regex">Filter:</span>
             </div>
             {{/if}}
-            <div class="rows">
-                {{#each filter:index}}
-                <div class="row">
-                    <input class="author form-control input-sm" type="text" value="{{channel}}">
-                    <select class="type form-control input-sm" value="{{type}}">
-                        <option value="blacklist">Blacklist</option>
-                        <option value="whitelist">Whitelist</option>
-                    </select>
-                    <input class="regex form-control input-sm" type="text" value="{{regexes}}">
-                    <div on-tap="filterRemove:{{index}}" title="Remove this row">
-                        <i class="fa fa-remove"></i>
-                    </div>
+            {{#each filter:index}}
+            <div class="row">
+                <input class="author form-control input-sm" type="text" value="{{channel}}">
+                <select class="type form-control input-sm" value="{{type}}">
+                    <option value="blacklist">Blacklist</option>
+                    <option value="whitelist">Whitelist</option>
+                </select>
+                <input class="regex form-control input-sm" type="text" value="{{regexes}}">
+                <div on-tap="filterRemove:{{index}}" title="Remove this row">
+                    <i class="fa fa-remove"></i>
                 </div>
-                {{/each}}
             </div>
+            {{/each}}
             <button class="btn btn-default btn-sm" on-tap="filterAdd" title="Add new filter">Add</button>
         </div>
 
@@ -104,16 +105,14 @@
                 <span class="name">Name:</span>
             </div>
             {{/if}}
-            <div class="rows">
-                {{#each additionalChannels:index}}
-                <div class="row">
-                    <a class="name" href="https://www.youtube.com/channel/{{id}}" target="_blank">{{name}}</a>
-                    <div on-tap="channelRemove:{{index}}" title="Remove this channel">
-                        <i class="fa fa-remove"></i>
-                    </div>
+            {{#each additionalChannels:index}}
+            <div class="row">
+                <a class="name" href="https://www.youtube.com/channel/{{id}}" target="_blank">{{name}}</a>
+                <div on-tap="channelRemove:{{index}}" title="Remove this channel">
+                    <i class="fa fa-remove"></i>
                 </div>
-                {{/each}}
             </div>
+            {{/each}}
             <form class="add-channel input-group input-group-sm" on-submit="channelAdd">
                 <input type="text" class="name-input form-control" placeholder="Channel URL" value="{{newChannel}}">
                 <span class="input-group-btn">
@@ -147,7 +146,7 @@
 
             <label>
                 <input type="checkbox" checked="{{truncated}}" class="hidden">
-                <span>{{#if truncated}}Read more{{else}}Read less{{/if}}</span>
+                <div>{{#if truncated}}Read more{{else}}Read less{{/if}}</div>
             </label>
         </div>
         <div class="side-buttons">

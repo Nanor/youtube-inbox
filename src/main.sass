@@ -3,7 +3,7 @@
 
 $top-bar-height: 45px
 $video-width: 585px
-$side-buttons-width: 80px
+$tab-count: 3
 
 html
   // Always display the scroll bar.
@@ -23,9 +23,10 @@ html
     margin-top: 5px
     width: 38px
 
+  $tab-width: 100% / ($tab-count + 2)
   .tab
     position: absolute
-    width: 20%
+    width: $tab-width
     height: $top-bar-height
 
     .text
@@ -41,48 +42,38 @@ html
         border-color: black
         font-weight: 600
 
-  #unwatched
-    left: 20%
-
-  #watched
-    left: 40%
-
-  #blocked
-    left: 60%
-
-  .mark-all
-    i
-      margin-left: -3px
+  @for $index from 1 through $tab-count
+    .tab:nth-child(#{$index})
+      left: $tab-width * $index
 
 .videos
   padding-top: $top-bar-height
-  padding-left: 10px
-  padding-right: 10px
   width: 100%
   height: 100%
-  background-color: lightgray
 
   .video-list
     .video-container
-      margin-top: 10px
-      background-color: white
+      $side-buttons-width: 80px
+      $container-padding: 5px
+      $background-odd: whitesmoke
+      $background-even: white
 
       .video, .video-info, .side-buttons
         display: inline-block
-        padding: 10px
+        padding: $container-padding
         vertical-align: top
 
       .video
         position: relative
-        height: $video-width * 0.5797
+        height: $video-width * 0.57
         width: $video-width
 
         &:after
           position: absolute
-          top: 10px
-          right: 10px
-          left: 10px
-          bottom: 10px
+          top: $container-padding
+          right: $container-padding
+          left: $container-padding
+          bottom: $container-padding
           z-index: 1
           background: linear-gradient(black -10%, transparent 20%, transparent 80%, black 110%)
           content: ''
@@ -112,7 +103,7 @@ html
         width: calc(50% - 90px)
 
         .upload-date
-          color: gray
+          color: grey
 
         .description
           overflow: hidden
@@ -120,10 +111,10 @@ html
 
         label
           width: 100%
-
-          span
-            padding-left: 40%
-            color: gray
+          div
+            text-align: center
+            color: grey
+            margin-top: 5px
 
         // Don't allow the description to be so long if truncated.
         .description.truncated
@@ -131,13 +122,11 @@ html
 
         .truncated:before
           position: absolute
-          top: 70%
-          bottom: 10px
+          top: 0
+          bottom: 25px + $container-padding
           left: 0
+          right: 0
           z-index: 1
-          width: 100%
-          height: 20%
-          background: linear-gradient(transparent, white)
           content: ''
 
       .side-buttons
@@ -146,9 +135,16 @@ html
 
         .btn
           margin-bottom: 5px
-          width: 100%
-          i
-            margin-left: -9px
+          width: $side-buttons-width - 20px
+
+      &:nth-child(odd)
+        background: $background-odd
+        .truncated:before
+          background: linear-gradient(transparent 0%, transparent 70%, $background-odd 100%)
+      &:nth-child(even)
+        background: $background-even
+        .truncated:before
+          background: linear-gradient(transparent 0%, transparent 70%, $background-even 100%)
 
       &.expanded
         .video
@@ -158,13 +154,13 @@ html
 
   .no-videos
     padding: 10px
-    background-color: lightgray
+    background-color: lightgrey
     color: grey
     text-align: center
 
 .settings
   position: fixed
-  top: 50px
+  top: $top-bar-height + 5px
   left: 5px
   z-index: 100
   padding: 5px
@@ -184,20 +180,19 @@ html
     width: 100%
     span
       font-weight: 600
-      color: #777
+      color: grey
       display: inline-block
 
-  .rows
-    .row:nth-child(even)
-      background: whitesmoke
-    .row:nth-child(odd)
-      background: ghostwhite
+  .row:nth-child(even)
+    background: whitesmoke
+  .row:nth-child(odd)
+    background: ghostwhite
 
-    .row
-      margin-left: 0
-    .row > *
-      margin: 2px
-      display: inline-block
+  .row
+    margin-left: 0
+  .row > *
+    margin: 2px
+    display: inline-block
 
   .filter-panel
     .author
@@ -212,3 +207,8 @@ html
       width: 475px
     .add-channel
       padding-top: 5px
+
+i.fa-fw
+  margin-left: -3px
+i.fa-fw.fa-3x
+  margin-left: -8px
