@@ -13,7 +13,7 @@
             <i class="fa fa-gear"></i>
             <input class="hidden" type="checkbox" checked="{{showSettings}}">
         </label>
-        <button class="btn btn-default" title="Refresh" on-tap="refresh">
+        <button class="btn btn-default" title="Refresh" on-click="refresh">
             <i class="fa fa-refresh {{#if loading}}fa-spin{{/if}}"></i>
         </button>
 
@@ -29,10 +29,10 @@
         </span>
 
         {{#if selectedList === 0}}
-        <button class="btn btn-default pull-right" title="Mark all as watched" on-tap="markAll:{{true}}">
+        <button class="btn btn-default pull-right" title="Mark all as watched" on-click="markAll:{{true}}">
             <i class="fa fa-check fa-fw"></i></button>
         {{elseif selectedList === 1}}
-        <button class="btn btn-default pull-right" title="Mark all as unwatched" on-tap="markAll:{{false}}">
+        <button class="btn btn-default pull-right" title="Mark all as unwatched" on-click="markAll:{{false}}">
             <i class="fa fa-remove fa-fw"></i>
         </button>
         {{/if}}
@@ -54,7 +54,7 @@
 
     <div class="settings {{#if !showSettings}}hidden{{/if}}">
         {{#if !apiLoaded}}
-        <button class="btn btn-default" on-tap="login">Log in</button>
+        <button class="btn btn-default" on-click="login">Log in</button>
         {{/if}}
         <div>Update interval:<input class="form-control input-sm" type="number" value="{{update}}"/>minutes.
             <em>(0 for never)</em></div>
@@ -90,12 +90,12 @@
                     <option value="whitelist">Whitelist</option>
                 </select>
                 <input class="regex form-control input-sm" type="text" value="{{regexes}}">
-                <div on-tap="filterRemove:{{index}}" title="Remove this row">
+                <div on-click="filterRemove:{{index}}" title="Remove this row">
                     <i class="fa fa-remove"></i>
                 </div>
             </div>
             {{/each}}
-            <button class="btn btn-default btn-sm" on-tap="filterAdd" title="Add new filter">Add</button>
+            <button class="btn btn-default btn-sm" on-click="filterAdd" title="Add new filter">Add</button>
         </div>
 
         <div class="additional-channels-panel">
@@ -108,7 +108,7 @@
             {{#each additionalChannels:index}}
             <div class="row">
                 <a class="name" href="https://www.youtube.com/channel/{{id}}" target="_blank">{{name}}</a>
-                <div on-tap="channelRemove:{{index}}" title="Remove this channel">
+                <div on-click="channelRemove:{{index}}" title="Remove this channel">
                     <i class="fa fa-remove"></i>
                 </div>
             </div>
@@ -124,8 +124,8 @@
 </script>
 
 <script id="video-component" type="text/html">
-    <div class="video-container {{#if expanded}}expanded{{/if}}" id="video-container">
-        <div class="video" id="video" on-tap="play">
+    <div class="video-container row {{#if expanded}}expanded{{/if}}" id="video-container">
+        <div class="video" id="video" on-click="play">
             <div class="thumbnail" style="background-image: url({{thumbnail}})">
                 <p class="title">{{title}}</p>
                 <i class="play-icon fa fa-play fa-3x"></i>
@@ -152,10 +152,10 @@
         <div class="side-buttons">
             {{#if !blocked(this)}}
             {{#if !watched}}
-            <button class="btn btn-default" title="Mark as watched" on-tap="mark" id="mark">
+            <button class="btn btn-default" title="Mark as watched" on-click="mark" id="mark">
                 <i class="fa fa-check fa-3x fa-fw"></i></button>
             {{else}}
-            <button class="btn btn-default" title="Mark as unwatched" on-tap="mark">
+            <button class="btn btn-default" title="Mark as unwatched" on-click="mark">
                 <i class="fa fa-remove fa-3x fa-fw"></i></button>
             {{/if}}
             {{/if}}
