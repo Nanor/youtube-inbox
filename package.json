@@ -24,6 +24,8 @@
     "font-awesome": "^4.5.0",
     "font-awesome-webpack": "0.0.4",
     "html-linkify": "^1.2.1",
+    "jade": "^1.11.0",
+    "jade-loader": "^0.8.0",
     "less": "^2.5.3",
     "node-sass": "^3.4.2",
     "ractive": "^0.7.3",

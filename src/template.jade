@@ -1,0 +1,106 @@
+.top-bar
+  label.btn.btn-default(title='Settings')
+    i.fa.fa-gear
+    input.hidden(type='checkbox', checked='{{showSettings}}')
+
+  button.btn.btn-default(title='Refresh', on-click='refresh')
+    i.fa.fa-refresh(class='{{#if loading}}fa-spin{{/if}}')
+
+  span.tabs
+    | {{#each videoLists:list}}
+    label.tab
+      input.hidden(type='radio', name='{{selectedList}}', value='{{list}}')
+      .text.selectedList(class='{{#if selectedList === list}}selected{{/if}}')
+        | {{capitalise(name)}}
+        | ({{listLength(this)}})
+    | {{/each}}
+
+  | {{#if selectedList === 0}}
+  button.btn.btn-default.pull-right(title='Mark all as watched', on-click='markAll:{{true}}')
+    i.fa.fa-check.fa-fw
+  | {{elseif selectedList === 1}}
+  button.btn.btn-default.pull-right(title='Mark all as unwatched', on-click='markAll:{{false}}')
+    i.fa.fa-remove.fa-fw
+  | {{/if}}
+
+.videos
+  | {{#each videoLists:list}}
+  .video-list.selectedList.container-fluid(class='{{#if selectedList !== list}}hidden{{/if}}')
+    | {{#each (reversed ? videos.slice().reverse() : videos)}}
+    | {{#if filter(this)}}
+    Video
+    | {{/if}}
+    | {{/each}}
+  | {{/each}}
+  .no-videos End of videos.
+
+.settings(class='{{#if !showSettings}}hidden{{/if}}')
+  | {{#if !apiLoaded}}
+  button.btn.btn-default(on-click='login') Log in
+  | {{/if}}
+
+  div
+    | Update interval
+    input.form-control.input-sm(type='number', value='{{update}}')
+    | minutes.
+    em (0 for never)
+  div
+    | Discard watched videos older than
+    input.form-control.input-sm(type='number', value='{{history}}')
+    | day{{#if history !== 1}}s{{/if}} old.
+  em (Unwatched videos will be kept forever)
+  .checkbox
+    label
+      input(type='checkbox', checked='{{autoplay}}')
+      | Auto-play videos?
+  .checkbox
+    label
+      input(type='checkbox', checked='{{expand}}')
+      | Expand playing videos?
+  .checkbox
+    label
+      input(type='checkbox', checked='{{watchLater}}')
+      | Use watch later integration?
+
+  .filter-panel
+    h4 Filters:
+
+    | {{#if filter}}
+    .header
+      span.author Channel Name:
+      span.type
+      span.regex Filter:
+    | {{/if}}
+
+    | {{#each filter:index}}
+    .row
+      input.author.form-control.input-sm(type='text', value='{{channel}}')
+      select.type.form-control.input-sm(value='{{type}}')
+        option(value='blacklist') Blacklist
+        option(value='whitelist') Whitelist
+      input.regex.form-control.input-sm(type='text', value='{{regexes}}')
+      div(on-click='filterRemove:{{index}}', title='Remove this row')
+        i.fa.fa-remove
+    | {{/each}}
+
+    button.btn.btn-default.btn-sm(on-click='filterAdd', title='Add new filter') Add
+
+  .additional-channels-panel
+    h4 Additional YouTube Channels:
+
+    | {{#if additionalChannels}}
+    .header
+      span.name Name:
+    | {{/if}}
+
+    | {{#each additionalChannels:index}}
+    .row
+      a.name(href='https://www.youtube.com/channel/{{id}}', target='_blank') {{name}}
+      div(on-click='channelRemove:{{index}}', title='Remove this channel')
+        i.fa.fa-remove
+    | {{/each}}
+
+    form.add-channel.input-group.input-group-sm(on-submit='channelAdd')
+      input.name-input.form-control(type='text', placeholder='Channel URL', value='{{newChannel}}')
+      span.input-group-btn
+        input.btn.btn-default(type='submit', value='Add Channel')

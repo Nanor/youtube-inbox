@@ -66,7 +66,7 @@ listLength = (list) ->
 
 videoComponent = Ractive.extend({
   isolated: false
-  template: '#video-component'
+  template: require('./video-component.jade')
   oninit: () ->
     videoContainer = this
     this.on({
@@ -141,7 +141,7 @@ videoComponent = Ractive.extend({
 
 ractive = new Ractive({
   el: '#container'
-  template: '#template'
+  template: require('./template.jade')
   magic: true
   data: {
   # Saved objects
