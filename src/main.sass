@@ -122,7 +122,7 @@ html
 
         .truncated:before
           position: absolute
-          top: 0
+          top: 70%
           bottom: 25px + $container-padding
           left: 0
           right: 0
@@ -140,11 +140,11 @@ html
       &:nth-child(odd)
         background: $background-odd
         .truncated:before
-          background: linear-gradient(transparent 0%, transparent 70%, $background-odd 100%)
+          background: linear-gradient(transparent 0%, $background-odd 100%)
       &:nth-child(even)
         background: $background-even
         .truncated:before
-          background: linear-gradient(transparent 0%, transparent 70%, $background-even 100%)
+          background: linear-gradient(transparent 0%, $background-even 100%)
 
       &.expanded
         .video
