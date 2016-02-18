@@ -19,7 +19,7 @@
       div {{#if truncated}}Read more{{else}}Read less{{/if}}
 
   .side-buttons
-    | {{#if !blocked(this)}}
+    | {{#if !blocked(this.id)}}
     | {{#if !watched}}
     button#mark.btn.btn-default(title='Mark as watched', on-click='mark')
       i.fa.fa-check.fa-3x.fa-fw

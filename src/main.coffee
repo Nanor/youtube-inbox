@@ -30,24 +30,27 @@ videoLists = [
   {
     name: 'unwatched'
     filter: (video) ->
-      not blocked(video) and !video.watched
+      not blocked(video.id) and !video.watched
     reversed: false
   }
   {
     name: 'watched'
     filter: (video) ->
-      not blocked(video) and video.watched
+      not blocked(video.id) and video.watched
     reversed: true
   }
   {
     name: 'blocked'
     filter: (video) ->
-      blocked(video)
+      blocked(video.id)
     reversed: true
   }
 ]
 
-blocked = (video) ->
+blocked = (id) ->
+  video = (v for v in videos when v.id == id)[0]
+  if video.playlistId?
+    return false
   for filterRow in filter
     if video.author == filterRow.channel
       if filterRow.type == 'blacklist'
@@ -102,12 +105,13 @@ videoComponent = Ractive.extend({
       if value and oldValue == false # If it's moved from unwatched to watched
         playlistId = this.get('playlistId')
         if playlistId? and ractive.get('watchLater') # If this video is in the watchLater playlist and we're using integration
-          api.deleteFromPlaylist(playlistId).then(() ->
+          remove = () ->
             # Clear the playlistId from the video, so we don't try and delete it again
             for video in videos
               if video.playlistId == playlistId
-                playlistId = null
-          )
+                video.playlistId = null
+                ractive.update('videos')
+          api.deleteFromPlaylist(playlistId).then(remove, remove)
     ))
     this.observe('expanded', ((expanded) ->
       container = this.nodes['video-container']
@@ -283,7 +287,8 @@ loadVideos = () ->
       added = false
       for v, index in ractive.get('videos')
         if v.id == video.id
-          video.watched = v.watched
+          video.watched = (if video.playlistId? then false else v.watched)
+          video.playlistId = video.playlistId or v.playlistId
           ractive.set("videos[#{index}]", video)
           added = true
           break
