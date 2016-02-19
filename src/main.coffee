@@ -49,6 +49,8 @@ videoLists = [
 
 blocked = (id) ->
   video = (v for v in videos when v.id == id)[0]
+  if not video?
+    return false
   if video.playlistId?
     return false
   for filterRow in filter
@@ -280,8 +282,8 @@ loadVideos = () ->
 
   videosCallback = (videos) ->
     # Remove videos that are too old unless they're from the watch later list and sort them
-    videos = (video for video in videos when video.playlistId? or new Date(video.publishedDate) > new Date() - 1000 * 60 * 60 * 24 * ractive.get('history'))
-    videos.sort((a, b) -> (if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1))
+    comparisonDate = new Date() - 1000 * 60 * 60 * 24 * ractive.get('history')
+    videos = (video for video in videos when video.playlistId? or new Date(video.publishedDate) > comparisonDate)
     videosToAdd = []
     for video in videos
       added = false
@@ -296,6 +298,7 @@ loadVideos = () ->
         videosToAdd.push(video)
 
     # Add all the video not in the list to the end of the list
+    videosToAdd.sort((a, b) -> (if new Date(a.publishedDate) > new Date(b.publishedDate) then 1 else -1))
     ractive.splice.apply(ractive, ['videos', ractive.get('videos').length, 0].concat(videosToAdd))
     ractive.set('loading', false)
 
