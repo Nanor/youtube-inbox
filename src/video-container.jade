@@ -1,0 +1,33 @@
+#video-container.video-container.row(intro-outro='slide')
+
+    #video.video(on-click='play')
+        .thumbnail(style='background-image: url({{thumbnail}})')
+            p.title {{title}}
+            i.play-icon.fa.fa-play.fa-3x
+            p.duration {{formatDuration(duration)}}
+
+    .video-info(class='{{#if truncated}}truncated{{/if}}')
+        .author
+            a(href='http://www.youtube.com/channel/{{authorId}}', target='_blank') {{author}}
+        .upload-date uploaded at {{formatDate(publishedDate)}}
+        .description
+            | {{#each paragraphs(description)}}
+            p {{{this}}}
+            | {{/each}}
+        label.show
+            input.hidden(type='checkbox', checked='{{truncated}}')
+            div {{#if truncated}}Read more{{else}}Read less{{/if}}
+
+    .side-buttons
+        | {{#if !blocked(this.id)}}
+        | {{#if !watched}}
+        button#mark.btn.btn-default(title='Mark as Watched', on-click='mark')
+            i.fa.fa-check.fa-3x.fa-fw
+        | {{else}}
+        button.btn.btn-default(title='Mark as Unwatched', on-click='mark')
+            i.fa.fa-remove.fa-3x.fa-fw
+        | {{/if}}
+        | {{/if}}
+
+        a.youtube-watch.btn.btn-default(title='Watch on YouTube', href='https://www.youtube.com/watch?v={{id}}', target='_blank')
+            i.fa.fa-youtube.fa-3x.fa-fw

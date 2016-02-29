@@ -1,37 +1,41 @@
 .top-bar
-  label.btn.btn-default(title='Settings')
-    i.fa.fa-gear
-    input.hidden(type='checkbox', checked='{{showSettings}}')
+    label.btn.btn-default(title='Settings')
+        i.fa.fa-gear
+        input.hidden(type='checkbox', checked='{{showSettings}}')
 
-  button.btn.btn-default(title='Refresh', on-click='refresh')
-    i.fa.fa-refresh(class='{{#if loading}}fa-spin{{/if}}')
+    button.btn.btn-default(title='Refresh', on-click='refresh')
+        i.fa.fa-refresh(class='{{#if loading}}fa-spin{{/if}}')
 
-  span.tabs
-    | {{#each videoLists:list}}
-    label.tab
-      input.hidden(type='radio', name='{{selectedList}}', value='{{list}}')
-      .text.selectedList(class='{{#if selectedList === list}}selected{{/if}}')
-        | {{capitalise(name)}}
-        | ({{listLength(this)}})
-    | {{/each}}
+    span.tabs
+        | {{#each videoLists:list}}
+        label.tab
+            input.hidden(type='radio', name='{{selectedList}}', value='{{list}}')
+            .text.selectedList(class='{{#if selectedList === list}}selected{{/if}}')
+                | {{capitalise(name)}}
+                | ({{listLength(this)}})
+        | {{/each}}
 
-  | {{#if selectedList === 0}}
-  button.btn.btn-default.pull-right(title='Mark all as watched', on-click='markAll:{{true}}')
-    i.fa.fa-check.fa-fw
-  | {{elseif selectedList === 1}}
-  button.btn.btn-default.pull-right(title='Mark all as unwatched', on-click='markAll:{{false}}')
-    i.fa.fa-remove.fa-fw
-  | {{/if}}
+    | {{#if selectedList === 0}}
+    button.btn.btn-default.pull-right(title='Mark all as Watched', on-click='markAll:{{true}}')
+        i.fa.fa-check.fa-fw
+    | {{elseif selectedList === 1}}
+    button.btn.btn-default.pull-right(title='Mark all as Unwatched', on-click='markAll:{{false}}')
+        i.fa.fa-remove.fa-fw
+    | {{/if}}
 
 .videos
-  | {{#each videoLists:list}}
-  .video-list.selectedList.container-fluid(class='{{#if selectedList !== list}}hidden{{/if}}')
-    | {{#each (reversed ? videos.slice().reverse() : videos)}}
-    | {{#if filter(this)}}
-    Video
-    | {{/if}}
+    | {{#each videoLists:list}}
+    .video-list.selectedList.container-fluid(class='{{#if selectedList !== list}}hidden{{/if}}')
+        | {{#each (reversed ? videos.slice().reverse() : videos)}}
+        | {{#if filter(this)}}
+        Video
+        | {{/if}}
+        | {{/each}}
     | {{/each}}
-  | {{/each}}
-  .no-videos End of videos.
+    .no-videos End of videos.
+
+| {{#with currentVideo}}
+Player
+| {{/with}}
 
 include settings.jade

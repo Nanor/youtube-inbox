@@ -1,5 +1,5 @@
 $top-bar-height: 45px
-$video-width: 585px
+$video-height: 300px
 $tab-count: 3
 
 html
@@ -65,8 +65,8 @@ html
 
       .video
         position: relative
-        height: $video-width * 0.57
-        width: $video-width
+        height: $video-height
+        width: $video-height * 1.75
 
         &:after
           position: absolute
@@ -100,34 +100,41 @@ html
 
       .video-info
         position: relative
-        width: calc(100% - #{$video-width} - #{$side-buttons-width})
+        width: calc(100% - #{$video-height * 1.75 + $side-buttons-width})
+        min-height: $video-height
+        max-height: 1000px
+        transition: max-height 1s
+        overflow: hidden
 
         .upload-date
           color: grey
 
         .description
-          overflow: hidden
-          min-height: 250px
+          margin-bottom: 30px
 
-        label
+        .show
+          position: absolute
+          bottom: 5px
           width: 100%
+          z-index: 1
+
           div
             text-align: center
             color: grey
             margin-top: 5px
 
         // Don't allow the description to be so long if truncated.
-        .description.truncated
-          height: 250px
+        &.truncated
+          max-height: $video-height
 
-        .truncated:before
-          position: absolute
-          top: 70%
-          bottom: 25px + $container-padding
-          left: 0
-          right: 0
-          z-index: 1
-          content: ''
+          &:before
+            position: absolute
+            top: 70%
+            bottom: 0
+            left: 0
+            right: 0
+            z-index: 1
+            content: ''
 
       .side-buttons
         width: $side-buttons-width
@@ -140,17 +147,11 @@ html
       &:nth-child(odd)
         background: $background-odd
         .truncated:before
-          background: linear-gradient(transparent 0%, $background-odd 100%)
+          background: linear-gradient(transparent 0%, $background-odd 80%)
       &:nth-child(even)
         background: $background-even
         .truncated:before
-          background: linear-gradient(transparent 0%, $background-even 100%)
-
-      &.expanded
-        .video
-          width: 100%
-        .video-info
-          width: calc(100% - #{$side-buttons-width})
+          background: linear-gradient(transparent 0%, $background-even 80%)
 
   .no-videos
     padding: 10px
@@ -158,11 +159,18 @@ html
     color: grey
     text-align: center
 
+.player
+  position: fixed
+  top: $top-bar-height + 5px
+  left: 5px
+  background: white
+  z-index: 50
+
 .settings
   position: fixed
   top: $top-bar-height + 5px
   left: 5px
-  z-index: 100
+  z-index: 101
   padding: 5px
   border: 2px solid black
   background-color: white

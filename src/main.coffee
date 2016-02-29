@@ -23,34 +23,31 @@ additionalChannels = loadData('additional-channels', [])
 historyValue = loadData('days-into-history', 7)
 updateValue = loadData('update-interval', 5)
 autoplayValue = loadData('autoplay', false)
-expandValue = loadData('expand', false)
 watchLaterValue = loadData('watch-later', false)
 
 videoLists = [
   {
     name: 'unwatched'
     filter: (video) ->
-      not blocked(video.id) and !video.watched
+      not blocked(video.id or video.get('id')) and !video.watched
     reversed: false
   }
   {
     name: 'watched'
     filter: (video) ->
-      not blocked(video.id) and video.watched
+      not blocked(video.id or video.get('id')) and video.watched
     reversed: true
   }
   {
     name: 'blocked'
     filter: (video) ->
-      blocked(video.id)
+      blocked(video.id or video.get('id'))
     reversed: true
   }
 ]
 
 blocked = (id) ->
   video = (v for v in videos when v.id == id)[0]
-  if not video?
-    return false
   if video.playlistId?
     return false
   for filterRow in filter
@@ -69,9 +66,34 @@ blocked = (id) ->
 listLength = (list) ->
   (video for video in (if ractive? then ractive.get('videos') else videos) when list.filter(video)).length
 
-videoComponent = Ractive.extend({
+videoPlayerComponent = Ractive.extend({
+  template: require('./video-player.jade')
   isolated: false
-  template: require('./video-component.jade')
+  oninit: () ->
+    this.observe('currentVideo', (video) ->
+    )
+#  YouTubeIframeLoader.load((YT) ->
+#  new YT.Player(event.node, {
+#    height: event.node.width * 9 / 16
+#    width: event.node.width
+#    videoId: videoContainer.get('id')
+#    events: {
+#      onReady: (event) ->
+#        event.target.playVideo()
+#      onStateChange: (event) ->
+#        video = (v for v in ractive.get('videos') when v.id == videoContainer.get('id'))[0]
+#        # If the video has ended, the autoplay option is on, and the video is in the unwatched videos list
+#        if event.data == YT.PlayerState.ENDED and ractive.get('autoplay') and videoLists[0].filter(video)
+#          videoContainer.nodes['video-container'].nextElementSibling?.firstChild.click() # Click on the next video to play it if it exists
+#          videoContainer.set('watched', true) # Click on the done button for this video
+#    }
+#  })
+#)
+})
+
+videoContainerComponent = Ractive.extend({
+  isolated: false
+  template: require('./video-container.jade')
   oninit: () ->
     videoContainer = this
     this.on({
@@ -79,58 +101,27 @@ videoComponent = Ractive.extend({
         videoContainer.toggle('watched')
         ractive.update('videos')
 
-      play: (event) ->
-        YouTubeIframeLoader.load((YT) ->
-          new YT.Player(event.node, {
-            height: event.node.width * 9 / 16
-            width: event.node.width
-            videoId: videoContainer.get('id')
-            events: {
-              onReady: (event) ->
-                event.target.playVideo()
-              onStateChange: (event) ->
-                video = (v for v in ractive.get('videos') when v.id == videoContainer.get('id'))[0]
-                # If the video has ended, the autoplay option is on, and the video is in the unwatched videos list
-                if event.data == YT.PlayerState.ENDED and ractive.get('autoplay') and videoLists[0].filter(video)
-                  videoContainer.nodes['video-container'].nextElementSibling?.firstChild.click() # Click on the next video to play it if it exists
-                  videoContainer.nodes['mark'].click() # Click on the done button for this video
-                if ractive.get('expand')
-                  checkbox = videoContainer.nodes['expand']
-                  # If there's a expand checkbox, and it's playing and not expanded, or ended and expanded
-                  if checkbox? and ((event.data == YT.PlayerState.PLAYING and not checkbox.checked) or (event.data == YT.PlayerState.ENDED and checkbox.checked))
-                    checkbox.click() # Click the expand checkbox
-            }
-          })
-        )
+      play: () ->
+        ractive.set('currentVideo', (video for video in videos when video.id == videoContainer.get('id'))[0])
     })
     this.observe('watched', ((value, oldValue) ->
       if value and oldValue == false # If it's moved from unwatched to watched
         playlistId = this.get('playlistId')
         if playlistId? and ractive.get('watchLater') # If this video is in the watchLater playlist and we're using integration
           remove = () ->
-            # Clear the playlistId from the video, so we don't try and delete it again
-            for video in videos
-              if video.playlistId == playlistId
-                video.playlistId = null
-                ractive.update('videos')
+# Clear the playlistId from the video, so we don't try and delete it again
+            videoContainer.set('playlistId', null)
           api.deleteFromPlaylist(playlistId).then(remove, remove)
     ))
-    this.observe('expanded', ((expanded) ->
-      container = this.nodes['video-container']
-      if container?
-        video = container.firstChild
-        video.style.height = (video.clientWidth * (if expanded then 0.567 else 0.57)) + 'px'
-    ), {defer: true})
   data: {
     truncated: true
-    expanded: false
 
     paragraphs: (text) ->
-      (linkify(paragraph, {attributes: {target: '_blank'}}) for paragraph in text.split(/\n\n*/))
+      ((linkify(line, {attributes: {target: '_blank'}}) for line in paragraph.split(/\n/)).join('<br>') for paragraph in text.split(/\n{2,}/))
     formatDate: (date) ->
       new Date(date).toLocaleString()
     formatDuration: (date) ->
-      # Turn the duration string into a list eg. PT3H12M5S -> [null, null, null, 3, 12, 5]
+# Turn the duration string into a list eg. PT3H12M5S -> [null, null, null, 3, 12, 5]
       strings = date.match(/P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/).slice(1, 7)
       # Always make sure we have minutes, so it says 0:27 rather than just 27
       strings[4] = strings[4] or '0'
@@ -150,17 +141,16 @@ ractive = new Ractive({
   template: require('./template.jade')
   magic: true
   data: {
-  # Saved objects
+# Saved objects
     videos: videos
     filter: filter
     additionalChannels: additionalChannels
     history: historyValue
     autoplay: autoplayValue
-    expand: expandValue
     update: updateValue
     watchLater: watchLaterValue
 
-  # Unsaved objects
+# Unsaved objects
     videoLists: videoLists
     apiLoaded: false
     loading: false
@@ -168,13 +158,19 @@ ractive = new Ractive({
     selectedList: 0
     newChannel: ''
 
-  # Methods
+    currentVideo: null
+
+# Methods
     capitalise: (s) ->
       s[0].toUpperCase() + s.slice(1)
     listLength: listLength
   }
   components: {
-    Video: videoComponent
+    Video: videoContainerComponent
+    Player: videoPlayerComponent
+  }
+  transitions: {
+    slide: require('ractive-transitions-slide')
   }
 })
 
@@ -232,10 +228,6 @@ ractive.observe('videos', (value) ->
 ractive.observe('autoplay', (value) ->
   saveData(value, 'autoplay')
 )
-ractive.observe('expand', (value) ->
-  saveData(value, 'expand')
-)
-
 ractive.observe('history', ((value) ->
   if value < 0
     value = 0
@@ -281,7 +273,7 @@ loadVideos = () ->
   ractive.set('loading', true)
 
   videosCallback = (videos) ->
-    # Remove videos that are too old unless they're from the watch later list and sort them
+# Remove videos that are too old unless they're from the watch later list and sort them
     comparisonDate = new Date() - 1000 * 60 * 60 * 24 * ractive.get('history')
     videos = (video for video in videos when video.playlistId? or new Date(video.publishedDate) > comparisonDate)
     videosToAdd = []
