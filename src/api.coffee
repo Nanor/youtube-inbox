@@ -84,11 +84,6 @@ getVideos = (callback, additionalChannels, watchLater) ->
             window.setTimeout((() -> loadVideo(video, playlistIds[video.id])), 5)
       )
 
-    videos = []
-    loadTimeout = null
-    videosLoaded = () ->
-      callback(videos.splice(0, videos.length))
-
     loadVideo = (item, playlistId) ->
       videoSnippet = item.snippet
       thumbnails = (videoSnippet.thumbnails[key] for key in Object.keys(videoSnippet.thumbnails))
@@ -107,9 +102,7 @@ getVideos = (callback, additionalChannels, watchLater) ->
         playlistId: playlistId
       }
 
-      videos.push(video)
-      window.clearTimeout(loadTimeout)
-      loadTimeout = window.setTimeout(videosLoaded, 1000)
+      callback(video)
 
     loadFromSubscriptions()
     loadFromChannels(additionalChannels)

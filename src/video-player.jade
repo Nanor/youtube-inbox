@@ -1,3 +1,8 @@
-.player
-    p {{title}}
-    p {{id}}
+.player(class='{{#if videoVisible}}visible{{/if}} {{#if currentVideo == null}}disabled{{/if}}')
+    .iframe#iframe
+    .toggle-video(on-click='videoToggle')
+        | {{#if videoVisible}}
+        i.fa.fa-2x.fa-angle-double-left
+        | {{else}}
+        i.fa.fa-2x.fa-angle-double-right
+        | {{/if}}

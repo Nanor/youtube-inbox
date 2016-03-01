@@ -162,9 +162,33 @@ html
 .player
   position: fixed
   top: $top-bar-height + 5px
-  left: 5px
-  background: white
   z-index: 50
+  display: inline-block
+
+  transition: left 1s
+  left: -640px
+  &.visible
+    left: 0
+  &.disabled
+    left: -1000px
+
+  .iframe
+    padding: 5px 0
+    border-bottom-right-radius: 5px
+    background: black
+    display: inline-block
+  .toggle-video
+    position: absolute
+    padding-left: 2px
+    width: 24px
+    height: 27px
+    background: black
+    display: inline-block
+    top: 0
+    border-top-right-radius: 5px
+    border-bottom-right-radius: 5px
+    i
+      color: white
 
 .settings
   position: fixed
