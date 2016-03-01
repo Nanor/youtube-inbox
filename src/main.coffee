@@ -71,36 +71,38 @@ videoPlayerComponent = Ractive.extend({
   template: require('./video-player.jade')
   isolated: false
   oninit: () ->
-    id = null
     player = null
     YouTubeIframeLoader.load((YT) ->
       player = new YT.Player('iframe', {
         events: {
           onStateChange: (event) ->
             if event.data == YT.PlayerState.ENDED
-              ractive.set('currentVideo', null)
 
-              if id?
+              if ractive.get('currentVideo')?
                 videos = ractive.get('videos')
-                [video, index] = ([video, index] for video, index in videos when video.id == id)[0]
+                [video, index] = ([video,
+                  index] for video, index in videos when video.id == ractive.get('currentVideo'))[0]
 
                 # If the video has ended, the autoplay option is on, and the video is in the unwatched videos list
                 if ractive.get('autoplay') and videoLists[0].filter(video)
                   video.watched = true
+                  ractive.update('videos')
 
                   for i in [index + 1...videos.length]
                     video = videos[i]
                     if videoLists[0].filter(video)
                       ractive.set('currentVideo', video.id)
                       break
+              ractive.set('currentVideo', null)
         }
       })
     )
     this.observe('currentVideo', (videoId) ->
       if videoId?
-        id = videoId
-        player.loadVideoById(videoId: id)
+        player.loadVideoById(videoId: videoId)
         ractive.set('videoVisible', true)
+      else
+        player?.pauseVideo()
     )
     this.on({
       videoToggle: () ->
@@ -250,7 +252,7 @@ ractive.observe('history', ((value) ->
     value = 0
     ractive.set('history', value)
   saveData(value, 'days-into-history')
-  ractive.set('videos', (video for video in ractive.get('videos') when videoLists[0].filter(video) or
+  ractive.set('videos', (video for video in ractive.get('videos') when video.playlistId? or
     new Date(video.publishedDate) > (new Date() - 1000 * 60 * 60 * 24 * value)))
 ), {defer: true})
 

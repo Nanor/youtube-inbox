@@ -13,7 +13,7 @@
         | Discard watched videos older than
         input.form-control.input-sm(type='number', value='{{history}}')
         | day{{#if history !== 1}}s{{/if}} old.
-    em (Unwatched videos will be kept forever)
+    em (Videos from your Watch Later playlist will be kept forever.)
     .checkbox
         label
             input(type='checkbox', checked='{{autoplay}}')
