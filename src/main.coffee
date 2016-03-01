@@ -77,11 +77,13 @@ videoPlayerComponent = Ractive.extend({
         events: {
           onStateChange: (event) ->
             if event.data == YT.PlayerState.ENDED
+              id = ractive.get('currentVideo')
+              ractive.set('currentVideo', null)
 
-              if ractive.get('currentVideo')?
+              if id?
                 videos = ractive.get('videos')
                 [video, index] = ([video,
-                  index] for video, index in videos when video.id == ractive.get('currentVideo'))[0]
+                  index] for video, index in videos when video.id == id)[0]
 
                 # If the video has ended, the autoplay option is on, and the video is in the unwatched videos list
                 if ractive.get('autoplay') and videoLists[0].filter(video)
@@ -93,7 +95,6 @@ videoPlayerComponent = Ractive.extend({
                     if videoLists[0].filter(video)
                       ractive.set('currentVideo', video.id)
                       break
-              ractive.set('currentVideo', null)
         }
       })
     )
