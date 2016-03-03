@@ -23,16 +23,16 @@
         i.fa.fa-remove.fa-fw
     | {{/if}}
 
-.videos
+.videos(class='selected-list-{{selectedList}}')
     | {{#each videoLists:list}}
-    .video-list.selectedList.container-fluid(class='{{#if selectedList !== list}}hidden{{/if}}')
+    .video-list.selectedList.container-fluid(class='list-{{list}}')
         | {{#each (reversed ? videos.slice().reverse() : videos)}}
         | {{#if filter(this)}}
         Video
         | {{/if}}
         | {{/each}}
+        .no-videos.row End of videos.
     | {{/each}}
-    .no-videos End of videos.
 
 | {{#with currentVideo}}
 Player

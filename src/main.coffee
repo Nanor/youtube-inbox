@@ -75,6 +75,11 @@ videoPlayerComponent = Ractive.extend({
     YouTubeIframeLoader.load((YT) ->
       player = new YT.Player('iframe', {
         events: {
+          onReady: (event) ->
+            videoId = ractive.get('currentVideo')
+            if videoId?
+              event.target.loadVideoById(videoId)
+              ractive.set('videoVisible', true)
           onStateChange: (event) ->
             if event.data == YT.PlayerState.ENDED
               id = ractive.get('currentVideo')
@@ -82,8 +87,8 @@ videoPlayerComponent = Ractive.extend({
 
               if id?
                 videos = ractive.get('videos')
-                [video, index] = ([video,
-                  index] for video, index in videos when video.id == id)[0]
+                [video, index] = (
+                  [video, index] for video, index in videos when video.id == id)[0]
 
                 # If the video has ended, the autoplay option is on, and the video is in the unwatched videos list
                 if ractive.get('autoplay') and videoLists[0].filter(video)
@@ -99,7 +104,7 @@ videoPlayerComponent = Ractive.extend({
       })
     )
     this.observe('currentVideo', (videoId) ->
-      if videoId?
+      if videoId? and player?
         player.loadVideoById(videoId: videoId)
         ractive.set('videoVisible', true)
       else
@@ -270,15 +275,6 @@ ractive.observe('update', ((value) ->
 
 ractive.observe('watchLater', (value) ->
   saveData(value, 'watch-later')
-)
-scrolls = ({x: 0, y: 0} for list in videoLists)
-ractive.observe('selectedList', (value, oldValue) ->
-  if oldValue?
-    scrolls[oldValue] = {x: window.scrollX, y: window.scrollY}
-  window.scrollTo(scrolls[value].x, scrolls[value].y)
-  window.setTimeout((() ->
-    window.scrollTo(scrolls[value].x, scrolls[value].y)
-  ), 0)
 )
 ractive.observe('additionalChannels', (value) ->
   saveData(value, 'additional-channels')
