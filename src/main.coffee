@@ -140,6 +140,8 @@ videoContainerComponent = Ractive.extend({
     ))
   data: {
     truncated: true
+    #TODO: Set this based on description length
+    long: true
 
     paragraphs: (text) ->
       ((linkify(line, {attributes: {target: '_blank'}}) for line in paragraph.split(/\n/)).join('<br>') for paragraph in text.split(/\n{2,}/))

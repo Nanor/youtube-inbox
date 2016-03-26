@@ -3,7 +3,6 @@ $video-height: 300px
 $tab-count: 3
 
 html
-  // Always display the scroll bar.
   overflow: hidden
 
 .top-bar
@@ -53,20 +52,15 @@ html
     overflow-y: scroll
 
     .video-container
-      $side-buttons-width: 70px
       $container-padding: 5px
       $background-odd: whitesmoke
       $background-even: white
 
       .video, .video-info, .side-buttons
-        display: inline-block
         padding: $container-padding
-        vertical-align: top
 
       .video
-        position: relative
         height: $video-height
-        width: $video-height * 1.75
 
         &:after
           position: absolute
@@ -99,8 +93,6 @@ html
             right: 20px
 
       .video-info
-        position: relative
-        width: calc(100% - #{$video-height * 1.75 + $side-buttons-width})
         min-height: $video-height
         max-height: 2000px
         transition: max-height 1s
@@ -114,6 +106,7 @@ html
 
         .show
           position: absolute
+          visibility: hidden
           bottom: 5px
           width: 100%
           z-index: 1
@@ -123,21 +116,23 @@ html
             color: grey
             margin-top: 5px
 
-        // Don't allow the description to be so long if truncated.
-        &.truncated
-          max-height: $video-height
+        &.long
+          .show
+            visibility: visible
 
-          &:before
-            position: absolute
-            top: 70%
-            bottom: 0
-            left: 0
-            right: 0
-            z-index: 1
-            content: ''
+          &.truncated
+            max-height: $video-height
+            &:before
+              position: absolute
+              top: 70%
+              bottom: 0
+              left: 0
+              right: 0
+              z-index: 1
+              content: ''
 
       .side-buttons
-        width: $side-buttons-width
+        width: 70px
         float: right
 
         .btn

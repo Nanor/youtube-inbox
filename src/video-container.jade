@@ -1,16 +1,16 @@
 #video-container.video-container.row(intro-outro='slide')
 
-    #video.video(on-click='play')
+    #video.video.col-md-5(on-click='play')
         .thumbnail(style='background-image: url({{thumbnail}})')
             p.title {{title}}
             i.play-icon.fa.fa-play.fa-3x
             p.duration {{formatDuration(duration)}}
 
-    .video-info(class='{{#if truncated}}truncated{{/if}}')
+    .video-info.col-md-6(class='{{#if truncated}}truncated{{/if}} {{#if long}}long{{/if}}')
         .author
             a(href='http://www.youtube.com/channel/{{authorId}}', target='_blank') {{author}}
         .upload-date uploaded at {{formatDate(publishedDate)}}
-        .description
+        #description.description
             | {{#each paragraphs(description)}}
             p {{{this}}}
             | {{/each}}
@@ -18,7 +18,7 @@
             input.hidden(type='checkbox', checked='{{truncated}}')
             div {{#if truncated}}Read more{{else}}Read less{{/if}}
 
-    .side-buttons
+    .side-buttons.col-md-1
         | {{#if !blocked(this.id)}}
         | {{#if !watched}}
         button#mark.btn.btn-default(title='Mark as Watched', on-click='mark')
