@@ -49,7 +49,7 @@ getVideos = (callback, additionalChannels, watchLater) ->
         nextPageToken = response.result.nextPageToken
         if nextPageToken?
           loadFromSubscriptions(nextPageToken)
-        window.setTimeout((() -> loadFromChannels(channelIds)), 5)
+        loadFromChannels(channelIds)
       )
 
     loadFromChannels = (channelIds) ->
@@ -60,7 +60,7 @@ getVideos = (callback, additionalChannels, watchLater) ->
         playlistIds = (item.contentDetails.relatedPlaylists.uploads for item in response.result.items)
         for playlistId in playlistIds
           do (playlistId) ->
-            window.setTimeout((() -> loadVideosFromPlaylist(playlistId)), 5)
+            loadVideosFromPlaylist(playlistId)
       )
 
     loadVideosFromPlaylist = (playlistId, watchLater) ->
@@ -81,7 +81,7 @@ getVideos = (callback, additionalChannels, watchLater) ->
       ).then((response) ->
         for video in response.result.items
           do (video) ->
-            window.setTimeout((() -> loadVideo(video, playlistIds[video.id])), 5)
+            loadVideo(video, playlistIds[video.id])
       )
 
     loadVideo = (item, playlistId) ->
