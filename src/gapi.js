@@ -291,7 +291,7 @@ module.exports = function (loadedCallback) {
                         "rethrowException": false,
                         "host": "https://apis.google.com"
                     },
-                    "lexps": [81, 97, 99, 122, 123, 45, 30, 79, 127],
+                    "lexps": [81, 97, 99, 122, 123, 30, 79, 127],
                     "enableMultilogin": true,
                     "googleapis.config": {"auth": {"useFirstPartyAuthV2": true}},
                     "isPlusUser": true,
@@ -308,7 +308,7 @@ module.exports = function (loadedCallback) {
                     "client": {
                         "headers": {
                             "request": ["Accept", "Accept-Language", "Authorization", "Cache-Control", "Content-Disposition", "Content-Encoding", "Content-Language", "Content-Length", "Content-MD5", "Content-Range", "Content-Type", "Date", "GData-Version", "Host", "If-Match", "If-Modified-Since", "If-None-Match", "If-Unmodified-Since", "Origin", "OriginToken", "Pragma", "Range", "Slug", "Transfer-Encoding", "Want-Digest", "X-ClientDetails", "X-GData-Client", "X-GData-Key", "X-Goog-AuthUser", "X-Goog-PageId", "X-Goog-Encode-Response-If-Executable", "X-Goog-Correlation-Id", "X-Goog-Request-Info", "X-Goog-Experiments", "x-goog-iam-authority-selector", "x-goog-iam-authorization-token", "X-Goog-Spatula", "X-Goog-Upload-Command", "X-Goog-Upload-Content-Disposition", "X-Goog-Upload-Content-Length", "X-Goog-Upload-Content-Type", "X-Goog-Upload-File-Name", "X-Goog-Upload-Offset", "X-Goog-Upload-Protocol", "X-Goog-Visitor-Id", "X-HTTP-Method-Override", "X-JavaScript-User-Agent", "X-Pan-Versionid", "X-Origin", "X-Referer", "X-Upload-Content-Length", "X-Upload-Content-Type", "X-Use-HTTP-Status-Code-Override", "X-YouTube-VVT", "X-YouTube-Page-CL", "X-YouTube-Page-Timestamp"],
-                            "response": ["Digest", "Cache-Control", "Content-Disposition", "Content-Encoding", "Content-Language", "Content-Length", "Content-MD5", "Content-Range", "Content-Type", "Date", "ETag", "Expires", "Last-Modified", "Location", "Pragma", "Range", "Server", "Transfer-Encoding", "WWW-Authenticate", "Vary", "Unzipped-Content-MD5", "X-Goog-Generation", "X-Goog-Metageneration", "X-Goog-Safety-Content-Type", "X-Goog-Safety-Encoding", "X-Google-Trace", "X-Goog-Upload-Chunk-Granularity", "X-Goog-Upload-Control-URL", "X-Goog-Upload-Size-Received", "X-Goog-Upload-Status", "X-Goog-Upload-URL", "X-Goog-Diff-Download-Range", "X-Goog-Hash", "X-Goog-Updated-Authorization", "X-Server-Object-Version", "X-Guploader-Customer", "X-Guploader-Upload-Result", "X-Guploader-Uploadid"]
+                            "response": ["Digest", "Cache-Control", "Content-Disposition", "Content-Encoding", "Content-Language", "Content-Length", "Content-MD5", "Content-Range", "Content-Type", "Date", "ETag", "Expires", "Last-Modified", "Location", "Pragma", "Range", "Server", "Transfer-Encoding", "WWW-Authenticate", "Vary", "Unzipped-Content-MD5", "X-Goog-Generation", "X-Goog-Metageneration", "X-Goog-Safety-Content-Type", "X-Goog-Safety-Encoding", "X-Google-Trace", "X-Goog-Upload-Chunk-Granularity", "X-Goog-Upload-Control-URL", "X-Goog-Upload-Size-Received", "X-Goog-Upload-Status", "X-Goog-Upload-URL", "X-Goog-Diff-Download-Range", "X-Goog-Hash", "X-Goog-Updated-Authorization", "X-Server-Object-Version", "X-Guploader-Customer", "X-Guploader-Upload-Result", "X-Guploader-Uploadid", "X-Google-Gfe-Backend-Request-Cost"]
                         }, "rms": "migrated", "cors": false
                     },
                     "isLoggedIn": true,
@@ -356,7 +356,6 @@ module.exports = function (loadedCallback) {
                             "params": {"url": ""},
                             "url": ":socialhost:/_/im/_/widget/render/plus/followers?usegapi\u003d1"
                         },
-                        "photocomments": {"url": ":socialhost:/:session_prefix:_/widget/render/photocomments?usegapi\u003d1"},
                         "post": {
                             "params": {"url": ""},
                             "url": ":socialhost:/:session_prefix::im_prefix:_/widget/render/post?usegapi\u003d1"
@@ -422,13 +421,13 @@ module.exports = function (loadedCallback) {
                         "card": {"url": ":socialhost:/:session_prefix:_/hovercard/card"}
                     }
                 },
-                "h": "m;/_/scs/apps-static/_/js/k\u003doz.gapi.en_GB.Tehn4gVKne8.O/m\u003d__features__/am\u003dAQ/rt\u003dj/d\u003d1/t\u003dzcms/rs\u003dAGLTcCOYfNkgHXTu-v2ke-P4wNersesGOg",
-                "u": "https://apis.google.com/js/client.js?onload\u003dfooTest",
+                "h": "m;/_/scs/apps-static/_/js/k\u003doz.gapi.en_GB.Pc_OA3os_Rw.O/m\u003d__features__/am\u003dAQ/rt\u003dj/d\u003d1/rs\u003dAGLTcCPi4tWKbCZjJQ1Tpnq94gY9Shvgag",
+                "u": "https://apis.google.com/js/client.js?onload\u003dOnLoadCallback",
                 "hee": true,
-                "fp": "8c11088bd325e21b58bb459364a02b751c83e8f2",
+                "fp": "b47882e68bdefb6e2d6c8fabf4729bec2ee5461b",
                 "dpo": false
             },
-            "fp": "8c11088bd325e21b58bb459364a02b751c83e8f2",
+            "fp": "b47882e68bdefb6e2d6c8fabf4729bec2ee5461b",
             "annotation": ["interactivepost", "recobar", "signin2", "autocomplete", "profile"],
             "bimodal": ["signin", "share"]
         }
